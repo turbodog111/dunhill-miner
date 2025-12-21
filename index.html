@@ -333,6 +333,15 @@
             background: #FF6600;
         }
 
+        /* Manager has green suit */
+        .manager .worker-torso {
+            background: #228B22;
+        }
+
+        .manager .worker-helmet {
+            background: #32CD32;
+        }
+
         .worker.walking {
             animation: walk 0.3s infinite;
         }
@@ -410,6 +419,83 @@
 
         .worker.mining .worker-status {
             display: none;
+        }
+
+        /* Manager slot (empty outline) */
+        .manager-slot {
+            position: absolute;
+            width: 30px;
+            height: 40px;
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 19;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .manager-slot:hover {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .manager-slot.hired {
+            border: none;
+            background: none;
+            cursor: default;
+        }
+
+        .manager-slot .plus-icon {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .manager-slot:hover .plus-icon {
+            color: #ffd700;
+        }
+
+        .manager-slot.hired .plus-icon {
+            display: none;
+        }
+
+        /* Hire popup */
+        .hire-popup {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 15px;
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .hire-popup.show {
+            display: block;
+        }
+
+        .hire-popup h4 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .hire-btn {
+            background: linear-gradient(to bottom, #32CD32, #228B22);
+            border: 2px solid #006400;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .hire-btn:hover {
+            background: linear-gradient(to bottom, #3ddb3d, #2da52d);
+            box-shadow: 0 0 10px #32CD32;
         }
 
         /* Instructions */
@@ -498,6 +584,22 @@
             </div>
         </div>
 
+        <!-- Miner Manager Slot -->
+        <div class="manager-slot" id="minerManagerSlot" onclick="showMinerManagerPopup(event)">
+            <span class="plus-icon">+</span>
+            <!-- Manager will appear here when hired -->
+            <div class="worker manager" id="minerManager" style="display: none;">
+                <div class="worker-body">
+                    <div class="worker-helmet">
+                        <div class="worker-helmet-light"></div>
+                    </div>
+                    <div class="worker-head"></div>
+                    <div class="worker-torso"></div>
+                    <div class="worker-legs"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Miner Worker -->
         <div class="worker" id="miner" onclick="handleMinerClick()">
             <div class="worker-status" id="minerStatus">Click me!</div>
@@ -513,6 +615,22 @@
                 <div class="worker-legs"></div>
             </div>
             <div class="carried-coal"></div>
+        </div>
+
+        <!-- Elevator Manager Slot -->
+        <div class="manager-slot" id="elevatorManagerSlot" onclick="showElevatorManagerPopup(event)">
+            <span class="plus-icon">+</span>
+            <!-- Manager will appear here when hired -->
+            <div class="worker manager" id="elevatorManager" style="display: none;">
+                <div class="worker-body">
+                    <div class="worker-helmet">
+                        <div class="worker-helmet-light"></div>
+                    </div>
+                    <div class="worker-head"></div>
+                    <div class="worker-torso"></div>
+                    <div class="worker-legs"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Elevator Operator -->
@@ -531,12 +649,24 @@
             </div>
             <div class="carried-coal"></div>
         </div>
+
+        <!-- Hire Popups -->
+        <div class="hire-popup" id="minerHirePopup">
+            <h4>Miner Manager</h4>
+            <button class="hire-btn" onclick="hireMinerManager()">Hire Manager</button>
+        </div>
+
+        <div class="hire-popup" id="elevatorHirePopup">
+            <h4>Elevator Manager</h4>
+            <button class="hire-btn" onclick="hireElevatorManager()">Hire Manager</button>
+        </div>
     </div>
 
     <div class="instructions">
         <h3>Idle Miner</h3>
         <p>Click the miner to mine coal into the bucket</p>
         <p>Click the elevator to collect and sell coal</p>
+        <p>Click the + to hire managers for automation!</p>
     </div>
 
     <script>
@@ -548,6 +678,9 @@
 
         let minerState = 'idle';
         let operatorState = 'idle';
+
+        let hasMinerManager = false;
+        let hasElevatorManager = false;
 
         // DOM elements
         const miner = document.getElementById('miner');
@@ -563,6 +696,13 @@
         const bucketFill = document.getElementById('bucketFill');
         const coalCountEl = document.getElementById('coalCount');
         const moneyCountEl = document.getElementById('moneyCount');
+
+        const minerManagerSlot = document.getElementById('minerManagerSlot');
+        const elevatorManagerSlot = document.getElementById('elevatorManagerSlot');
+        const minerManager = document.getElementById('minerManager');
+        const elevatorManager = document.getElementById('elevatorManager');
+        const minerHirePopup = document.getElementById('minerHirePopup');
+        const elevatorHirePopup = document.getElementById('elevatorHirePopup');
 
         // Positions for miner
         const minerPositions = {
@@ -593,6 +733,13 @@
         elevatorOperator.style.top = operatorPositions.surface.top + 'px';
 
         elevator.style.top = elevatorPositions.top + 'px';
+
+        // Manager slots positioning
+        minerManagerSlot.style.left = '15px';
+        minerManagerSlot.style.top = '480px';
+
+        elevatorManagerSlot.style.left = '250px';
+        elevatorManagerSlot.style.top = '55px';
 
         function updateBucket() {
             bucketCountEl.textContent = bucketCoal;
@@ -654,14 +801,82 @@
             setTimeout(() => sparkle.remove(), 1000);
         }
 
-        // Miner click handler
-        async function handleMinerClick() {
-            if (minerState !== 'idle') return;
-            if (bucketCoal >= maxBucketCoal) {
-                minerStatus.textContent = 'Bucket full!';
-                setTimeout(() => { minerStatus.textContent = 'Click me!'; }, 1000);
-                return;
+        // Close popups when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#minerManagerSlot') && !e.target.closest('#minerHirePopup')) {
+                minerHirePopup.classList.remove('show');
             }
+            if (!e.target.closest('#elevatorManagerSlot') && !e.target.closest('#elevatorHirePopup')) {
+                elevatorHirePopup.classList.remove('show');
+            }
+        });
+
+        function showMinerManagerPopup(event) {
+            if (hasMinerManager) return;
+            event.stopPropagation();
+            minerHirePopup.style.left = '10px';
+            minerHirePopup.style.top = '420px';
+            minerHirePopup.classList.toggle('show');
+            elevatorHirePopup.classList.remove('show');
+        }
+
+        function showElevatorManagerPopup(event) {
+            if (hasElevatorManager) return;
+            event.stopPropagation();
+            elevatorHirePopup.style.left = '240px';
+            elevatorHirePopup.style.top = '10px';
+            elevatorHirePopup.classList.toggle('show');
+            minerHirePopup.classList.remove('show');
+        }
+
+        function hireMinerManager() {
+            hasMinerManager = true;
+            minerHirePopup.classList.remove('show');
+            minerManagerSlot.classList.add('hired');
+            minerManager.style.display = 'block';
+            minerManager.style.position = 'relative';
+            minerManager.style.left = '0';
+            minerManager.style.top = '0';
+
+            // Start auto-mining
+            autoMine();
+        }
+
+        function hireElevatorManager() {
+            hasElevatorManager = true;
+            elevatorHirePopup.classList.remove('show');
+            elevatorManagerSlot.classList.add('hired');
+            elevatorManager.style.display = 'block';
+            elevatorManager.style.position = 'relative';
+            elevatorManager.style.left = '0';
+            elevatorManager.style.top = '0';
+
+            // Start auto-elevator
+            autoElevator();
+        }
+
+        async function autoMine() {
+            while (hasMinerManager) {
+                if (minerState === 'idle' && bucketCoal < maxBucketCoal) {
+                    await doMining();
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+        }
+
+        async function autoElevator() {
+            while (hasElevatorManager) {
+                if (operatorState === 'idle' && bucketCoal > 0) {
+                    await doElevatorRun();
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+        }
+
+        // Core mining logic (shared by click and auto)
+        async function doMining() {
+            if (minerState !== 'idle') return;
+            if (bucketCoal >= maxBucketCoal) return;
 
             minerState = 'busy';
 
@@ -698,26 +913,32 @@
             await setPosition(miner, minerPositions.idle, 400);
             miner.classList.remove('walking');
 
-            minerStatus.textContent = 'Click me!';
+            minerStatus.textContent = hasMinerManager ? 'Auto' : 'Click me!';
             minerState = 'idle';
         }
 
-        // Elevator click handler
-        async function handleElevatorClick() {
-            if (operatorState !== 'idle') return;
-            if (bucketCoal <= 0) {
-                operatorStatus.textContent = 'Bucket empty!';
-                setTimeout(() => { operatorStatus.textContent = 'Click elevator!'; }, 1000);
+        // Miner click handler
+        async function handleMinerClick() {
+            if (hasMinerManager) return; // Manager handles it
+            if (minerState !== 'idle') return;
+            if (bucketCoal >= maxBucketCoal) {
+                minerStatus.textContent = 'Bucket full!';
+                setTimeout(() => { minerStatus.textContent = 'Click me!'; }, 1000);
                 return;
             }
+            await doMining();
+        }
+
+        // Core elevator logic (shared by click and auto)
+        async function doElevatorRun() {
+            if (operatorState !== 'idle') return;
+            if (bucketCoal <= 0) return;
 
             operatorState = 'busy';
-            const coalToCollect = bucketCoal;
 
             // 1. Ride elevator down
             operatorStatus.textContent = 'Going down...';
 
-            // Animate operator with elevator
             const rideDown = async () => {
                 const duration = 2000;
                 const startTop = operatorPositions.elevatorTop.top;
@@ -752,7 +973,8 @@
             await animateProgress(operatorProgressFill, 1000);
             elevatorOperator.classList.remove('mining');
 
-            // Take all coal from bucket
+            // BUG FIX: Capture coal amount NOW (at collection time), not at start
+            const coalToCollect = bucketCoal;
             bucketCoal = 0;
             updateBucket();
             elevatorOperator.classList.add('has-coal');
@@ -799,8 +1021,20 @@
             updateStats();
             createSparkle(175, 30, '+$' + (coalToCollect * 10));
 
-            operatorStatus.textContent = 'Click elevator!';
+            operatorStatus.textContent = hasElevatorManager ? 'Auto' : 'Click elevator!';
             operatorState = 'idle';
+        }
+
+        // Elevator click handler
+        async function handleElevatorClick() {
+            if (hasElevatorManager) return; // Manager handles it
+            if (operatorState !== 'idle') return;
+            if (bucketCoal <= 0) {
+                operatorStatus.textContent = 'Bucket empty!';
+                setTimeout(() => { operatorStatus.textContent = 'Click elevator!'; }, 1000);
+                return;
+            }
+            await doElevatorRun();
         }
     </script>
 </body>
