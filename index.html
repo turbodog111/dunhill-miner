@@ -975,25 +975,28 @@
         /* Elevator upgrade button */
         .elevator-upgrade-btn {
             position: absolute;
-            top: 85px;
-            right: 10px;
-            width: 35px;
-            height: 35px;
+            top: 25px;
+            left: 270px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(to bottom, #FF6600, #cc5200);
-            border: 2px solid #993d00;
-            border-radius: 5px;
+            border: 3px solid #993d00;
+            border-radius: 8px;
             color: white;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 25;
+            text-align: center;
+            line-height: 1.1;
         }
 
         .elevator-upgrade-btn:hover {
-            box-shadow: 0 0 10px #FF6600;
+            box-shadow: 0 0 15px #FF6600;
+            transform: scale(1.05);
         }
     </style>
 </head>
@@ -1079,7 +1082,7 @@
             </div>
 
             <!-- Elevator Upgrade Button -->
-            <button class="elevator-upgrade-btn" id="elevatorUpgradeBtn" onclick="openElevatorUpgradeModal()">E</button>
+            <button class="elevator-upgrade-btn" id="elevatorUpgradeBtn" onclick="openElevatorUpgradeModal()">ELV<br>UP</button>
 
             <!-- Elevator Shaft - will be extended dynamically -->
             <div class="elevator-shaft" id="elevatorShaft">
@@ -1090,7 +1093,7 @@
             </div>
 
             <!-- Elevator Manager Slot -->
-            <div class="manager-slot" id="elevatorManagerSlot" style="left: 250px; top: 95px;">
+            <div class="manager-slot" id="elevatorManagerSlot" style="left: 250px; top: 35px;">
                 <span class="plus-icon">+</span>
             </div>
 
@@ -1476,9 +1479,9 @@
         async function doElevatorRun() {
             if (operatorState !== 'idle') return;
 
-            // Find the deepest shaft with coal
+            // Find the topmost shaft with coal (start from shaft 1, work down)
             let targetShaftIndex = -1;
-            for (let i = mineshafts.length - 1; i >= 0; i--) {
+            for (let i = 0; i < mineshafts.length; i++) {
                 if (mineshafts[i].bucketCoal > 0) {
                     targetShaftIndex = i;
                     break;
