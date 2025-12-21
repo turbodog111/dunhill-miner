@@ -568,6 +568,128 @@
             cursor: not-allowed;
         }
 
+        /* Manager info popup */
+        .manager-info-popup {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #32CD32;
+            border-radius: 10px;
+            padding: 15px;
+            z-index: 2000;
+            display: none;
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .manager-info-popup.show {
+            display: block;
+        }
+
+        .manager-info-popup h4 {
+            color: #32CD32;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .manager-info-popup .ability-info {
+            background: rgba(153, 50, 204, 0.3);
+            border: 1px solid #9932CC;
+            border-radius: 5px;
+            padding: 8px;
+            margin: 8px 0;
+        }
+
+        .manager-info-popup .ability-name {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .manager-info-popup .ability-desc {
+            color: #ccc;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .manager-info-popup .ability-status {
+            color: #aaa;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .manager-info-popup .ability-status.active {
+            color: #32CD32;
+        }
+
+        .manager-info-popup .ability-status.cooldown {
+            color: #ff6666;
+        }
+
+        .activate-btn {
+            background: linear-gradient(to bottom, #9932CC, #6a1b9a);
+            border: 2px solid #ffd700;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            margin: 5px 3px;
+        }
+
+        .activate-btn:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #a940d6, #7a2ba8);
+            box-shadow: 0 0 10px #9932CC;
+        }
+
+        .activate-btn:disabled {
+            background: #666;
+            border-color: #444;
+            cursor: not-allowed;
+        }
+
+        .fire-btn {
+            background: linear-gradient(to bottom, #dc3545, #a71d2a);
+            border: 2px solid #721c24;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            margin: 5px 3px;
+        }
+
+        .fire-btn:hover {
+            background: linear-gradient(to bottom, #e4606d, #bd2130);
+            box-shadow: 0 0 10px #dc3545;
+        }
+
+        .close-popup-btn {
+            background: linear-gradient(to bottom, #666, #444);
+            border: 2px solid #333;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            margin: 5px 3px;
+        }
+
+        .close-popup-btn:hover {
+            background: linear-gradient(to bottom, #777, #555);
+        }
+
+        /* Make hired managers clickable */
+        .manager-slot.hired {
+            cursor: pointer;
+        }
+
+        .manager-slot.hired:hover {
+            filter: brightness(1.2);
+        }
+
         /* Buy new shaft button */
         .buy-shaft-area {
             position: relative;
@@ -997,87 +1119,6 @@
             box-shadow: 0 0 15px #FF6600;
             transform: scale(1.05);
         }
-
-        /* Ability button styles */
-        .ability-btn {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 2px solid #ffd700;
-            background: linear-gradient(to bottom, #9932CC, #6a1b9a);
-            color: white;
-            font-size: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 30;
-            transition: all 0.2s;
-        }
-
-        .ability-btn:hover:not(:disabled) {
-            transform: scale(1.15);
-            box-shadow: 0 0 10px #9932CC;
-        }
-
-        .ability-btn:disabled {
-            background: #444;
-            border-color: #666;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-
-        .ability-btn.active {
-            background: linear-gradient(to bottom, #32CD32, #228B22);
-            border-color: #00ff00;
-            animation: abilityPulse 1s infinite;
-        }
-
-        .ability-btn.cooldown {
-            background: linear-gradient(to bottom, #666, #444);
-            border-color: #888;
-        }
-
-        @keyframes abilityPulse {
-            0%, 100% { box-shadow: 0 0 5px #32CD32; }
-            50% { box-shadow: 0 0 15px #32CD32; }
-        }
-
-        .ability-tooltip {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.95);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 11px;
-            white-space: nowrap;
-            z-index: 100;
-            display: none;
-            border: 1px solid #ffd700;
-            text-align: center;
-        }
-
-        .ability-btn:hover .ability-tooltip {
-            display: block;
-        }
-
-        .ability-timer {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #000;
-            color: #ffd700;
-            font-size: 8px;
-            padding: 2px 4px;
-            border-radius: 4px;
-            min-width: 20px;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
@@ -1177,13 +1218,6 @@
                 <span class="plus-icon">+</span>
             </div>
 
-            <!-- Elevator Ability Button -->
-            <button class="ability-btn" id="elevatorAbilityBtn" style="left: 290px; top: 40px; display: none;" onclick="activateElevatorAbility()">
-                <span class="ability-tooltip" id="elevatorAbilityTooltip"></span>
-                <span class="ability-timer" id="elevatorAbilityTimer" style="display: none;"></span>
-                <span id="elevatorAbilityIcon"></span>
-            </button>
-
             <!-- Elevator Operator -->
             <div class="worker elevator-operator" id="elevatorOperator" style="left: 175px; top: 55px;">
                 <div class="worker-status" id="operatorStatus">Click elevator!</div>
@@ -1218,6 +1252,23 @@
         <h4 id="hirePopupTitle">Manager</h4>
         <div class="cost" id="hirePopupCost">Cost: $50</div>
         <button class="hire-btn" id="hirePopupBtn">Hire Manager</button>
+    </div>
+
+    <!-- Manager Info Popup -->
+    <div class="manager-info-popup" id="managerInfoPopup">
+        <h4 id="managerInfoTitle">Manager 1</h4>
+        <div class="ability-info">
+            <div class="ability-name" id="managerAbilityName">30% Discount</div>
+            <div class="ability-desc" id="managerAbilityDesc">30% off upgrades</div>
+            <div class="ability-status" id="managerAbilityStatus">Ready to activate</div>
+        </div>
+        <div>
+            <button class="activate-btn" id="managerActivateBtn">Activate</button>
+        </div>
+        <div>
+            <button class="fire-btn" id="managerFireBtn">Fire Manager</button>
+            <button class="close-popup-btn" id="managerCloseBtn">Close</button>
+        </div>
     </div>
 
     <!-- Upgrade Modal -->
@@ -1531,11 +1582,6 @@
                     </div>
                     <div class="carried-coal"></div>
                 </div>
-                <button class="ability-btn" id="abilityBtn-${index}" style="left: 42px; top: 55px; display: none;" onclick="activateShaftAbility(${index})">
-                    <span class="ability-tooltip" id="abilityTooltip-${index}"></span>
-                    <span class="ability-timer" id="abilityTimer-${index}" style="display: none;"></span>
-                    <span id="abilityIcon-${index}"></span>
-                </button>
             `;
 
             mineshaftsContainer.appendChild(shaftDiv);
@@ -1550,11 +1596,7 @@
                 bucketCount: document.getElementById(`bucketCount-${index}`),
                 bucketFill: document.getElementById(`bucketFill-${index}`),
                 levelBtn: document.getElementById(`levelBtn-${index}`),
-                managerSlot: document.getElementById(`managerSlot-${index}`),
-                abilityBtn: document.getElementById(`abilityBtn-${index}`),
-                abilityTooltip: document.getElementById(`abilityTooltip-${index}`),
-                abilityTimer: document.getElementById(`abilityTimer-${index}`),
-                abilityIcon: document.getElementById(`abilityIcon-${index}`)
+                managerSlot: document.getElementById(`managerSlot-${index}`)
             };
 
             // Create shaft data
@@ -1849,7 +1891,12 @@
         function showMinerManagerPopup(event, shaftIndex) {
             event.stopPropagation();
             const shaft = mineshafts[shaftIndex];
-            if (shaft.hasManager) return;
+
+            // If manager is hired, show info popup instead
+            if (shaft.hasManager) {
+                showManagerInfoPopup(event, 'shaft', shaftIndex);
+                return;
+            }
 
             currentHireTarget = { type: 'miner', shaftIndex };
 
@@ -1869,7 +1916,12 @@
 
         function showElevatorManagerPopup(event) {
             event.stopPropagation();
-            if (hasElevatorManager) return;
+
+            // If manager is hired, show info popup instead
+            if (hasElevatorManager) {
+                showManagerInfoPopup(event, 'elevator', null);
+                return;
+            }
 
             currentHireTarget = { type: 'elevator' };
 
@@ -1920,11 +1972,6 @@
                 cooldownUntil: 0
             };
 
-            // Show and configure ability button
-            shaft.elements.abilityBtn.style.display = 'flex';
-            shaft.elements.abilityIcon.textContent = randomAbility.icon;
-            shaft.elements.abilityTooltip.textContent = randomAbility.name + ': ' + randomAbility.desc;
-
             autoMine(shaftIndex);
         }
 
@@ -1961,23 +2008,186 @@
                 cooldownUntil: 0
             };
 
-            // Show and configure elevator ability button
-            const elevAbilityBtn = document.getElementById('elevatorAbilityBtn');
-            elevAbilityBtn.style.display = 'flex';
-            document.getElementById('elevatorAbilityIcon').textContent = randomAbility.icon;
-            document.getElementById('elevatorAbilityTooltip').textContent = randomAbility.name + ': ' + randomAbility.desc;
-
             autoElevator();
         }
 
         // Close popup when clicking elsewhere
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.manager-slot') && !e.target.closest('.hire-popup')) {
+            if (!e.target.closest('.manager-slot') && !e.target.closest('.hire-popup') && !e.target.closest('.manager-info-popup')) {
                 hirePopup.classList.remove('show');
+                document.getElementById('managerInfoPopup').classList.remove('show');
             }
         });
 
         elevatorManagerSlot.onclick = showElevatorManagerPopup;
+
+        // ============================================
+        // MANAGER INFO POPUP
+        // ============================================
+        let currentInfoTarget = null; // { type: 'shaft'|'elevator', shaftIndex: number|null }
+        const managerInfoPopup = document.getElementById('managerInfoPopup');
+        const managerInfoTitle = document.getElementById('managerInfoTitle');
+        const managerAbilityName = document.getElementById('managerAbilityName');
+        const managerAbilityDesc = document.getElementById('managerAbilityDesc');
+        const managerAbilityStatus = document.getElementById('managerAbilityStatus');
+        const managerActivateBtn = document.getElementById('managerActivateBtn');
+        const managerFireBtn = document.getElementById('managerFireBtn');
+        const managerCloseBtn = document.getElementById('managerCloseBtn');
+
+        function showManagerInfoPopup(event, type, shaftIndex) {
+            let ability;
+            let managerName;
+            let slotElement;
+
+            if (type === 'shaft') {
+                const shaft = mineshafts[shaftIndex];
+                ability = shaft.managerAbility;
+                managerName = `Manager ${shaftIndex + 1}`;
+                slotElement = shaft.elements.managerSlot;
+
+                // Handle legacy managers without abilities
+                if (!ability) {
+                    const randomAbility = SHAFT_ABILITIES[Math.floor(Math.random() * SHAFT_ABILITIES.length)];
+                    shaft.managerAbility = {
+                        type: randomAbility.id,
+                        name: randomAbility.name,
+                        desc: randomAbility.desc,
+                        icon: randomAbility.icon,
+                        activeUntil: 0,
+                        cooldownUntil: 0
+                    };
+                    ability = shaft.managerAbility;
+                }
+            } else {
+                ability = elevatorManagerAbility;
+                managerName = 'Elevator Manager';
+                slotElement = elevatorManagerSlot;
+
+                // Handle legacy managers without abilities
+                if (!ability) {
+                    const randomAbility = ELEVATOR_ABILITIES[Math.floor(Math.random() * ELEVATOR_ABILITIES.length)];
+                    elevatorManagerAbility = {
+                        type: randomAbility.id,
+                        name: randomAbility.name,
+                        desc: randomAbility.desc,
+                        icon: randomAbility.icon,
+                        activeUntil: 0,
+                        cooldownUntil: 0
+                    };
+                    ability = elevatorManagerAbility;
+                }
+            }
+
+            currentInfoTarget = { type, shaftIndex };
+
+            // Update popup content
+            managerInfoTitle.textContent = managerName;
+            managerAbilityName.textContent = ability.name;
+            managerAbilityDesc.textContent = ability.desc;
+
+            // Update ability status
+            updateManagerInfoPopupStatus();
+
+            // Position popup
+            const rect = slotElement.getBoundingClientRect();
+            managerInfoPopup.style.left = (rect.left + 40) + 'px';
+            managerInfoPopup.style.top = (rect.top - 50) + 'px';
+            managerInfoPopup.classList.add('show');
+        }
+
+        function updateManagerInfoPopupStatus() {
+            if (!currentInfoTarget) return;
+
+            let ability;
+            if (currentInfoTarget.type === 'shaft') {
+                ability = mineshafts[currentInfoTarget.shaftIndex].managerAbility;
+            } else {
+                ability = elevatorManagerAbility;
+            }
+
+            if (!ability) return;
+
+            const now = Date.now();
+            if (ability.activeUntil > now) {
+                const remaining = Math.ceil((ability.activeUntil - now) / 1000);
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                managerAbilityStatus.textContent = `Active: ${mins}:${secs.toString().padStart(2, '0')}`;
+                managerAbilityStatus.className = 'ability-status active';
+                managerActivateBtn.disabled = true;
+                managerActivateBtn.textContent = 'Active';
+            } else if (ability.cooldownUntil > now) {
+                const remaining = Math.ceil((ability.cooldownUntil - now) / 1000);
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                managerAbilityStatus.textContent = `Cooldown: ${mins}:${secs.toString().padStart(2, '0')}`;
+                managerAbilityStatus.className = 'ability-status cooldown';
+                managerActivateBtn.disabled = true;
+                managerActivateBtn.textContent = 'On Cooldown';
+            } else {
+                managerAbilityStatus.textContent = 'Ready to activate';
+                managerAbilityStatus.className = 'ability-status';
+                managerActivateBtn.disabled = false;
+                managerActivateBtn.textContent = 'Activate';
+            }
+        }
+
+        // Update popup status periodically
+        setInterval(() => {
+            if (managerInfoPopup.classList.contains('show')) {
+                updateManagerInfoPopupStatus();
+            }
+        }, 1000);
+
+        // Activate button click
+        managerActivateBtn.onclick = () => {
+            if (!currentInfoTarget) return;
+
+            if (currentInfoTarget.type === 'shaft') {
+                activateShaftAbility(currentInfoTarget.shaftIndex);
+            } else {
+                activateElevatorAbility();
+            }
+            updateManagerInfoPopupStatus();
+        };
+
+        // Fire button click
+        managerFireBtn.onclick = () => {
+            if (!currentInfoTarget) return;
+
+            if (currentInfoTarget.type === 'shaft') {
+                fireShaftManager(currentInfoTarget.shaftIndex);
+            } else {
+                fireElevatorManager();
+            }
+            managerInfoPopup.classList.remove('show');
+        };
+
+        // Close button click
+        managerCloseBtn.onclick = () => {
+            managerInfoPopup.classList.remove('show');
+        };
+
+        function fireShaftManager(shaftIndex) {
+            const shaft = mineshafts[shaftIndex];
+            if (!shaft.hasManager) return;
+
+            shaft.hasManager = false;
+            shaft.managerAbility = null;
+            shaft.elements.managerSlot.classList.remove('hired');
+            shaft.elements.managerSlot.innerHTML = '<span class="plus-icon">+</span>';
+            shaft.elements.minerStatus.textContent = 'Click me!';
+        }
+
+        function fireElevatorManager() {
+            if (!hasElevatorManager) return;
+
+            hasElevatorManager = false;
+            elevatorManagerAbility = null;
+            elevatorManagerSlot.classList.remove('hired');
+            elevatorManagerSlot.innerHTML = '<span class="plus-icon">+</span>';
+            operatorStatus.textContent = 'Click me!';
+        }
 
         // ============================================
         // ABILITY SYSTEM
@@ -2006,76 +2216,23 @@
             updateElevatorCapacityDisplay(); // In case it's the capacity ability
         }
 
+        // Legacy functions - buttons removed, now using info popup
         function updateAbilityButtonState(shaftIndex) {
-            const shaft = mineshafts[shaftIndex];
-            if (!shaft.managerAbility) return;
-
-            const btn = shaft.elements.abilityBtn;
-            const timer = shaft.elements.abilityTimer;
-            const ability = shaft.managerAbility;
-
-            btn.classList.remove('active', 'cooldown');
-            btn.disabled = false;
-
-            if (isAbilityActive(ability)) {
-                btn.classList.add('active');
-                btn.disabled = true;
-                timer.style.display = 'block';
-                const remaining = ability.activeUntil - Date.now();
-                timer.textContent = formatTime(remaining);
-            } else if (isAbilityOnCooldown(ability)) {
-                btn.classList.add('cooldown');
-                btn.disabled = true;
-                timer.style.display = 'block';
-                const remaining = ability.cooldownUntil - Date.now();
-                timer.textContent = formatTime(remaining);
-            } else {
-                timer.style.display = 'none';
-            }
+            // No-op - standalone ability buttons have been removed
+            // Status is now shown in the manager info popup
         }
 
         function updateElevatorAbilityButtonState() {
-            if (!elevatorManagerAbility) return;
-
-            const btn = document.getElementById('elevatorAbilityBtn');
-            const timer = document.getElementById('elevatorAbilityTimer');
-            const ability = elevatorManagerAbility;
-
-            btn.classList.remove('active', 'cooldown');
-            btn.disabled = false;
-
-            if (isAbilityActive(ability)) {
-                btn.classList.add('active');
-                btn.disabled = true;
-                timer.style.display = 'block';
-                const remaining = ability.activeUntil - Date.now();
-                timer.textContent = formatTime(remaining);
-            } else if (isAbilityOnCooldown(ability)) {
-                btn.classList.add('cooldown');
-                btn.disabled = true;
-                timer.style.display = 'block';
-                const remaining = ability.cooldownUntil - Date.now();
-                timer.textContent = formatTime(remaining);
-            } else {
-                timer.style.display = 'none';
-            }
+            // No-op - standalone ability buttons have been removed
+            // Status is now shown in the manager info popup
         }
 
-        // Update all ability buttons every second
-        function updateAllAbilityButtons() {
-            for (let i = 0; i < mineshafts.length; i++) {
-                if (mineshafts[i].hasManager) {
-                    updateAbilityButtonState(i);
-                }
-            }
+        // Update elevator capacity display periodically
+        setInterval(() => {
             if (hasElevatorManager) {
-                updateElevatorAbilityButtonState();
-                updateElevatorCapacityDisplay(); // Update capacity if ability expires
+                updateElevatorCapacityDisplay();
             }
-        }
-
-        // Start ability timer update loop
-        setInterval(updateAllAbilityButtons, 1000);
+        }, 1000);
 
         // ============================================
         // UPGRADE MODALS
@@ -2412,10 +2569,6 @@
                                 // Restore ability data
                                 if (shaftData.managerAbility) {
                                     mineshafts[i].managerAbility = shaftData.managerAbility;
-                                    mineshafts[i].elements.abilityBtn.style.display = 'flex';
-                                    mineshafts[i].elements.abilityIcon.textContent = shaftData.managerAbility.icon;
-                                    mineshafts[i].elements.abilityTooltip.textContent = shaftData.managerAbility.name + ': ' + shaftData.managerAbility.desc;
-                                    updateAbilityButtonState(i);
                                 }
 
                                 autoMine(i);
@@ -2443,11 +2596,6 @@
                         // Restore elevator ability data
                         if (data.elevatorManagerAbility) {
                             elevatorManagerAbility = data.elevatorManagerAbility;
-                            const elevAbilityBtn = document.getElementById('elevatorAbilityBtn');
-                            elevAbilityBtn.style.display = 'flex';
-                            document.getElementById('elevatorAbilityIcon').textContent = data.elevatorManagerAbility.icon;
-                            document.getElementById('elevatorAbilityTooltip').textContent = data.elevatorManagerAbility.name + ': ' + data.elevatorManagerAbility.desc;
-                            updateElevatorAbilityButtonState();
                         }
 
                         autoElevator();
