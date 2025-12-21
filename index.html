@@ -200,6 +200,32 @@
             box-shadow: inset -2px -2px 4px rgba(0,0,0,0.5), inset 2px 2px 4px rgba(100,100,100,0.3);
         }
 
+        /* Level button */
+        .level-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(to bottom, #4169E1, #2850a8);
+            border: 2px solid #1a3a7a;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 25;
+        }
+
+        .level-btn:hover {
+            box-shadow: 0 0 10px #4169E1;
+            background: linear-gradient(to bottom, #5179F1, #3860b8);
+        }
+
         /* Bucket */
         .bucket {
             position: absolute;
@@ -469,7 +495,7 @@
             z-index: 1000;
             display: none;
             text-align: center;
-            min-width: 120px;
+            min-width: 140px;
         }
 
         .hire-popup.show {
@@ -478,8 +504,22 @@
 
         .hire-popup h4 {
             color: #ffd700;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-size: 14px;
+        }
+
+        .hire-popup .cost {
+            color: #aaa;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .hire-popup .cost.affordable {
+            color: #32CD32;
+        }
+
+        .hire-popup .cost.too-expensive {
+            color: #ff6666;
         }
 
         .hire-btn {
@@ -493,9 +533,123 @@
             font-size: 12px;
         }
 
-        .hire-btn:hover {
+        .hire-btn:hover:not(:disabled) {
             background: linear-gradient(to bottom, #3ddb3d, #2da52d);
             box-shadow: 0 0 10px #32CD32;
+        }
+
+        .hire-btn:disabled {
+            background: #666;
+            border-color: #444;
+            cursor: not-allowed;
+        }
+
+        /* Upgrade Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .upgrade-modal {
+            background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            padding: 25px;
+            min-width: 300px;
+            text-align: center;
+            color: white;
+        }
+
+        .upgrade-modal h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .upgrade-modal .level-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4169E1;
+            margin: 10px 0;
+        }
+
+        .upgrade-modal .stats {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .upgrade-modal .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .upgrade-modal .stat-label {
+            color: #aaa;
+        }
+
+        .upgrade-modal .stat-value {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .upgrade-modal .stat-value.increase {
+            color: #32CD32;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(to bottom, #ffd700, #daa520);
+            border: 2px solid #b8860b;
+            color: #000;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        .upgrade-btn:hover:not(:disabled) {
+            box-shadow: 0 0 15px #ffd700;
+            background: linear-gradient(to bottom, #ffe44d, #e8b830);
+        }
+
+        .upgrade-btn:disabled {
+            background: #666;
+            border-color: #444;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .close-btn {
+            background: linear-gradient(to bottom, #666, #444);
+            border: 2px solid #333;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 10px 5px;
+        }
+
+        .close-btn:hover {
+            background: linear-gradient(to bottom, #777, #555);
         }
 
         /* Instructions */
@@ -572,7 +726,7 @@
         </div>
 
         <!-- Mineshaft Level -->
-        <div class="mineshaft">
+        <div class="mineshaft" id="mineshaft">
             <div class="mineshaft-floor"></div>
             <div class="mining-tunnel">
                 <div class="coal-deposit">
@@ -582,12 +736,15 @@
                     <div class="coal-piece"></div>
                 </div>
             </div>
+            <!-- Level Button -->
+            <button class="level-btn" id="mineshaftLevelBtn" onclick="openUpgradeModal()">
+                <span id="mineshaftLevelDisplay">1</span>
+            </button>
         </div>
 
         <!-- Miner Manager Slot -->
         <div class="manager-slot" id="minerManagerSlot" onclick="showMinerManagerPopup(event)">
             <span class="plus-icon">+</span>
-            <!-- Manager will appear here when hired -->
             <div class="worker manager" id="minerManager" style="display: none;">
                 <div class="worker-body">
                     <div class="worker-helmet">
@@ -620,7 +777,6 @@
         <!-- Elevator Manager Slot -->
         <div class="manager-slot" id="elevatorManagerSlot" onclick="showElevatorManagerPopup(event)">
             <span class="plus-icon">+</span>
-            <!-- Manager will appear here when hired -->
             <div class="worker manager" id="elevatorManager" style="display: none;">
                 <div class="worker-body">
                     <div class="worker-helmet">
@@ -653,20 +809,48 @@
         <!-- Hire Popups -->
         <div class="hire-popup" id="minerHirePopup">
             <h4>Miner Manager</h4>
-            <button class="hire-btn" onclick="hireMinerManager()">Hire Manager</button>
+            <div class="cost" id="minerManagerCost">Cost: $50</div>
+            <button class="hire-btn" id="minerHireBtn" onclick="hireMinerManager()">Hire Manager</button>
         </div>
 
         <div class="hire-popup" id="elevatorHirePopup">
             <h4>Elevator Manager</h4>
-            <button class="hire-btn" onclick="hireElevatorManager()">Hire Manager</button>
+            <div class="cost" id="elevatorManagerCost">Cost: $50</div>
+            <button class="hire-btn" id="elevatorHireBtn" onclick="hireElevatorManager()">Hire Manager</button>
+        </div>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div class="modal-overlay" id="upgradeModal">
+        <div class="upgrade-modal">
+            <h2>Mineshaft Upgrade</h2>
+            <div class="level-display">Level <span id="modalLevel">1</span></div>
+            <div class="stats">
+                <div class="stat-row">
+                    <span class="stat-label">Coal per trip:</span>
+                    <span class="stat-value" id="currentCoal">1.00</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Next level:</span>
+                    <span class="stat-value increase" id="nextCoal">1.20</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Upgrade cost:</span>
+                    <span class="stat-value" id="upgradeCost">$50</span>
+                </div>
+            </div>
+            <div>
+                <button class="upgrade-btn" id="upgradeBtn" onclick="upgradeMineshaft()">Upgrade</button>
+                <button class="close-btn" onclick="closeUpgradeModal()">Close</button>
+            </div>
         </div>
     </div>
 
     <div class="instructions">
         <h3>Idle Miner</h3>
-        <p>Click the miner to mine coal into the bucket</p>
-        <p>Click the elevator to collect and sell coal</p>
-        <p>Click the + to hire managers for automation!</p>
+        <p>Click workers to mine and transport coal</p>
+        <p>Hire managers ($50) for automation</p>
+        <p>Upgrade the mineshaft to mine more coal!</p>
     </div>
 
     <script>
@@ -674,13 +858,28 @@
         let totalCoalSold = 0;
         let money = 0;
         let bucketCoal = 0;
-        const maxBucketCoal = 10;
+        // No bucket limit - infinite capacity
 
         let minerState = 'idle';
         let operatorState = 'idle';
 
         let hasMinerManager = false;
         let hasElevatorManager = false;
+
+        // Mineshaft level system
+        let mineshaftLevel = 1;
+        const MANAGER_COST = 50;
+        const BASE_UPGRADE_COST = 50;
+        const UPGRADE_COST_MULTIPLIER = 1.5;
+        const COAL_PER_LEVEL_MULTIPLIER = 1.2;
+
+        function getCoalPerTrip() {
+            return Math.pow(COAL_PER_LEVEL_MULTIPLIER, mineshaftLevel - 1);
+        }
+
+        function getUpgradeCost() {
+            return Math.floor(BASE_UPGRADE_COST * Math.pow(UPGRADE_COST_MULTIPLIER, mineshaftLevel - 1));
+        }
 
         // DOM elements
         const miner = document.getElementById('miner');
@@ -703,6 +902,13 @@
         const elevatorManager = document.getElementById('elevatorManager');
         const minerHirePopup = document.getElementById('minerHirePopup');
         const elevatorHirePopup = document.getElementById('elevatorHirePopup');
+        const minerHireBtn = document.getElementById('minerHireBtn');
+        const elevatorHireBtn = document.getElementById('elevatorHireBtn');
+        const minerManagerCostEl = document.getElementById('minerManagerCost');
+        const elevatorManagerCostEl = document.getElementById('elevatorManagerCost');
+
+        const upgradeModal = document.getElementById('upgradeModal');
+        const mineshaftLevelDisplay = document.getElementById('mineshaftLevelDisplay');
 
         // Positions for miner
         const minerPositions = {
@@ -741,15 +947,49 @@
         elevatorManagerSlot.style.left = '250px';
         elevatorManagerSlot.style.top = '55px';
 
+        function formatNumber(num) {
+            if (Number.isInteger(num)) return num.toString();
+            return num.toFixed(2);
+        }
+
         function updateBucket() {
-            bucketCountEl.textContent = bucketCoal;
-            const fillPercent = (bucketCoal / maxBucketCoal) * 100;
+            bucketCountEl.textContent = formatNumber(bucketCoal);
+            // Visual fill based on a soft cap of 20 for display purposes
+            const fillPercent = Math.min((bucketCoal / 20) * 100, 100);
             bucketFill.style.height = fillPercent + '%';
         }
 
         function updateStats() {
-            coalCountEl.textContent = totalCoalSold;
-            moneyCountEl.textContent = money;
+            coalCountEl.textContent = formatNumber(totalCoalSold);
+            moneyCountEl.textContent = Math.floor(money);
+        }
+
+        function updateManagerPopups() {
+            const canAffordMiner = money >= MANAGER_COST;
+            const canAffordElevator = money >= MANAGER_COST;
+
+            minerManagerCostEl.textContent = `Cost: $${MANAGER_COST}`;
+            minerManagerCostEl.className = 'cost ' + (canAffordMiner ? 'affordable' : 'too-expensive');
+            minerHireBtn.disabled = !canAffordMiner;
+
+            elevatorManagerCostEl.textContent = `Cost: $${MANAGER_COST}`;
+            elevatorManagerCostEl.className = 'cost ' + (canAffordElevator ? 'affordable' : 'too-expensive');
+            elevatorHireBtn.disabled = !canAffordElevator;
+        }
+
+        function updateUpgradeModal() {
+            const currentCoal = getCoalPerTrip();
+            const nextCoal = currentCoal * COAL_PER_LEVEL_MULTIPLIER;
+            const cost = getUpgradeCost();
+            const canAfford = money >= cost;
+
+            document.getElementById('modalLevel').textContent = mineshaftLevel;
+            document.getElementById('currentCoal').textContent = formatNumber(currentCoal);
+            document.getElementById('nextCoal').textContent = formatNumber(nextCoal);
+            document.getElementById('upgradeCost').textContent = '$' + cost;
+            document.getElementById('upgradeBtn').disabled = !canAfford;
+
+            mineshaftLevelDisplay.textContent = mineshaftLevel;
         }
 
         function setPosition(element, pos, duration = 1000) {
@@ -801,6 +1041,33 @@
             setTimeout(() => sparkle.remove(), 1000);
         }
 
+        // Upgrade modal functions
+        function openUpgradeModal() {
+            updateUpgradeModal();
+            upgradeModal.classList.add('show');
+        }
+
+        function closeUpgradeModal() {
+            upgradeModal.classList.remove('show');
+        }
+
+        function upgradeMineshaft() {
+            const cost = getUpgradeCost();
+            if (money >= cost) {
+                money -= cost;
+                mineshaftLevel++;
+                updateStats();
+                updateUpgradeModal();
+            }
+        }
+
+        // Close modal when clicking overlay
+        upgradeModal.addEventListener('click', (e) => {
+            if (e.target === upgradeModal) {
+                closeUpgradeModal();
+            }
+        });
+
         // Close popups when clicking elsewhere
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#minerManagerSlot') && !e.target.closest('#minerHirePopup')) {
@@ -814,6 +1081,7 @@
         function showMinerManagerPopup(event) {
             if (hasMinerManager) return;
             event.stopPropagation();
+            updateManagerPopups();
             minerHirePopup.style.left = '10px';
             minerHirePopup.style.top = '420px';
             minerHirePopup.classList.toggle('show');
@@ -823,6 +1091,7 @@
         function showElevatorManagerPopup(event) {
             if (hasElevatorManager) return;
             event.stopPropagation();
+            updateManagerPopups();
             elevatorHirePopup.style.left = '240px';
             elevatorHirePopup.style.top = '10px';
             elevatorHirePopup.classList.toggle('show');
@@ -830,6 +1099,11 @@
         }
 
         function hireMinerManager() {
+            if (money < MANAGER_COST) return;
+
+            money -= MANAGER_COST;
+            updateStats();
+
             hasMinerManager = true;
             minerHirePopup.classList.remove('show');
             minerManagerSlot.classList.add('hired');
@@ -843,6 +1117,11 @@
         }
 
         function hireElevatorManager() {
+            if (money < MANAGER_COST) return;
+
+            money -= MANAGER_COST;
+            updateStats();
+
             hasElevatorManager = true;
             elevatorHirePopup.classList.remove('show');
             elevatorManagerSlot.classList.add('hired');
@@ -857,7 +1136,7 @@
 
         async function autoMine() {
             while (hasMinerManager) {
-                if (minerState === 'idle' && bucketCoal < maxBucketCoal) {
+                if (minerState === 'idle') {
                     await doMining();
                 }
                 await new Promise(r => setTimeout(r, 100));
@@ -876,9 +1155,9 @@
         // Core mining logic (shared by click and auto)
         async function doMining() {
             if (minerState !== 'idle') return;
-            if (bucketCoal >= maxBucketCoal) return;
 
             minerState = 'busy';
+            const coalToMine = getCoalPerTrip();
 
             // 1. Walk to mine
             minerStatus.textContent = 'Walking...';
@@ -904,9 +1183,9 @@
             minerStatus.textContent = 'Depositing...';
             await new Promise(r => setTimeout(r, 300));
             miner.classList.remove('has-coal');
-            bucketCoal++;
+            bucketCoal += coalToMine;
             updateBucket();
-            createSparkle(85, 450, '+1');
+            createSparkle(85, 450, '+' + formatNumber(coalToMine));
 
             // 5. Return to idle position
             miner.classList.add('walking');
@@ -921,11 +1200,6 @@
         async function handleMinerClick() {
             if (hasMinerManager) return; // Manager handles it
             if (minerState !== 'idle') return;
-            if (bucketCoal >= maxBucketCoal) {
-                minerStatus.textContent = 'Bucket full!';
-                setTimeout(() => { minerStatus.textContent = 'Click me!'; }, 1000);
-                return;
-            }
             await doMining();
         }
 
@@ -973,12 +1247,12 @@
             await animateProgress(operatorProgressFill, 1000);
             elevatorOperator.classList.remove('mining');
 
-            // BUG FIX: Capture coal amount NOW (at collection time), not at start
+            // Capture coal amount NOW (at collection time)
             const coalToCollect = bucketCoal;
             bucketCoal = 0;
             updateBucket();
             elevatorOperator.classList.add('has-coal');
-            createSparkle(100, 450, '+' + coalToCollect);
+            createSparkle(100, 450, '+' + formatNumber(coalToCollect));
 
             // 4. Walk back to elevator
             elevatorOperator.classList.add('walking');
@@ -1017,9 +1291,10 @@
             elevatorOperator.classList.remove('has-coal');
 
             totalCoalSold += coalToCollect;
-            money += coalToCollect * 10;
+            const moneyEarned = coalToCollect * 10;
+            money += moneyEarned;
             updateStats();
-            createSparkle(175, 30, '+$' + (coalToCollect * 10));
+            createSparkle(175, 30, '+$' + Math.floor(moneyEarned));
 
             operatorStatus.textContent = hasElevatorManager ? 'Auto' : 'Click elevator!';
             operatorState = 'idle';
@@ -1036,6 +1311,9 @@
             }
             await doElevatorRun();
         }
+
+        // Initialize displays
+        updateUpgradeModal();
     </script>
 </body>
 </html>
