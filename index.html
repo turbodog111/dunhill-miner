@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idle Miner</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -719,6 +725,199 @@
         .audio-btn.muted {
             border-color: #666;
         }
+
+        /* Auth UI */
+        .auth-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #ffd700;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .auth-btn:hover {
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .auth-btn.logged-in {
+            border-color: #32CD32;
+        }
+
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .auth-modal.show {
+            display: flex;
+        }
+
+        .auth-box {
+            background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            padding: 30px;
+            min-width: 320px;
+            text-align: center;
+            color: white;
+        }
+
+        .auth-box h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            background: #333;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .auth-tab:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .auth-tab:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .auth-tab.active {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #555;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            font-size: 14px;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .auth-submit {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: linear-gradient(to bottom, #ffd700, #daa520);
+            border: 2px solid #b8860b;
+            border-radius: 8px;
+            color: #000;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-submit:hover {
+            box-shadow: 0 0 15px #ffd700;
+        }
+
+        .auth-submit:disabled {
+            background: #666;
+            border-color: #444;
+            cursor: not-allowed;
+        }
+
+        .auth-error {
+            color: #ff6666;
+            font-size: 12px;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+
+        .auth-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #aaa;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .auth-close:hover {
+            color: #fff;
+        }
+
+        .user-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .user-email {
+            color: #ffd700;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: linear-gradient(to bottom, #666, #444);
+            border: 2px solid #333;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(to bottom, #777, #555);
+        }
+
+        .save-status {
+            font-size: 12px;
+            color: #32CD32;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -731,6 +930,56 @@
     <button class="audio-btn" id="audioBtn" onclick="toggleAudio()">
         <span id="audioIcon">🔇</span>
     </button>
+
+    <!-- Auth Button -->
+    <button class="auth-btn" id="authBtn" onclick="openAuthModal()">
+        Login
+    </button>
+
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <button class="auth-close" onclick="closeAuthModal()">&times;</button>
+        <div class="auth-box">
+            <!-- Login/Signup View -->
+            <div id="authFormView">
+                <h2>Account</h2>
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                    <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+                    <input type="email" class="auth-input" id="loginEmail" placeholder="Email" required>
+                    <input type="password" class="auth-input" id="loginPassword" placeholder="Password" required>
+                    <button type="submit" class="auth-submit">Login</button>
+                    <div class="auth-error" id="loginError"></div>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signupForm" class="auth-form" onsubmit="handleSignup(event)">
+                    <input type="email" class="auth-input" id="signupEmail" placeholder="Email" required>
+                    <input type="password" class="auth-input" id="signupPassword" placeholder="Password (min 6 chars)" required minlength="6">
+                    <input type="password" class="auth-input" id="signupConfirm" placeholder="Confirm Password" required>
+                    <button type="submit" class="auth-submit">Create Account</button>
+                    <div class="auth-error" id="signupError"></div>
+                </form>
+            </div>
+
+            <!-- Logged In View -->
+            <div id="loggedInView" style="display: none;">
+                <h2>Account</h2>
+                <div class="user-info">
+                    <div>Logged in as:</div>
+                    <div class="user-email" id="userEmail"></div>
+                </div>
+                <button class="auth-submit" onclick="saveGameToCloud()">Save Progress</button>
+                <button class="auth-submit" onclick="loadGameFromCloud()" style="background: linear-gradient(to bottom, #32CD32, #228B22); border-color: #006400;">Load Progress</button>
+                <div class="save-status" id="saveStatus"></div>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
 
     <div class="game-header">
         <div class="stats-container">
@@ -1387,6 +1636,245 @@
                 }).catch(() => {});
             }
         }, { once: false });
+
+        // ============================================
+        // FIREBASE AUTHENTICATION & CLOUD SAVE
+        // ============================================
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyALpmEs_llRQUlaRZxkqWmZ9O57kNfShYw",
+            authDomain: "dunhill-miner.firebaseapp.com",
+            projectId: "dunhill-miner",
+            storageBucket: "dunhill-miner.firebasestorage.app",
+            messagingSenderId: "327920415162",
+            appId: "1:327920415162:web:8f5f610ab703f28cd3ad83",
+            measurementId: "G-JEZB8XJW8J"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Auth state
+        let currentUser = null;
+
+        // Auth DOM elements
+        const authBtn = document.getElementById('authBtn');
+        const authModal = document.getElementById('authModal');
+        const authFormView = document.getElementById('authFormView');
+        const loggedInView = document.getElementById('loggedInView');
+        const userEmailEl = document.getElementById('userEmail');
+        const saveStatusEl = document.getElementById('saveStatus');
+
+        // Listen for auth state changes
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            if (user) {
+                // User is logged in
+                authBtn.textContent = user.email.split('@')[0];
+                authBtn.classList.add('logged-in');
+                authFormView.style.display = 'none';
+                loggedInView.style.display = 'block';
+                userEmailEl.textContent = user.email;
+            } else {
+                // User is logged out
+                authBtn.textContent = 'Login';
+                authBtn.classList.remove('logged-in');
+                authFormView.style.display = 'block';
+                loggedInView.style.display = 'none';
+            }
+        });
+
+        // Open/close auth modal
+        function openAuthModal() {
+            authModal.classList.add('show');
+        }
+
+        function closeAuthModal() {
+            authModal.classList.remove('show');
+            // Clear errors
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('signupError').textContent = '';
+            saveStatusEl.textContent = '';
+        }
+
+        // Switch between login and signup tabs
+        function switchAuthTab(tab) {
+            const tabs = document.querySelectorAll('.auth-tab');
+            const forms = document.querySelectorAll('.auth-form');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            forms.forEach(f => f.classList.remove('active'));
+
+            if (tab === 'login') {
+                tabs[0].classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('signupForm').classList.add('active');
+            }
+        }
+
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+
+            try {
+                errorEl.textContent = 'Logging in...';
+                await auth.signInWithEmailAndPassword(email, password);
+                errorEl.textContent = '';
+                document.getElementById('loginForm').reset();
+            } catch (error) {
+                errorEl.textContent = getAuthErrorMessage(error.code);
+            }
+        }
+
+        // Handle signup
+        async function handleSignup(e) {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupConfirm').value;
+            const errorEl = document.getElementById('signupError');
+
+            if (password !== confirm) {
+                errorEl.textContent = 'Passwords do not match';
+                return;
+            }
+
+            try {
+                errorEl.textContent = 'Creating account...';
+                await auth.createUserWithEmailAndPassword(email, password);
+                errorEl.textContent = '';
+                document.getElementById('signupForm').reset();
+            } catch (error) {
+                errorEl.textContent = getAuthErrorMessage(error.code);
+            }
+        }
+
+        // Handle logout
+        async function handleLogout() {
+            try {
+                await auth.signOut();
+                closeAuthModal();
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Get user-friendly error messages
+        function getAuthErrorMessage(code) {
+            switch (code) {
+                case 'auth/email-already-in-use':
+                    return 'Email already in use';
+                case 'auth/invalid-email':
+                    return 'Invalid email address';
+                case 'auth/weak-password':
+                    return 'Password too weak (min 6 characters)';
+                case 'auth/user-not-found':
+                    return 'No account with this email';
+                case 'auth/wrong-password':
+                    return 'Incorrect password';
+                case 'auth/invalid-credential':
+                    return 'Invalid email or password';
+                default:
+                    return 'An error occurred. Please try again.';
+            }
+        }
+
+        // Save game to cloud
+        async function saveGameToCloud() {
+            if (!currentUser) return;
+
+            saveStatusEl.textContent = 'Saving...';
+
+            const gameData = {
+                totalCoalSold,
+                money,
+                bucketCoal,
+                mineshaftLevel,
+                hasMinerManager,
+                hasElevatorManager,
+                savedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection('saves').doc(currentUser.uid).set(gameData);
+                saveStatusEl.textContent = 'Saved successfully!';
+                setTimeout(() => { saveStatusEl.textContent = ''; }, 3000);
+            } catch (error) {
+                saveStatusEl.textContent = 'Save failed: ' + error.message;
+            }
+        }
+
+        // Load game from cloud
+        async function loadGameFromCloud() {
+            if (!currentUser) return;
+
+            saveStatusEl.textContent = 'Loading...';
+
+            try {
+                const doc = await db.collection('saves').doc(currentUser.uid).get();
+
+                if (doc.exists) {
+                    const data = doc.data();
+
+                    // Restore game state
+                    totalCoalSold = data.totalCoalSold || 0;
+                    money = data.money || 0;
+                    bucketCoal = data.bucketCoal || 0;
+                    mineshaftLevel = data.mineshaftLevel || 1;
+
+                    // Update displays
+                    updateStats();
+                    updateBucket();
+                    updateUpgradeModal();
+
+                    // Restore managers if they were hired
+                    if (data.hasMinerManager && !hasMinerManager) {
+                        hasMinerManager = true;
+                        minerManagerSlot.classList.add('hired');
+                        minerManager.style.display = 'block';
+                        minerManager.style.position = 'relative';
+                        minerManager.style.left = '0';
+                        minerManager.style.top = '0';
+                        minerStatus.textContent = 'Auto';
+                        autoMine();
+                    }
+
+                    if (data.hasElevatorManager && !hasElevatorManager) {
+                        hasElevatorManager = true;
+                        elevatorManagerSlot.classList.add('hired');
+                        elevatorManager.style.display = 'block';
+                        elevatorManager.style.position = 'relative';
+                        elevatorManager.style.left = '0';
+                        elevatorManager.style.top = '0';
+                        operatorStatus.textContent = 'Auto';
+                        autoElevator();
+                    }
+
+                    saveStatusEl.textContent = 'Loaded successfully!';
+                } else {
+                    saveStatusEl.textContent = 'No saved game found';
+                }
+
+                setTimeout(() => { saveStatusEl.textContent = ''; }, 3000);
+            } catch (error) {
+                saveStatusEl.textContent = 'Load failed: ' + error.message;
+            }
+        }
+
+        // Close modal when clicking outside
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                closeAuthModal();
+            }
+        });
     </script>
 </body>
 </html>
