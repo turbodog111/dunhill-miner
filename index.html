@@ -977,26 +977,106 @@
             position: absolute;
             top: 25px;
             left: 270px;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             background: linear-gradient(to bottom, #FF6600, #cc5200);
-            border: 3px solid #993d00;
-            border-radius: 8px;
+            border: 2px solid #993d00;
+            border-radius: 5px;
             color: white;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 12px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 25;
             text-align: center;
-            line-height: 1.1;
         }
 
         .elevator-upgrade-btn:hover {
             box-shadow: 0 0 15px #FF6600;
             transform: scale(1.05);
+        }
+
+        /* Ability button styles */
+        .ability-btn {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #ffd700;
+            background: linear-gradient(to bottom, #9932CC, #6a1b9a);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            transition: all 0.2s;
+        }
+
+        .ability-btn:hover:not(:disabled) {
+            transform: scale(1.15);
+            box-shadow: 0 0 10px #9932CC;
+        }
+
+        .ability-btn:disabled {
+            background: #444;
+            border-color: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .ability-btn.active {
+            background: linear-gradient(to bottom, #32CD32, #228B22);
+            border-color: #00ff00;
+            animation: abilityPulse 1s infinite;
+        }
+
+        .ability-btn.cooldown {
+            background: linear-gradient(to bottom, #666, #444);
+            border-color: #888;
+        }
+
+        @keyframes abilityPulse {
+            0%, 100% { box-shadow: 0 0 5px #32CD32; }
+            50% { box-shadow: 0 0 15px #32CD32; }
+        }
+
+        .ability-tooltip {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 100;
+            display: none;
+            border: 1px solid #ffd700;
+            text-align: center;
+        }
+
+        .ability-btn:hover .ability-tooltip {
+            display: block;
+        }
+
+        .ability-timer {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #000;
+            color: #ffd700;
+            font-size: 8px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            min-width: 20px;
+            text-align: center;
         }
     </style>
 </head>
@@ -1082,7 +1162,7 @@
             </div>
 
             <!-- Elevator Upgrade Button -->
-            <button class="elevator-upgrade-btn" id="elevatorUpgradeBtn" onclick="openElevatorUpgradeModal()">ELV<br>UP</button>
+            <button class="elevator-upgrade-btn" id="elevatorUpgradeBtn" onclick="openElevatorUpgradeModal()"><span id="elevatorLevelDisplay">1</span></button>
 
             <!-- Elevator Shaft - will be extended dynamically -->
             <div class="elevator-shaft" id="elevatorShaft">
@@ -1096,6 +1176,13 @@
             <div class="manager-slot" id="elevatorManagerSlot" style="left: 250px; top: 35px;">
                 <span class="plus-icon">+</span>
             </div>
+
+            <!-- Elevator Ability Button -->
+            <button class="ability-btn" id="elevatorAbilityBtn" style="left: 290px; top: 40px; display: none;" onclick="activateElevatorAbility()">
+                <span class="ability-tooltip" id="elevatorAbilityTooltip"></span>
+                <span class="ability-timer" id="elevatorAbilityTimer" style="display: none;"></span>
+                <span id="elevatorAbilityIcon"></span>
+            </button>
 
             <!-- Elevator Operator -->
             <div class="worker elevator-operator" id="elevatorOperator" style="left: 175px; top: 55px;">
@@ -1177,6 +1264,25 @@
         const SHAFT_BASE_COAL_MULTIPLIER = 2; // Each shaft produces 2x base of previous
         const BASE_ELEVATOR_CAPACITY = 10;
         const SHAFT_HEIGHT = 120;
+        const WALKING_SPEED = 0.15; // pixels per millisecond (uniform speed)
+
+        // Ability constants
+        const ABILITY_DURATION = 10 * 60 * 1000; // 10 minutes in ms
+        const ABILITY_COOLDOWN = 30 * 60 * 1000; // 30 minutes in ms
+
+        // Mineshaft manager ability types
+        const SHAFT_ABILITIES = [
+            { id: 'discount', name: '30% Discount', desc: '30% off upgrades', icon: '$' },
+            { id: 'speed', name: '40% Speed', desc: '40% faster mining', icon: 'S' },
+            { id: 'coal', name: '+20% Coal', desc: '20% more coal', icon: 'C' }
+        ];
+
+        // Elevator manager ability types
+        const ELEVATOR_ABILITIES = [
+            { id: 'discount', name: '30% Discount', desc: '30% off upgrades', icon: '$' },
+            { id: 'speed', name: '40% Speed', desc: '40% faster elevator', icon: 'S' },
+            { id: 'capacity', name: '+40% Capacity', desc: '40% more storage', icon: 'C' }
+        ];
 
         // ============================================
         // GAME STATE
@@ -1187,6 +1293,9 @@
         let hasElevatorManager = false;
         let elevatorLevel = 1;
         let elevatorCarrying = 0;
+
+        // Elevator manager ability state
+        let elevatorManagerAbility = null; // { type, activeUntil, cooldownUntil }
 
         // Array of mineshafts
         let mineshafts = [];
@@ -1213,6 +1322,7 @@
         const upgradeModal = document.getElementById('upgradeModal');
         const hirePopup = document.getElementById('hirePopup');
         const elevatorManagerSlot = document.getElementById('elevatorManagerSlot');
+        const elevatorLevelDisplay = document.getElementById('elevatorLevelDisplay');
 
         // ============================================
         // HELPER FUNCTIONS
@@ -1222,12 +1332,57 @@
             return num.toFixed(2);
         }
 
+        function formatTime(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function getWalkDuration(distance) {
+            return Math.max(200, distance / WALKING_SPEED);
+        }
+
+        // Check if an ability is currently active
+        function isAbilityActive(abilityState) {
+            if (!abilityState) return false;
+            return Date.now() < abilityState.activeUntil;
+        }
+
+        // Check if ability is on cooldown
+        function isAbilityOnCooldown(abilityState) {
+            if (!abilityState) return false;
+            return Date.now() < abilityState.cooldownUntil && !isAbilityActive(abilityState);
+        }
+
+        // Check if ability can be activated
+        function canActivateAbility(abilityState) {
+            if (!abilityState) return false;
+            return !isAbilityActive(abilityState) && !isAbilityOnCooldown(abilityState);
+        }
+
         function getElevatorCapacity() {
-            return Math.floor(BASE_ELEVATOR_CAPACITY * Math.pow(COAL_PER_LEVEL_MULTIPLIER, elevatorLevel - 1));
+            let capacity = Math.floor(BASE_ELEVATOR_CAPACITY * Math.pow(COAL_PER_LEVEL_MULTIPLIER, elevatorLevel - 1));
+            // Apply capacity ability if active
+            if (elevatorManagerAbility && elevatorManagerAbility.type === 'capacity' && isAbilityActive(elevatorManagerAbility)) {
+                capacity = Math.floor(capacity * 1.4);
+            }
+            return capacity;
         }
 
         function getElevatorUpgradeCost() {
-            return Math.floor(BASE_UPGRADE_COST * Math.pow(UPGRADE_COST_MULTIPLIER, elevatorLevel - 1));
+            let cost = Math.floor(BASE_UPGRADE_COST * Math.pow(UPGRADE_COST_MULTIPLIER, elevatorLevel - 1));
+            // Apply discount ability if active
+            if (elevatorManagerAbility && elevatorManagerAbility.type === 'discount' && isAbilityActive(elevatorManagerAbility)) {
+                cost = Math.floor(cost * 0.7);
+            }
+            return cost;
+        }
+
+        function getElevatorSpeedMultiplier() {
+            if (elevatorManagerAbility && elevatorManagerAbility.type === 'speed' && isAbilityActive(elevatorManagerAbility)) {
+                return 0.6; // 40% faster = 60% of normal time
+            }
+            return 1;
         }
 
         function getShaftBaseCoal(shaftIndex) {
@@ -1238,13 +1393,31 @@
         function getShaftCoalPerTrip(shaftIndex) {
             const shaft = mineshafts[shaftIndex];
             const baseCoal = getShaftBaseCoal(shaftIndex);
-            return baseCoal * Math.pow(COAL_PER_LEVEL_MULTIPLIER, shaft.level - 1);
+            let coal = baseCoal * Math.pow(COAL_PER_LEVEL_MULTIPLIER, shaft.level - 1);
+            // Apply coal ability if active
+            if (shaft.managerAbility && shaft.managerAbility.type === 'coal' && isAbilityActive(shaft.managerAbility)) {
+                coal = coal * 1.2;
+            }
+            return coal;
         }
 
         function getShaftUpgradeCost(shaftIndex) {
             const shaft = mineshafts[shaftIndex];
             const baseCost = BASE_UPGRADE_COST * Math.pow(SHAFT_BASE_COAL_MULTIPLIER, shaftIndex);
-            return Math.floor(baseCost * Math.pow(UPGRADE_COST_MULTIPLIER, shaft.level - 1));
+            let cost = Math.floor(baseCost * Math.pow(UPGRADE_COST_MULTIPLIER, shaft.level - 1));
+            // Apply discount ability if active
+            if (shaft.managerAbility && shaft.managerAbility.type === 'discount' && isAbilityActive(shaft.managerAbility)) {
+                cost = Math.floor(cost * 0.7);
+            }
+            return cost;
+        }
+
+        function getShaftSpeedMultiplier(shaftIndex) {
+            const shaft = mineshafts[shaftIndex];
+            if (shaft.managerAbility && shaft.managerAbility.type === 'speed' && isAbilityActive(shaft.managerAbility)) {
+                return 0.6; // 40% faster = 60% of normal time
+            }
+            return 1;
         }
 
         function getNewShaftCost() {
@@ -1256,6 +1429,7 @@
             moneyCountEl.textContent = Math.floor(money);
             updateBuyShaftButton();
             updateElevatorCapacityDisplay();
+            elevatorLevelDisplay.textContent = elevatorLevel;
         }
 
         function updateElevatorCapacityDisplay() {
@@ -1357,6 +1531,11 @@
                     </div>
                     <div class="carried-coal"></div>
                 </div>
+                <button class="ability-btn" id="abilityBtn-${index}" style="left: 42px; top: 55px; display: none;" onclick="activateShaftAbility(${index})">
+                    <span class="ability-tooltip" id="abilityTooltip-${index}"></span>
+                    <span class="ability-timer" id="abilityTimer-${index}" style="display: none;"></span>
+                    <span id="abilityIcon-${index}"></span>
+                </button>
             `;
 
             mineshaftsContainer.appendChild(shaftDiv);
@@ -1371,7 +1550,11 @@
                 bucketCount: document.getElementById(`bucketCount-${index}`),
                 bucketFill: document.getElementById(`bucketFill-${index}`),
                 levelBtn: document.getElementById(`levelBtn-${index}`),
-                managerSlot: document.getElementById(`managerSlot-${index}`)
+                managerSlot: document.getElementById(`managerSlot-${index}`),
+                abilityBtn: document.getElementById(`abilityBtn-${index}`),
+                abilityTooltip: document.getElementById(`abilityTooltip-${index}`),
+                abilityTimer: document.getElementById(`abilityTimer-${index}`),
+                abilityIcon: document.getElementById(`abilityIcon-${index}`)
             };
 
             // Create shaft data
@@ -1380,6 +1563,7 @@
                 bucketCoal: 0,
                 minerState: 'idle',
                 hasManager: false,
+                managerAbility: null, // { type, activeUntil, cooldownUntil }
                 elements: elements
             };
 
@@ -1413,6 +1597,7 @@
             const miner = shaft.elements.miner;
             const status = shaft.elements.minerStatus;
             const progressFill = shaft.elements.minerProgress;
+            const speedMult = getShaftSpeedMultiplier(shaftIndex);
 
             // Positions relative to shaft
             const idlePos = { left: 50, top: 55 };
@@ -1420,24 +1605,32 @@
             const miningPos = { left: 320, top: 55 };
             const bucketPos = { left: 75, top: 55 };
 
+            // Calculate uniform walking durations based on distance
+            const idleToEntrance = getWalkDuration(180) * speedMult;      // 50 to 230
+            const entranceToMine = getWalkDuration(90) * speedMult;       // 230 to 320
+            const mineToEntrance = getWalkDuration(90) * speedMult;       // 320 to 230
+            const entranceToBucket = getWalkDuration(155) * speedMult;    // 230 to 75
+            const bucketToIdle = getWalkDuration(25) * speedMult;         // 75 to 50
+            const miningTime = 2000 * speedMult;
+
             // 1. Walk to mine
             status.textContent = 'Walking...';
             miner.classList.add('walking');
-            await setPosition(miner, mineEntrance.left, mineEntrance.top, 800);
-            await setPosition(miner, miningPos.left, miningPos.top, 800);
+            await setPosition(miner, mineEntrance.left, mineEntrance.top, idleToEntrance);
+            await setPosition(miner, miningPos.left, miningPos.top, entranceToMine);
             miner.classList.remove('walking');
 
             // 2. Mine coal
             miner.classList.add('mining');
-            await animateProgress(progressFill, 2000);
+            await animateProgress(progressFill, miningTime);
             miner.classList.remove('mining');
             miner.classList.add('has-coal');
 
             // 3. Walk back to bucket
             status.textContent = 'Got coal!';
             miner.classList.add('walking');
-            await setPosition(miner, mineEntrance.left, mineEntrance.top, 800);
-            await setPosition(miner, bucketPos.left, bucketPos.top, 600);
+            await setPosition(miner, mineEntrance.left, mineEntrance.top, mineToEntrance);
+            await setPosition(miner, bucketPos.left, bucketPos.top, entranceToBucket);
             miner.classList.remove('walking');
 
             // 4. Deposit
@@ -1449,7 +1642,7 @@
 
             // 5. Return to idle
             miner.classList.add('walking');
-            await setPosition(miner, idlePos.left, idlePos.top, 400);
+            await setPosition(miner, idlePos.left, idlePos.top, bucketToIdle);
             miner.classList.remove('walking');
 
             status.textContent = shaft.hasManager ? 'Auto' : 'Click me!';
@@ -1515,16 +1708,17 @@
             const shaft = mineshafts[shaftIndex];
             const capacity = getElevatorCapacity();
             const shaftTop = 80 + (shaftIndex * SHAFT_HEIGHT) + 55;
+            const speedMult = getElevatorSpeedMultiplier();
 
             // Walk to bucket
             operatorStatus.textContent = `Collecting at Shaft ${shaftIndex + 1}...`;
             elevatorOperator.classList.add('walking');
-            await setPosition(elevatorOperator, 100, shaftTop, 400);
+            await setPosition(elevatorOperator, 100, shaftTop, 400 * speedMult);
             elevatorOperator.classList.remove('walking');
 
             // Collect coal
             elevatorOperator.classList.add('mining');
-            await animateProgress(operatorProgressFill, 800);
+            await animateProgress(operatorProgressFill, 800 * speedMult);
             elevatorOperator.classList.remove('mining');
 
             const spaceAvailable = capacity - elevatorCarrying;
@@ -1540,7 +1734,7 @@
 
             // Walk back to elevator
             elevatorOperator.classList.add('walking');
-            await setPosition(elevatorOperator, 175, shaftTop, 400);
+            await setPosition(elevatorOperator, 175, shaftTop, 400 * speedMult);
             elevatorOperator.classList.remove('walking');
 
             return coalToCollect;
@@ -1555,6 +1749,7 @@
 
             operatorState = 'busy';
             const capacity = getElevatorCapacity();
+            const speedMult = getElevatorSpeedMultiplier();
             let currentShaftIndex = -1; // -1 = surface
             let deepestVisited = -1;
 
@@ -1569,7 +1764,7 @@
 
                 // Move down to this shaft
                 operatorStatus.textContent = `Going to Shaft ${i + 1}...`;
-                const travelTime = 600; // Time to travel between adjacent shafts
+                const travelTime = 600 * speedMult;
                 await animateElevatorMovement(currentShaftIndex, i, travelTime);
                 currentShaftIndex = i;
                 deepestVisited = i;
@@ -1583,7 +1778,7 @@
             // Return to surface
             if (deepestVisited >= 0) {
                 operatorStatus.textContent = 'Returning to surface...';
-                const returnTime = 600 + (deepestVisited * 400); // Longer return from deeper shafts
+                const returnTime = (600 + (deepestVisited * 400)) * speedMult;
                 await animateElevatorMovement(currentShaftIndex, -1, returnTime);
             }
 
@@ -1714,6 +1909,22 @@
             `;
             shaft.elements.minerStatus.textContent = 'Auto';
 
+            // Assign random ability
+            const randomAbility = SHAFT_ABILITIES[Math.floor(Math.random() * SHAFT_ABILITIES.length)];
+            shaft.managerAbility = {
+                type: randomAbility.id,
+                name: randomAbility.name,
+                desc: randomAbility.desc,
+                icon: randomAbility.icon,
+                activeUntil: 0,
+                cooldownUntil: 0
+            };
+
+            // Show and configure ability button
+            shaft.elements.abilityBtn.style.display = 'flex';
+            shaft.elements.abilityIcon.textContent = randomAbility.icon;
+            shaft.elements.abilityTooltip.textContent = randomAbility.name + ': ' + randomAbility.desc;
+
             autoMine(shaftIndex);
         }
 
@@ -1739,6 +1950,23 @@
             `;
             operatorStatus.textContent = 'Auto';
 
+            // Assign random ability
+            const randomAbility = ELEVATOR_ABILITIES[Math.floor(Math.random() * ELEVATOR_ABILITIES.length)];
+            elevatorManagerAbility = {
+                type: randomAbility.id,
+                name: randomAbility.name,
+                desc: randomAbility.desc,
+                icon: randomAbility.icon,
+                activeUntil: 0,
+                cooldownUntil: 0
+            };
+
+            // Show and configure elevator ability button
+            const elevAbilityBtn = document.getElementById('elevatorAbilityBtn');
+            elevAbilityBtn.style.display = 'flex';
+            document.getElementById('elevatorAbilityIcon').textContent = randomAbility.icon;
+            document.getElementById('elevatorAbilityTooltip').textContent = randomAbility.name + ': ' + randomAbility.desc;
+
             autoElevator();
         }
 
@@ -1750,6 +1978,104 @@
         });
 
         elevatorManagerSlot.onclick = showElevatorManagerPopup;
+
+        // ============================================
+        // ABILITY SYSTEM
+        // ============================================
+        function activateShaftAbility(shaftIndex) {
+            const shaft = mineshafts[shaftIndex];
+            if (!shaft.managerAbility) return;
+            if (!canActivateAbility(shaft.managerAbility)) return;
+
+            const now = Date.now();
+            shaft.managerAbility.activeUntil = now + ABILITY_DURATION;
+            shaft.managerAbility.cooldownUntil = now + ABILITY_DURATION + ABILITY_COOLDOWN;
+
+            updateAbilityButtonState(shaftIndex);
+        }
+
+        function activateElevatorAbility() {
+            if (!elevatorManagerAbility) return;
+            if (!canActivateAbility(elevatorManagerAbility)) return;
+
+            const now = Date.now();
+            elevatorManagerAbility.activeUntil = now + ABILITY_DURATION;
+            elevatorManagerAbility.cooldownUntil = now + ABILITY_DURATION + ABILITY_COOLDOWN;
+
+            updateElevatorAbilityButtonState();
+            updateElevatorCapacityDisplay(); // In case it's the capacity ability
+        }
+
+        function updateAbilityButtonState(shaftIndex) {
+            const shaft = mineshafts[shaftIndex];
+            if (!shaft.managerAbility) return;
+
+            const btn = shaft.elements.abilityBtn;
+            const timer = shaft.elements.abilityTimer;
+            const ability = shaft.managerAbility;
+
+            btn.classList.remove('active', 'cooldown');
+            btn.disabled = false;
+
+            if (isAbilityActive(ability)) {
+                btn.classList.add('active');
+                btn.disabled = true;
+                timer.style.display = 'block';
+                const remaining = ability.activeUntil - Date.now();
+                timer.textContent = formatTime(remaining);
+            } else if (isAbilityOnCooldown(ability)) {
+                btn.classList.add('cooldown');
+                btn.disabled = true;
+                timer.style.display = 'block';
+                const remaining = ability.cooldownUntil - Date.now();
+                timer.textContent = formatTime(remaining);
+            } else {
+                timer.style.display = 'none';
+            }
+        }
+
+        function updateElevatorAbilityButtonState() {
+            if (!elevatorManagerAbility) return;
+
+            const btn = document.getElementById('elevatorAbilityBtn');
+            const timer = document.getElementById('elevatorAbilityTimer');
+            const ability = elevatorManagerAbility;
+
+            btn.classList.remove('active', 'cooldown');
+            btn.disabled = false;
+
+            if (isAbilityActive(ability)) {
+                btn.classList.add('active');
+                btn.disabled = true;
+                timer.style.display = 'block';
+                const remaining = ability.activeUntil - Date.now();
+                timer.textContent = formatTime(remaining);
+            } else if (isAbilityOnCooldown(ability)) {
+                btn.classList.add('cooldown');
+                btn.disabled = true;
+                timer.style.display = 'block';
+                const remaining = ability.cooldownUntil - Date.now();
+                timer.textContent = formatTime(remaining);
+            } else {
+                timer.style.display = 'none';
+            }
+        }
+
+        // Update all ability buttons every second
+        function updateAllAbilityButtons() {
+            for (let i = 0; i < mineshafts.length; i++) {
+                if (mineshafts[i].hasManager) {
+                    updateAbilityButtonState(i);
+                }
+            }
+            if (hasElevatorManager) {
+                updateElevatorAbilityButtonState();
+                updateElevatorCapacityDisplay(); // Update capacity if ability expires
+            }
+        }
+
+        // Start ability timer update loop
+        setInterval(updateAllAbilityButtons, 1000);
 
         // ============================================
         // UPGRADE MODALS
@@ -2005,7 +2331,15 @@
             const shaftsData = mineshafts.map(s => ({
                 level: s.level,
                 bucketCoal: s.bucketCoal,
-                hasManager: s.hasManager
+                hasManager: s.hasManager,
+                managerAbility: s.managerAbility ? {
+                    type: s.managerAbility.type,
+                    name: s.managerAbility.name,
+                    desc: s.managerAbility.desc,
+                    icon: s.managerAbility.icon,
+                    activeUntil: s.managerAbility.activeUntil,
+                    cooldownUntil: s.managerAbility.cooldownUntil
+                } : null
             }));
 
             const gameData = {
@@ -2013,6 +2347,14 @@
                 money,
                 elevatorLevel,
                 hasElevatorManager,
+                elevatorManagerAbility: elevatorManagerAbility ? {
+                    type: elevatorManagerAbility.type,
+                    name: elevatorManagerAbility.name,
+                    desc: elevatorManagerAbility.desc,
+                    icon: elevatorManagerAbility.icon,
+                    activeUntil: elevatorManagerAbility.activeUntil,
+                    cooldownUntil: elevatorManagerAbility.cooldownUntil
+                } : null,
                 shafts: shaftsData,
                 savedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -2066,6 +2408,16 @@
                                     </div>
                                 `;
                                 mineshafts[i].elements.minerStatus.textContent = 'Auto';
+
+                                // Restore ability data
+                                if (shaftData.managerAbility) {
+                                    mineshafts[i].managerAbility = shaftData.managerAbility;
+                                    mineshafts[i].elements.abilityBtn.style.display = 'flex';
+                                    mineshafts[i].elements.abilityIcon.textContent = shaftData.managerAbility.icon;
+                                    mineshafts[i].elements.abilityTooltip.textContent = shaftData.managerAbility.name + ': ' + shaftData.managerAbility.desc;
+                                    updateAbilityButtonState(i);
+                                }
+
                                 autoMine(i);
                             }
                         }
@@ -2087,6 +2439,17 @@
                             </div>
                         `;
                         operatorStatus.textContent = 'Auto';
+
+                        // Restore elevator ability data
+                        if (data.elevatorManagerAbility) {
+                            elevatorManagerAbility = data.elevatorManagerAbility;
+                            const elevAbilityBtn = document.getElementById('elevatorAbilityBtn');
+                            elevAbilityBtn.style.display = 'flex';
+                            document.getElementById('elevatorAbilityIcon').textContent = data.elevatorManagerAbility.icon;
+                            document.getElementById('elevatorAbilityTooltip').textContent = data.elevatorManagerAbility.name + ': ' + data.elevatorManagerAbility.desc;
+                            updateElevatorAbilityButtonState();
+                        }
+
                         autoElevator();
                     }
 
