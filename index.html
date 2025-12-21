@@ -1476,111 +1476,118 @@
         // ============================================
         // ELEVATOR LOGIC
         // ============================================
-        async function doElevatorRun() {
-            if (operatorState !== 'idle') return;
 
-            // Find the topmost shaft with coal (start from shaft 1, work down)
-            let targetShaftIndex = -1;
-            for (let i = 0; i < mineshafts.length; i++) {
-                if (mineshafts[i].bucketCoal > 0) {
-                    targetShaftIndex = i;
-                    break;
-                }
-            }
+        // Helper to animate elevator movement between two positions
+        function animateElevatorMovement(fromShaftIndex, toShaftIndex, duration) {
+            return new Promise(resolve => {
+                const surfaceTop = 55;
+                const fromTop = fromShaftIndex === -1 ? surfaceTop : 80 + (fromShaftIndex * SHAFT_HEIGHT) + 55;
+                const toTop = toShaftIndex === -1 ? surfaceTop : 80 + (toShaftIndex * SHAFT_HEIGHT) + 55;
+                const fromElevPos = fromShaftIndex === -1 ? 0 : (fromShaftIndex + 1) * SHAFT_HEIGHT - 40;
+                const toElevPos = toShaftIndex === -1 ? 0 : (toShaftIndex + 1) * SHAFT_HEIGHT - 40;
 
-            if (targetShaftIndex === -1) return; // No coal anywhere
+                const startTime = Date.now();
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
 
-            operatorState = 'busy';
+                    // Animate elevator
+                    const elevTop = fromElevPos + (toElevPos - fromElevPos) * progress;
+                    elevator.style.top = elevTop + 'px';
+
+                    // Animate operator
+                    const opTop = fromTop + (toTop - fromTop) * progress;
+                    elevatorOperator.style.transition = 'none';
+                    elevatorOperator.style.top = opTop + 'px';
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        resolve();
+                    }
+                };
+                animate();
+            });
+        }
+
+        // Helper to collect coal at a shaft
+        async function collectAtShaft(shaftIndex) {
+            const shaft = mineshafts[shaftIndex];
             const capacity = getElevatorCapacity();
+            const shaftTop = 80 + (shaftIndex * SHAFT_HEIGHT) + 55;
 
-            // Calculate positions
-            const surfaceTop = 55;
-            const targetShaftTop = 80 + (targetShaftIndex * SHAFT_HEIGHT) + 55;
-            const elevatorTopPos = 0;
-            const elevatorBottomPos = (targetShaftIndex + 1) * SHAFT_HEIGHT - 40;
-
-            // 1. Ride elevator down to target shaft
-            operatorStatus.textContent = `Going to Shaft ${targetShaftIndex + 1}...`;
-
-            const duration = 1000 + (targetShaftIndex * 500); // Longer for deeper shafts
-            const startTime = Date.now();
-
-            const animateDown = () => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-
-                // Animate elevator
-                const elevatorTop = elevatorTopPos + (elevatorBottomPos - elevatorTopPos) * progress;
-                elevator.style.top = elevatorTop + 'px';
-
-                // Animate operator
-                const operatorTop = surfaceTop + (targetShaftTop - surfaceTop) * progress;
-                elevatorOperator.style.transition = 'none';
-                elevatorOperator.style.top = operatorTop + 'px';
-
-                if (progress < 1) {
-                    requestAnimationFrame(animateDown);
-                }
-            };
-            animateDown();
-            await new Promise(r => setTimeout(r, duration));
-
-            // 2. Walk to bucket
-            operatorStatus.textContent = 'Collecting...';
+            // Walk to bucket
+            operatorStatus.textContent = `Collecting at Shaft ${shaftIndex + 1}...`;
             elevatorOperator.classList.add('walking');
-            await setPosition(elevatorOperator, 100, targetShaftTop, 500);
+            await setPosition(elevatorOperator, 100, shaftTop, 400);
             elevatorOperator.classList.remove('walking');
 
-            // 3. Collect coal from bucket (up to capacity)
+            // Collect coal
             elevatorOperator.classList.add('mining');
-            await animateProgress(operatorProgressFill, 1000);
+            await animateProgress(operatorProgressFill, 800);
             elevatorOperator.classList.remove('mining');
 
-            const shaft = mineshafts[targetShaftIndex];
             const spaceAvailable = capacity - elevatorCarrying;
             const coalToCollect = Math.min(shaft.bucketCoal, spaceAvailable);
 
-            shaft.bucketCoal -= coalToCollect;
-            elevatorCarrying += coalToCollect;
-            updateShaftBucket(targetShaftIndex);
-            updateElevatorCapacityDisplay();
-
             if (coalToCollect > 0) {
+                shaft.bucketCoal -= coalToCollect;
+                elevatorCarrying += coalToCollect;
+                updateShaftBucket(shaftIndex);
+                updateElevatorCapacityDisplay();
                 elevatorOperator.classList.add('has-coal');
             }
 
-            // 4. Walk back to elevator
+            // Walk back to elevator
             elevatorOperator.classList.add('walking');
-            await setPosition(elevatorOperator, 175, targetShaftTop, 500);
+            await setPosition(elevatorOperator, 175, shaftTop, 400);
             elevatorOperator.classList.remove('walking');
 
-            // 5. Ride elevator straight up (no stops)
-            operatorStatus.textContent = 'Going up...';
+            return coalToCollect;
+        }
 
-            const upDuration = 1000 + (targetShaftIndex * 500);
-            const upStartTime = Date.now();
+        async function doElevatorRun() {
+            if (operatorState !== 'idle') return;
 
-            const animateUp = () => {
-                const elapsed = Date.now() - upStartTime;
-                const progress = Math.min(elapsed / upDuration, 1);
+            // Check if any shaft has coal
+            const hasCoalAnywhere = mineshafts.some(s => s.bucketCoal > 0);
+            if (!hasCoalAnywhere) return;
 
-                // Animate elevator
-                const elevatorTop = elevatorBottomPos - (elevatorBottomPos - elevatorTopPos) * progress;
-                elevator.style.top = elevatorTop + 'px';
+            operatorState = 'busy';
+            const capacity = getElevatorCapacity();
+            let currentShaftIndex = -1; // -1 = surface
+            let deepestVisited = -1;
 
-                // Animate operator
-                const operatorTop = targetShaftTop - (targetShaftTop - surfaceTop) * progress;
-                elevatorOperator.style.transition = 'none';
-                elevatorOperator.style.top = operatorTop + 'px';
-
-                if (progress < 1) {
-                    requestAnimationFrame(animateUp);
+            // Go through each shaft from top to bottom
+            for (let i = 0; i < mineshafts.length; i++) {
+                // Check if elevator is full
+                if (elevatorCarrying >= capacity) {
+                    operatorStatus.textContent = 'Elevator full!';
+                    await new Promise(r => setTimeout(r, 300));
+                    break;
                 }
-            };
-            animateUp();
-            await new Promise(r => setTimeout(r, upDuration));
 
-            // 6. Sell coal at surface
+                // Move down to this shaft
+                operatorStatus.textContent = `Going to Shaft ${i + 1}...`;
+                const travelTime = 600; // Time to travel between adjacent shafts
+                await animateElevatorMovement(currentShaftIndex, i, travelTime);
+                currentShaftIndex = i;
+                deepestVisited = i;
+
+                // Collect coal if this shaft has any
+                if (mineshafts[i].bucketCoal > 0) {
+                    await collectAtShaft(i);
+                }
+            }
+
+            // Return to surface
+            if (deepestVisited >= 0) {
+                operatorStatus.textContent = 'Returning to surface...';
+                const returnTime = 600 + (deepestVisited * 400); // Longer return from deeper shafts
+                await animateElevatorMovement(currentShaftIndex, -1, returnTime);
+            }
+
+            // Sell coal at surface
             operatorStatus.textContent = 'Selling...';
             await new Promise(r => setTimeout(r, 500));
             elevatorOperator.classList.remove('has-coal');
