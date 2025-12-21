@@ -1782,8 +1782,17 @@
                     return 'Incorrect password';
                 case 'auth/invalid-credential':
                     return 'Invalid email or password';
+                case 'auth/operation-not-allowed':
+                    return 'Email/Password sign-in not enabled in Firebase Console';
+                case 'auth/network-request-failed':
+                    return 'Network error. Check your connection.';
+                case 'auth/too-many-requests':
+                    return 'Too many attempts. Try again later.';
+                case 'auth/configuration-not-found':
+                    return 'Firebase not configured properly';
                 default:
-                    return 'An error occurred. Please try again.';
+                    console.error('Firebase auth error:', code);
+                    return 'Error: ' + (code || 'Unknown error');
             }
         }
 
