@@ -857,6 +857,259 @@
             font-size: 14px;
         }
 
+        /* Player Stats Panel */
+        .player-stats-panel {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            width: 200px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 15px;
+            z-index: 50;
+            color: white;
+        }
+
+        .player-stats-panel h3 {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 1px solid #ffd700;
+            padding-bottom: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        .stat-label {
+            color: #aaa;
+        }
+
+        .stat-value {
+            color: #32CD32;
+            font-weight: bold;
+        }
+
+        .achievements-btn {
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px;
+            background: linear-gradient(to bottom, #9932CC, #6a1b9a);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            font-size: 14px;
+        }
+
+        .achievements-btn:hover {
+            background: linear-gradient(to bottom, #a940d6, #7a2ba8);
+            box-shadow: 0 0 10px #9932CC;
+        }
+
+        .achievement-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4444;
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            animation: badgePulse 1s infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Achievements Modal */
+        .achievements-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .achievements-modal.show {
+            display: flex;
+        }
+
+        .achievements-content {
+            background: linear-gradient(to bottom, #2a1a0a, #1a0a00);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .achievements-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 10px;
+        }
+
+        .achievements-header h2 {
+            color: #ffd700;
+            margin: 0;
+        }
+
+        .achievements-close {
+            background: #dc3545;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .achievements-close:hover {
+            background: #c82333;
+        }
+
+        .achievement-item {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+
+        .achievement-item.unlocked {
+            border-color: #ffd700;
+            animation: achievementGlow 2s infinite;
+        }
+
+        .achievement-item.claimed {
+            border-color: #32CD32;
+            animation: none;
+            opacity: 0.8;
+        }
+
+        @keyframes achievementGlow {
+            0%, 100% { box-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700; }
+            50% { box-shadow: 0 0 15px #ffd700, 0 0 25px #ffd700; }
+        }
+
+        .achievement-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(to bottom, #444, #222);
+            border: 2px solid #666;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .achievement-item.unlocked .achievement-icon,
+        .achievement-item.claimed .achievement-icon {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            border-color: #ffd700;
+        }
+
+        .achievement-info {
+            flex: 1;
+        }
+
+        .achievement-name {
+            color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .achievement-desc {
+            color: #aaa;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .achievement-progress {
+            background: #333;
+            border-radius: 5px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .achievement-progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #32CD32, #228B22);
+            transition: width 0.3s;
+        }
+
+        .achievement-item.unlocked .achievement-progress-fill,
+        .achievement-item.claimed .achievement-progress-fill {
+            background: linear-gradient(to right, #ffd700, #b8860b);
+        }
+
+        .claim-btn {
+            background: linear-gradient(to bottom, #32CD32, #228B22);
+            border: 2px solid #ffd700;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            animation: claimPulse 1s infinite;
+        }
+
+        .claim-btn:hover {
+            background: linear-gradient(to bottom, #3de03d, #2da02d);
+        }
+
+        @keyframes claimPulse {
+            0%, 100% { box-shadow: 0 0 5px #32CD32; }
+            50% { box-shadow: 0 0 15px #32CD32; }
+        }
+
+        /* Achievement claim animation */
+        @keyframes achievementClaim {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1); background: rgba(50, 205, 50, 0.3); }
+            100% { transform: scale(1); }
+        }
+
+        .achievement-item.claiming {
+            animation: achievementClaim 0.5s ease-out;
+        }
+
         /* Coal sparkle effect */
         .coal-sparkle {
             position: absolute;
@@ -1303,6 +1556,38 @@
         <p>Buy new shafts ($500) | Upgrade elevator capacity!</p>
     </div>
 
+    <!-- Player Stats Panel -->
+    <div class="player-stats-panel" id="playerStatsPanel">
+        <h3>Player Stats</h3>
+        <div class="stat-item">
+            <span class="stat-label">Total Coal Mined:</span>
+            <span class="stat-value" id="statTotalCoal">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Mineshafts:</span>
+            <span class="stat-value" id="statMineshafts">1</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Managers:</span>
+            <span class="stat-value" id="statManagers">0</span>
+        </div>
+        <button class="achievements-btn" id="achievementsBtn" onclick="openAchievementsModal()">
+            Achievements
+            <span class="achievement-badge" id="achievementBadge" style="display: none;">0</span>
+        </button>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div class="achievements-modal" id="achievementsModal">
+        <div class="achievements-content">
+            <div class="achievements-header">
+                <h2>Achievements</h2>
+                <button class="achievements-close" onclick="closeAchievementsModal()">X</button>
+            </div>
+            <div id="achievementsList"></div>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // GAME CONSTANTS
@@ -1335,10 +1620,25 @@
             { id: 'capacity', name: '+40% Capacity', desc: '40% more storage', icon: 'C' }
         ];
 
+        // Achievement definitions
+        const ACHIEVEMENTS = [
+            { id: 'coal_1', name: 'Coal Mined I', desc: 'You mined 100 coal!', icon: '⛏️', type: 'coal', target: 100 },
+            { id: 'coal_2', name: 'Coal Mined II', desc: 'You mined 1,000 coal!', icon: '⛏️', type: 'coal', target: 1000 },
+            { id: 'coal_3', name: 'Coal Mined III', desc: 'You mined 10,000 coal!', icon: '⛏️', type: 'coal', target: 10000 },
+            { id: 'coal_4', name: 'Coal Mined IV', desc: 'You mined 100,000 coal!', icon: '⛏️', type: 'coal', target: 100000 },
+            { id: 'coal_5', name: 'Coal Mined V', desc: 'You mined 1,000,000 coal!', icon: '⛏️', type: 'coal', target: 1000000 },
+            { id: 'shaft_1', name: 'Mineshaft I', desc: '2 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 2 },
+            { id: 'shaft_2', name: 'Mineshaft II', desc: '5 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 5 },
+            { id: 'shaft_3', name: 'Mineshaft III', desc: '20 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 20 },
+            { id: 'shaft_4', name: 'Mineshaft IV', desc: '50 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 50 },
+            { id: 'shaft_5', name: 'Mineshaft V', desc: '100 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 100 }
+        ];
+
         // ============================================
         // GAME STATE
         // ============================================
         let totalCoalSold = 0;
+        let totalCoalMined = 0;
         let money = 0;
         let operatorState = 'idle';
         let hasElevatorManager = false;
@@ -1347,6 +1647,9 @@
 
         // Elevator manager ability state
         let elevatorManagerAbility = null; // { type, activeUntil, cooldownUntil }
+
+        // Achievements state: { achievementId: 'locked' | 'unlocked' | 'claimed' }
+        let achievementsState = {};
 
         // Array of mineshafts
         let mineshafts = [];
@@ -1680,7 +1983,10 @@
             await new Promise(r => setTimeout(r, 300));
             miner.classList.remove('has-coal');
             shaft.bucketCoal += coalToMine;
+            totalCoalMined += coalToMine;
             updateShaftBucket(shaftIndex);
+            updatePlayerStats();
+            checkAchievements();
 
             // 5. Return to idle
             miner.classList.add('walking');
@@ -1881,6 +2187,8 @@
             createMineshaft(newIndex);
 
             updateBuyShaftButton();
+            updatePlayerStats();
+            checkAchievements();
         }
 
         // ============================================
@@ -1973,6 +2281,7 @@
             };
 
             autoMine(shaftIndex);
+            updatePlayerStats();
         }
 
         function hireElevatorManager() {
@@ -2009,6 +2318,7 @@
             };
 
             autoElevator();
+            updatePlayerStats();
         }
 
         // Close popup when clicking elsewhere
@@ -2177,6 +2487,7 @@
             shaft.elements.managerSlot.classList.remove('hired');
             shaft.elements.managerSlot.innerHTML = '<span class="plus-icon">+</span>';
             shaft.elements.minerStatus.textContent = 'Click me!';
+            updatePlayerStats();
         }
 
         function fireElevatorManager() {
@@ -2187,6 +2498,7 @@
             elevatorManagerSlot.classList.remove('hired');
             elevatorManagerSlot.innerHTML = '<span class="plus-icon">+</span>';
             operatorStatus.textContent = 'Click me!';
+            updatePlayerStats();
         }
 
         // ============================================
@@ -2233,6 +2545,134 @@
                 updateElevatorCapacityDisplay();
             }
         }, 1000);
+
+        // ============================================
+        // ACHIEVEMENTS SYSTEM
+        // ============================================
+        function initAchievements() {
+            // Initialize all achievements as locked if not already set
+            ACHIEVEMENTS.forEach(achievement => {
+                if (!achievementsState[achievement.id]) {
+                    achievementsState[achievement.id] = 'locked';
+                }
+            });
+        }
+
+        function getAchievementProgress(achievement) {
+            if (achievement.type === 'coal') {
+                return Math.min(totalCoalMined, achievement.target);
+            } else if (achievement.type === 'shafts') {
+                return Math.min(mineshafts.length, achievement.target);
+            }
+            return 0;
+        }
+
+        function checkAchievements() {
+            ACHIEVEMENTS.forEach(achievement => {
+                if (achievementsState[achievement.id] === 'locked') {
+                    const progress = getAchievementProgress(achievement);
+                    if (progress >= achievement.target) {
+                        achievementsState[achievement.id] = 'unlocked';
+                    }
+                }
+            });
+            updateAchievementBadge();
+        }
+
+        function getUnclaimedCount() {
+            return ACHIEVEMENTS.filter(a => achievementsState[a.id] === 'unlocked').length;
+        }
+
+        function updateAchievementBadge() {
+            const badge = document.getElementById('achievementBadge');
+            const count = getUnclaimedCount();
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function updatePlayerStats() {
+            document.getElementById('statTotalCoal').textContent = formatNumber(Math.floor(totalCoalMined));
+            document.getElementById('statMineshafts').textContent = mineshafts.length;
+
+            // Count managers
+            let managerCount = mineshafts.filter(s => s.hasManager).length;
+            if (hasElevatorManager) managerCount++;
+            document.getElementById('statManagers').textContent = managerCount;
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(2) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function openAchievementsModal() {
+            const modal = document.getElementById('achievementsModal');
+            const list = document.getElementById('achievementsList');
+
+            // Render achievements
+            list.innerHTML = ACHIEVEMENTS.map(achievement => {
+                const state = achievementsState[achievement.id] || 'locked';
+                const progress = getAchievementProgress(achievement);
+                const progressPercent = Math.min((progress / achievement.target) * 100, 100);
+
+                return `
+                    <div class="achievement-item ${state}" id="achievement-${achievement.id}">
+                        <div class="achievement-icon">${achievement.icon}</div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">${achievement.name}</div>
+                            <div class="achievement-desc">${achievement.desc}</div>
+                            <div class="achievement-progress">
+                                <div class="achievement-progress-fill" style="width: ${progressPercent}%"></div>
+                            </div>
+                        </div>
+                        ${state === 'unlocked' ? `<button class="claim-btn" onclick="claimAchievement('${achievement.id}')">Claim</button>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            modal.classList.add('show');
+        }
+
+        function closeAchievementsModal() {
+            document.getElementById('achievementsModal').classList.remove('show');
+        }
+
+        function claimAchievement(achievementId) {
+            if (achievementsState[achievementId] !== 'unlocked') return;
+
+            const element = document.getElementById(`achievement-${achievementId}`);
+            element.classList.add('claiming');
+
+            setTimeout(() => {
+                achievementsState[achievementId] = 'claimed';
+                element.classList.remove('claiming', 'unlocked');
+                element.classList.add('claimed');
+
+                // Remove claim button
+                const claimBtn = element.querySelector('.claim-btn');
+                if (claimBtn) claimBtn.remove();
+
+                updateAchievementBadge();
+            }, 500);
+        }
+
+        // Close achievements modal when clicking outside
+        document.getElementById('achievementsModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('achievements-modal')) {
+                closeAchievementsModal();
+            }
+        });
+
+        // Initialize achievements on load
+        initAchievements();
 
         // ============================================
         // UPGRADE MODALS
@@ -2501,6 +2941,7 @@
 
             const gameData = {
                 totalCoalSold,
+                totalCoalMined,
                 money,
                 elevatorLevel,
                 hasElevatorManager,
@@ -2512,6 +2953,7 @@
                     activeUntil: elevatorManagerAbility.activeUntil,
                     cooldownUntil: elevatorManagerAbility.cooldownUntil
                 } : null,
+                achievementsState,
                 shafts: shaftsData,
                 savedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -2535,8 +2977,15 @@
                     const data = doc.data();
 
                     totalCoalSold = data.totalCoalSold || 0;
+                    totalCoalMined = data.totalCoalMined || 0;
                     money = data.money || 0;
                     elevatorLevel = data.elevatorLevel || 1;
+
+                    // Restore achievements state
+                    if (data.achievementsState) {
+                        achievementsState = data.achievementsState;
+                    }
+                    initAchievements(); // Ensure all achievements are initialized
 
                     // Clear existing shafts and recreate
                     mineshaftsContainer.innerHTML = '';
@@ -2602,6 +3051,9 @@
                     }
 
                     updateStats();
+                    updatePlayerStats();
+                    checkAchievements();
+                    updateAchievementBadge();
                     saveStatusEl.textContent = 'Loaded successfully!';
                 } else {
                     saveStatusEl.textContent = 'No saved game found';
