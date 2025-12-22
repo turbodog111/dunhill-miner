@@ -1,0 +1,1361 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #8B4513;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+}
+
+.game-header {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 15px;
+    text-align: center;
+    z-index: 100;
+    position: fixed;
+    top: 0;
+}
+
+.stats-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+}
+
+.coal-counter, .money-counter {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.coal-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: #2c2c2c;
+    border-radius: 3px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.money-icon {
+    display: inline-block;
+    margin-right: 8px;
+    color: #ffd700;
+    font-size: 20px;
+}
+
+.game-wrapper {
+    margin-top: 70px;
+    padding-bottom: 120px;
+}
+
+.game-container {
+    position: relative;
+    width: 400px;
+}
+
+/* Surface area */
+.surface {
+    position: relative;
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 40%, #228B22 40%, #228B22 80%, #8B4513 100%);
+    border-bottom: 4px solid #654321;
+    z-index: 10;
+}
+
+.surface-building {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 50px;
+    background: #8B0000;
+    border: 3px solid #5c0000;
+}
+
+.surface-building::before {
+    content: '';
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 45px solid transparent;
+    border-right: 45px solid transparent;
+    border-bottom: 25px solid #5c0000;
+}
+
+/* Elevator shaft */
+.elevator-shaft {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    background: #3a3a3a;
+    border-left: 4px solid #555;
+    border-right: 4px solid #555;
+    z-index: 5;
+}
+
+.elevator-track {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 100%;
+    background: #666;
+}
+
+.elevator {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 40px;
+    background: linear-gradient(to bottom, #ffd700, #daa520);
+    border: 3px solid #b8860b;
+    border-radius: 5px;
+    z-index: 6;
+    cursor: pointer;
+}
+
+.elevator:hover {
+    box-shadow: 0 0 10px #ffd700;
+}
+
+.elevator-capacity {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: white;
+    background: rgba(0,0,0,0.7);
+    padding: 1px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+/* Mineshaft level */
+.mineshaft {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    background: #2a2a2a;
+    border-top: 4px solid #444;
+    border-bottom: 4px solid #444;
+}
+
+.mineshaft-floor {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: #4a4a4a;
+}
+
+.shaft-label {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 12px;
+    color: #ffd700;
+    font-weight: bold;
+    background: rgba(0,0,0,0.5);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Mining tunnel */
+.mining-tunnel {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    width: 120px;
+    height: 60px;
+    background: #1a1a1a;
+    border-left: 4px solid #333;
+}
+
+.coal-deposit {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, #3a3a3a 0%, #1a1a1a 100%);
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 5px;
+    gap: 3px;
+}
+
+.coal-piece {
+    width: 12px;
+    height: 12px;
+    background: #2c2c2c;
+    border-radius: 2px;
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.5), inset 2px 2px 4px rgba(100,100,100,0.3);
+}
+
+/* Level button */
+.level-btn {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(to bottom, #4169E1, #2850a8);
+    border: 2px solid #1a3a7a;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 25;
+}
+
+.level-btn:hover {
+    box-shadow: 0 0 10px #4169E1;
+    background: linear-gradient(to bottom, #5179F1, #3860b8);
+}
+
+/* Bucket */
+.bucket {
+    position: absolute;
+    top: 45px;
+    left: 70px;
+    width: 40px;
+    height: 35px;
+    background: linear-gradient(to bottom, #8B4513, #654321);
+    border: 3px solid #4a3728;
+    border-radius: 0 0 8px 8px;
+    z-index: 15;
+}
+
+.bucket::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 8px;
+    border: 3px solid #4a3728;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    background: transparent;
+}
+
+.bucket-counter {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.bucket-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: #2c2c2c;
+    border-radius: 0 0 5px 5px;
+    transition: height 0.3s ease;
+}
+
+/* Worker base styles */
+.worker {
+    position: absolute;
+    width: 30px;
+    height: 40px;
+    cursor: pointer;
+    z-index: 20;
+}
+
+.worker:hover {
+    filter: brightness(1.2);
+}
+
+.worker-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.worker-head {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: #ffdbac;
+    border-radius: 50%;
+}
+
+.worker-helmet {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 12px;
+    background: #ffd700;
+    border-radius: 10px 10px 0 0;
+}
+
+.worker-helmet-light {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #fff, 0 0 10px #ffd700;
+}
+
+.worker-torso {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 15px;
+    background: #4169E1;
+    border-radius: 3px;
+}
+
+.worker-legs {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 12px;
+    background: #2F4F4F;
+    border-radius: 0 0 3px 3px;
+}
+
+/* Elevator operator has orange vest */
+.elevator-operator .worker-torso {
+    background: #FF6600;
+}
+
+/* Manager has green suit */
+.manager .worker-torso {
+    background: #228B22;
+}
+
+.manager .worker-helmet {
+    background: #32CD32;
+}
+
+.worker.walking {
+    animation: walk 0.3s infinite;
+}
+
+@keyframes walk {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+.worker.mining {
+    animation: mine 0.4s infinite;
+}
+
+@keyframes mine {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-15deg); }
+}
+
+/* Carried coal indicator */
+.carried-coal {
+    position: absolute;
+    top: 10px;
+    right: -10px;
+    width: 15px;
+    height: 15px;
+    background: #2c2c2c;
+    border-radius: 3px;
+    display: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.worker.has-coal .carried-coal {
+    display: block;
+}
+
+/* Status text */
+.worker-status {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 10px;
+    color: white;
+    background: rgba(0,0,0,0.7);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Progress bar for mining */
+.progress-bar {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 8px;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    overflow: hidden;
+    display: none;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, #32CD32, #00FF00);
+}
+
+.worker.mining .progress-bar {
+    display: block;
+}
+
+.worker.mining .worker-status {
+    display: none;
+}
+
+/* Manager slot (empty outline) */
+.manager-slot {
+    position: absolute;
+    width: 30px;
+    height: 40px;
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 19;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.manager-slot:hover {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.manager-slot.hired {
+    border: none;
+    background: none;
+    cursor: default;
+}
+
+.manager-slot .plus-icon {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.manager-slot:hover .plus-icon {
+    color: #ffd700;
+}
+
+.manager-slot.hired .plus-icon {
+    display: none;
+}
+
+/* Hire popup */
+.hire-popup {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    padding: 15px;
+    z-index: 2000;
+    display: none;
+    text-align: center;
+    min-width: 140px;
+}
+
+.hire-popup.show {
+    display: block;
+}
+
+.hire-popup h4 {
+    color: #ffd700;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.hire-popup .cost {
+    color: #aaa;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.hire-popup .cost.affordable {
+    color: #32CD32;
+}
+
+.hire-popup .cost.too-expensive {
+    color: #ff6666;
+}
+
+.hire-btn {
+    background: linear-gradient(to bottom, #32CD32, #228B22);
+    border: 2px solid #006400;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.hire-btn:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #3ddb3d, #2da52d);
+    box-shadow: 0 0 10px #32CD32;
+}
+
+.hire-btn:disabled {
+    background: #666;
+    border-color: #444;
+    cursor: not-allowed;
+}
+
+/* Manager info popup */
+.manager-info-popup {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #32CD32;
+    border-radius: 10px;
+    padding: 15px;
+    z-index: 2000;
+    display: none;
+    text-align: center;
+    min-width: 180px;
+}
+
+.manager-info-popup.show {
+    display: block;
+}
+
+.manager-info-popup h4 {
+    color: #32CD32;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.manager-info-popup .ability-info {
+    background: rgba(153, 50, 204, 0.3);
+    border: 1px solid #9932CC;
+    border-radius: 5px;
+    padding: 8px;
+    margin: 8px 0;
+}
+
+.manager-info-popup .ability-name {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.manager-info-popup .ability-desc {
+    color: #ccc;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.manager-info-popup .ability-status {
+    color: #aaa;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.manager-info-popup .ability-status.active {
+    color: #32CD32;
+}
+
+.manager-info-popup .ability-status.cooldown {
+    color: #ff6666;
+}
+
+.activate-btn {
+    background: linear-gradient(to bottom, #9932CC, #6a1b9a);
+    border: 2px solid #ffd700;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+    margin: 5px 3px;
+}
+
+.activate-btn:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #a940d6, #7a2ba8);
+    box-shadow: 0 0 10px #9932CC;
+}
+
+.activate-btn:disabled {
+    background: #666;
+    border-color: #444;
+    cursor: not-allowed;
+}
+
+.fire-btn {
+    background: linear-gradient(to bottom, #dc3545, #a71d2a);
+    border: 2px solid #721c24;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 11px;
+    margin: 5px 3px;
+}
+
+.fire-btn:hover {
+    background: linear-gradient(to bottom, #e4606d, #bd2130);
+    box-shadow: 0 0 10px #dc3545;
+}
+
+.close-popup-btn {
+    background: linear-gradient(to bottom, #666, #444);
+    border: 2px solid #333;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 11px;
+    margin: 5px 3px;
+}
+
+.close-popup-btn:hover {
+    background: linear-gradient(to bottom, #777, #555);
+}
+
+/* Make hired managers clickable */
+.manager-slot.hired {
+    cursor: pointer;
+}
+
+.manager-slot.hired:hover {
+    filter: brightness(1.2);
+}
+
+/* Buy new shaft button */
+.buy-shaft-area {
+    position: relative;
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(to bottom, #1a1a1a, #2a2a2a);
+    border-top: 4px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.buy-shaft-btn {
+    background: linear-gradient(to bottom, #ffd700, #daa520);
+    border: 3px solid #b8860b;
+    color: #000;
+    padding: 15px 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.buy-shaft-btn:hover:not(:disabled) {
+    box-shadow: 0 0 20px #ffd700;
+    transform: scale(1.05);
+}
+
+.buy-shaft-btn:disabled {
+    background: #666;
+    border-color: #444;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* Upgrade Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.upgrade-modal {
+    background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+    border: 3px solid #ffd700;
+    border-radius: 15px;
+    padding: 25px;
+    min-width: 300px;
+    text-align: center;
+    color: white;
+}
+
+.upgrade-modal h2 {
+    color: #ffd700;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.upgrade-modal .level-display {
+    font-size: 48px;
+    font-weight: bold;
+    color: #4169E1;
+    margin: 10px 0;
+}
+
+.upgrade-modal .stats {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.upgrade-modal .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.upgrade-modal .stat-label {
+    color: #aaa;
+}
+
+.upgrade-modal .stat-value {
+    color: #fff;
+    font-weight: bold;
+}
+
+.upgrade-modal .stat-value.increase {
+    color: #32CD32;
+}
+
+.upgrade-btn {
+    background: linear-gradient(to bottom, #ffd700, #daa520);
+    border: 2px solid #b8860b;
+    color: #000;
+    padding: 12px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    margin: 10px 5px;
+}
+
+.upgrade-btn:hover:not(:disabled) {
+    box-shadow: 0 0 15px #ffd700;
+    background: linear-gradient(to bottom, #ffe44d, #e8b830);
+}
+
+.upgrade-btn:disabled {
+    background: #666;
+    border-color: #444;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.close-btn {
+    background: linear-gradient(to bottom, #666, #444);
+    border: 2px solid #333;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 10px 5px;
+}
+
+.close-btn:hover {
+    background: linear-gradient(to bottom, #777, #555);
+}
+
+/* Instructions */
+.instructions {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 100;
+}
+
+.instructions h3 {
+    margin-bottom: 5px;
+    color: #ffd700;
+}
+
+.instructions p {
+    margin: 3px 0;
+    font-size: 14px;
+}
+
+/* Player Stats Panel */
+.player-stats-panel {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 200px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    padding: 15px;
+    z-index: 50;
+    color: white;
+}
+
+.player-stats-panel h3 {
+    color: #ffd700;
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 16px;
+    border-bottom: 1px solid #ffd700;
+    padding-bottom: 8px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-size: 13px;
+}
+
+.stat-label {
+    color: #aaa;
+}
+
+.stat-value {
+    color: #32CD32;
+    font-weight: bold;
+}
+
+.achievements-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    background: linear-gradient(to bottom, #9932CC, #6a1b9a);
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    font-size: 14px;
+}
+
+.achievements-btn:hover {
+    background: linear-gradient(to bottom, #a940d6, #7a2ba8);
+    box-shadow: 0 0 10px #9932CC;
+}
+
+.achievement-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ff4444;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    animation: badgePulse 1s infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Achievements Modal */
+.achievements-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.achievements-modal.show {
+    display: flex;
+}
+
+.achievements-content {
+    background: linear-gradient(to bottom, #2a1a0a, #1a0a00);
+    border: 3px solid #ffd700;
+    border-radius: 15px;
+    padding: 25px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.achievements-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ffd700;
+    padding-bottom: 10px;
+}
+
+.achievements-header h2 {
+    color: #ffd700;
+    margin: 0;
+}
+
+.achievements-close {
+    background: #dc3545;
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.achievements-close:hover {
+    background: #c82333;
+}
+
+.achievement-item {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s;
+}
+
+.achievement-item.unlocked {
+    border-color: #ffd700;
+    animation: achievementGlow 2s infinite;
+}
+
+.achievement-item.claimed {
+    border-color: #32CD32;
+    animation: none;
+    opacity: 0.8;
+}
+
+@keyframes achievementGlow {
+    0%, 100% { box-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700; }
+    50% { box-shadow: 0 0 15px #ffd700, 0 0 25px #ffd700; }
+}
+
+.achievement-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(to bottom, #444, #222);
+    border: 2px solid #666;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.achievement-item.unlocked .achievement-icon,
+.achievement-item.claimed .achievement-icon {
+    background: linear-gradient(to bottom, #ffd700, #b8860b);
+    border-color: #ffd700;
+}
+
+.achievement-info {
+    flex: 1;
+}
+
+.achievement-name {
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 3px;
+}
+
+.achievement-desc {
+    color: #aaa;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.achievement-progress {
+    background: #333;
+    border-radius: 5px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.achievement-progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #32CD32, #228B22);
+    transition: width 0.3s;
+}
+
+.achievement-item.unlocked .achievement-progress-fill,
+.achievement-item.claimed .achievement-progress-fill {
+    background: linear-gradient(to right, #ffd700, #b8860b);
+}
+
+.claim-btn {
+    background: linear-gradient(to bottom, #32CD32, #228B22);
+    border: 2px solid #ffd700;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+    animation: claimPulse 1s infinite;
+}
+
+.claim-btn:hover {
+    background: linear-gradient(to bottom, #3de03d, #2da02d);
+}
+
+@keyframes claimPulse {
+    0%, 100% { box-shadow: 0 0 5px #32CD32; }
+    50% { box-shadow: 0 0 15px #32CD32; }
+}
+
+/* Achievement claim animation */
+@keyframes achievementClaim {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.1); }
+    50% { transform: scale(1); background: rgba(50, 205, 50, 0.3); }
+    100% { transform: scale(1); }
+}
+
+.achievement-item.claiming {
+    animation: achievementClaim 0.5s ease-out;
+}
+
+/* Coal sparkle effect */
+.coal-sparkle {
+    position: absolute;
+    pointer-events: none;
+    font-size: 16px;
+    animation: sparkle 1s ease-out forwards;
+    z-index: 100;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+@keyframes sparkle {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-30px); }
+}
+
+/* Audio controls */
+.audio-btn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #ffd700;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.audio-btn:hover {
+    background: rgba(255, 215, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.audio-btn.muted {
+    border-color: #666;
+}
+
+/* Auth UI */
+.auth-btn {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #ffd700;
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.auth-btn:hover {
+    background: rgba(255, 215, 0, 0.3);
+}
+
+.auth-btn.logged-in {
+    border-color: #32CD32;
+}
+
+.auth-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+
+.auth-modal.show {
+    display: flex;
+}
+
+.auth-box {
+    background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+    border: 3px solid #ffd700;
+    border-radius: 15px;
+    padding: 30px;
+    min-width: 320px;
+    text-align: center;
+    color: white;
+}
+
+.auth-box h2 {
+    color: #ffd700;
+    margin-bottom: 20px;
+}
+
+.auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 10px;
+    background: #333;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.auth-tab:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.auth-tab:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.auth-tab.active {
+    background: #ffd700;
+    color: #000;
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #555;
+    border-radius: 8px;
+    background: #222;
+    color: white;
+    font-size: 14px;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: #ffd700;
+}
+
+.auth-submit {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: linear-gradient(to bottom, #ffd700, #daa520);
+    border: 2px solid #b8860b;
+    border-radius: 8px;
+    color: #000;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.auth-submit:hover {
+    box-shadow: 0 0 15px #ffd700;
+}
+
+.auth-submit:disabled {
+    background: #666;
+    border-color: #444;
+    cursor: not-allowed;
+}
+
+.auth-error {
+    color: #ff6666;
+    font-size: 12px;
+    margin-top: 10px;
+    min-height: 20px;
+}
+
+.auth-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+    color: #aaa;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.auth-close:hover {
+    color: #fff;
+}
+
+.user-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.user-email {
+    color: #ffd700;
+    font-size: 14px;
+    word-break: break-all;
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: linear-gradient(to bottom, #666, #444);
+    border: 2px solid #333;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: linear-gradient(to bottom, #777, #555);
+}
+
+.save-status {
+    font-size: 12px;
+    color: #32CD32;
+    margin-top: 10px;
+}
+
+/* Elevator upgrade button */
+.elevator-upgrade-btn {
+    position: absolute;
+    top: 25px;
+    left: 270px;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(to bottom, #FF6600, #cc5200);
+    border: 2px solid #993d00;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 25;
+    text-align: center;
+}
+
+.elevator-upgrade-btn:hover {
+    box-shadow: 0 0 15px #FF6600;
+    transform: scale(1.05);
+}
