@@ -13,6 +13,17 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.8.0",
+        date: "2025-12-23",
+        changes: [
+            { type: "feature", text: "Full-screen achievements panel with large icons and grid layout" },
+            { type: "feature", text: "Interactive world map with visual terrain and compass" },
+            { type: "ui", text: "Achievement cards now display at 100px with centered layout" },
+            { type: "ui", text: "Map shows mine locations on visual terrain background" },
+            { type: "fix", text: "Fixed UI visibility - lowered vignette overlay z-index" }
+        ]
+    },
+    {
         version: "1.7.0",
         date: "2025-12-23",
         changes: [

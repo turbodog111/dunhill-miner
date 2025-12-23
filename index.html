@@ -137,7 +137,7 @@
 
                 <div class="credits-footer">
                     <p>Thank you for playing!</p>
-                    <p class="version-info">Version 1.5.0</p>
+                    <p class="version-info">Version 1.8.0</p>
                 </div>
             </div>
         </div>
@@ -405,17 +405,19 @@
         </div>
     </div>
 
-    <!-- Achievements Panel (side panel) -->
-    <div class="side-panel achievements-panel" id="achievementsPanel">
-        <div class="side-panel-header">
-            <h3>Achievements</h3>
-            <button class="panel-close" onclick="toggleAchievementsPanel()">×</button>
+    <!-- Achievements Panel (full-screen modal) -->
+    <div class="fullscreen-modal achievements-modal" id="achievementsPanel">
+        <div class="fullscreen-modal-content achievements-modal-content">
+            <div class="fullscreen-modal-header achievements-header">
+                <h2>🏆 Achievements</h2>
+                <div class="achievements-summary" id="achievementsSummary">
+                    <span class="achievements-count"><span id="achievementsUnlocked">0</span>/<span id="achievementsTotal">0</span></span>
+                    <span class="achievements-percent">(<span id="achievementsPercent">0</span>% Complete)</span>
+                </div>
+                <button class="fullscreen-close" onclick="toggleAchievementsPanel()">×</button>
+            </div>
+            <div class="fullscreen-modal-body achievements-grid" id="achievementsList"></div>
         </div>
-        <div class="achievements-summary" id="achievementsSummary">
-            <span class="achievements-count"><span id="achievementsUnlocked">0</span>/<span id="achievementsTotal">0</span></span>
-            <span class="achievements-percent">(<span id="achievementsPercent">0</span>%)</span>
-        </div>
-        <div class="side-panel-content" id="achievementsList"></div>
     </div>
 
     <!-- Updates Panel (side panel) -->
@@ -427,28 +429,60 @@
         <div class="side-panel-content" id="updatesList"></div>
     </div>
 
-    <!-- Map Panel (side panel) -->
-    <div class="side-panel map-panel" id="mapPanel">
-        <div class="side-panel-header map-header">
-            <h3>World Map</h3>
-            <button class="panel-close" onclick="toggleMapPanel()">×</button>
-        </div>
-        <div class="side-panel-content map-content">
-            <div class="map-journey" id="mapJourney">
-                <!-- Map locations rendered by JS -->
+    <!-- Map Panel (full-screen modal with actual map) -->
+    <div class="fullscreen-modal map-modal" id="mapPanel">
+        <div class="fullscreen-modal-content map-modal-content">
+            <div class="fullscreen-modal-header map-header">
+                <h2>🗺️ World Map</h2>
+                <button class="fullscreen-close" onclick="toggleMapPanel()">×</button>
             </div>
-            <div class="map-legend">
-                <div class="map-legend-item">
-                    <span class="legend-icon current">●</span>
-                    <span>Current Mine</span>
+            <div class="fullscreen-modal-body map-container">
+                <!-- Visual Map Background -->
+                <div class="map-visual">
+                    <div class="map-terrain">
+                        <!-- Mountains, trees, water decorations -->
+                        <div class="map-mountain mountain-1"></div>
+                        <div class="map-mountain mountain-2"></div>
+                        <div class="map-mountain mountain-3"></div>
+                        <div class="map-tree tree-1"></div>
+                        <div class="map-tree tree-2"></div>
+                        <div class="map-tree tree-3"></div>
+                        <div class="map-tree tree-4"></div>
+                        <div class="map-tree tree-5"></div>
+                        <div class="map-tree tree-6"></div>
+                        <div class="map-lake"></div>
+                        <!-- Compass Rose -->
+                        <div class="map-compass">
+                            <div class="compass-n">N</div>
+                            <div class="compass-needle"></div>
+                        </div>
+                    </div>
+                    <!-- Mine Locations -->
+                    <div class="map-mines" id="mapMines">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <!-- Path connecting mines -->
+                    <svg class="map-paths" id="mapPaths">
+                        <!-- Rendered by JS -->
+                    </svg>
                 </div>
-                <div class="map-legend-item">
-                    <span class="legend-icon unlocked">●</span>
-                    <span>Unlocked</span>
-                </div>
-                <div class="map-legend-item">
-                    <span class="legend-icon locked">●</span>
-                    <span>Locked</span>
+                <!-- Legend -->
+                <div class="map-legend-panel">
+                    <h4>Legend</h4>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-dot current"></span>
+                            <span>Current Location</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot unlocked"></span>
+                            <span>Available</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot locked"></span>
+                            <span>Locked</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
