@@ -13,8 +13,17 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.3.1",
+        date: "2025-12-22",
+        changes: [
+            { type: "balance", text: "Miner upgrades now scale by 25% per level (was 20%)" },
+            { type: "fix", text: "Fixed update log dates" },
+            { type: "fix", text: "Improved audio error handling" }
+        ]
+    },
+    {
         version: "1.3.0",
-        date: "2024-12-23",
+        date: "2025-12-22",
         changes: [
             { type: "feature", text: "Added World Map with mine locations" },
             { type: "feature", text: "Added mine indicator showing current location (M22)" },
@@ -27,7 +36,7 @@ const UPDATE_LOG = [
     },
     {
         version: "1.2.0",
-        date: "2024-12-23",
+        date: "2025-12-22",
         changes: [
             { type: "feature", text: "Added Update Log to track changes" },
             { type: "balance", text: "Elevator capacity now scales by 30% per level (was 20%)" },
@@ -37,7 +46,7 @@ const UPDATE_LOG = [
     },
     {
         version: "1.1.0",
-        date: "2024-12-22",
+        date: "2025-12-22",
         changes: [
             { type: "ui", text: "Added Chakra Petch tech font" },
             { type: "ui", text: "Enhanced surface with animated clouds and smoke" },
@@ -50,7 +59,7 @@ const UPDATE_LOG = [
     },
     {
         version: "1.0.0",
-        date: "2024-12-21",
+        date: "2025-12-21",
         changes: [
             { type: "feature", text: "Manager ability system with activate/cooldown" },
             { type: "feature", text: "Click managers to view abilities and fire them" },
