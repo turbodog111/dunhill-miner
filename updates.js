@@ -13,7 +13,18 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
-        version: "1.8.0",
+        version: "1.3.0",
+        date: "2025-12-23",
+        changes: [
+            { type: "feature", text: "Dialogue system with story scenes and characters" },
+            { type: "feature", text: "Opening letter from Dunhill Mining management" },
+            { type: "feature", text: "Real autosave every 60 seconds (cloud + local storage)" },
+            { type: "ui", text: "Cinematic text panel at bottom of screen" },
+            { type: "ui", text: "Modular code structure for easier development" }
+        ]
+    },
+    {
+        version: "1.2.4",
         date: "2025-12-23",
         changes: [
             { type: "feature", text: "Full-screen achievements panel with large icons and grid layout" },
@@ -24,7 +35,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.7.0",
+        version: "1.2.3",
         date: "2025-12-23",
         changes: [
             { type: "feature", text: "New blue ribbon level display with badge design" },
@@ -35,7 +46,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.6.2",
+        version: "1.2.2a",
         date: "2025-12-23",
         changes: [
             { type: "balance", text: "XP per resource reduced from 0.5 to 0.1" },
@@ -44,7 +55,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.6.1",
+        version: "1.2.2",
         date: "2025-12-23",
         changes: [
             { type: "feature", text: "New Settings panel with organized controls" },
@@ -55,7 +66,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.6.0",
+        version: "1.2.1",
         date: "2025-12-23",
         changes: [
             { type: "feature", text: "Player leveling system with max level 20" },
@@ -67,7 +78,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.5.0",
+        version: "1.2.0",
         date: "2025-12-22",
         changes: [
             { type: "feature", text: "Added Mine 37 - Copper Mine (copper worth 3x coal!)" },
@@ -82,7 +93,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.4.0",
+        version: "1.1.2",
         date: "2025-12-22",
         changes: [
             { type: "feature", text: "Added title screen with game logo" },
@@ -92,7 +103,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.3.1",
+        version: "1.1.1",
         date: "2025-12-22",
         changes: [
             { type: "balance", text: "Miner upgrades now scale by 25% per level (was 20%)" },
@@ -101,7 +112,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.3.0",
+        version: "1.1.0",
         date: "2025-12-22",
         changes: [
             { type: "feature", text: "Added World Map with mine locations" },
@@ -114,7 +125,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.2.0",
+        version: "1.0.2",
         date: "2025-12-22",
         changes: [
             { type: "feature", text: "Added Update Log to track changes" },
@@ -124,7 +135,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.1.0",
+        version: "1.0.1",
         date: "2025-12-22",
         changes: [
             { type: "ui", text: "Added Chakra Petch tech font" },

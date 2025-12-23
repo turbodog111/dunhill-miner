@@ -1,55 +1,6 @@
 // ============================================
-// GAME CONSTANTS
+// GAME CONSTANTS - See config.js for all constants
 // ============================================
-const MANAGER_COST = 50;
-const BASE_UPGRADE_COST = 50;
-const UPGRADE_COST_MULTIPLIER = 1.5;
-const COAL_PER_LEVEL_MULTIPLIER = 1.25;
-const ELEVATOR_CAPACITY_MULTIPLIER = 1.3; // Elevator capacity scales by 30% per level
-const NEW_SHAFT_COST = 500;
-const SHAFT_BASE_COAL_MULTIPLIER = 2; // Each shaft produces 2x base of previous
-const BASE_ELEVATOR_CAPACITY = 10;
-const SHAFT_HEIGHT = 120;
-const WALKING_SPEED = 0.15; // pixels per millisecond (uniform speed)
-
-// Ability constants
-const ABILITY_DURATION = 10 * 60 * 1000; // 10 minutes in ms
-const ABILITY_COOLDOWN = 30 * 60 * 1000; // 30 minutes in ms
-
-// Player leveling system
-const MAX_PLAYER_LEVEL = 20;
-const XP_PER_RESOURCE = 0.1;
-const LEVEL_XP_THRESHOLDS = [
-    0,      // Level 1
-    50,     // Level 2
-    150,    // Level 3
-    350,    // Level 4
-    750,    // Level 5
-    1500,   // Level 6
-    2500,   // Level 7
-    4000,   // Level 8
-    5000,   // Level 9
-    6000,   // Level 10
-    7500,   // Level 11
-    8500,   // Level 12
-    10000,  // Level 13
-    12000,  // Level 14
-    14000,  // Level 15
-    16000,  // Level 16
-    18000,  // Level 17
-    21000,  // Level 18
-    25000,  // Level 19
-    30000   // Level 20
-];
-
-// Achievement XP rewards by class (I-V)
-const ACHIEVEMENT_XP_REWARDS = {
-    1: 100,    // Class I
-    2: 500,    // Class II
-    3: 2000,   // Class III
-    4: 5000,   // Class IV
-    5: 10000   // Class V
-};
 
 // ============================================
 // TITLE SCREEN CONTROLS
@@ -61,12 +12,20 @@ function startGame() {
     // Fade to black
     fadeOverlay.classList.add('active');
 
-    // After fade completes, hide title screen and fade back in
+    // After fade completes, hide title screen and show intro
     setTimeout(() => {
         titleScreen.classList.add('hidden');
-        // Small delay then fade out the overlay
+
+        // Fade back in
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
+
+            // Show intro letter if first time
+            if (!storyProgress.hasSeenIntro) {
+                setTimeout(() => {
+                    playIntroSequence();
+                }, 500);
+            }
         }, 300);
     }, 500);
 }
@@ -452,68 +411,8 @@ function collectIdleRewards() {
     document.getElementById('idleRewardsModal').classList.remove('show');
 }
 
-// Mineshaft manager ability types
-const SHAFT_ABILITIES = [
-    { id: 'discount', name: '30% Discount', desc: '30% off upgrades', icon: '$' },
-    { id: 'speed', name: '40% Speed', desc: '40% faster mining', icon: 'S' },
-    { id: 'coal', name: '+20% Coal', desc: '20% more coal', icon: 'C' }
-];
-
-// Elevator manager ability types
-const ELEVATOR_ABILITIES = [
-    { id: 'discount', name: '30% Discount', desc: '30% off upgrades', icon: '$' },
-    { id: 'speed', name: '40% Speed', desc: '40% faster elevator', icon: 'S' },
-    { id: 'capacity', name: '+40% Capacity', desc: '40% more storage', icon: 'C' }
-];
-
-// Achievement definitions
-const ACHIEVEMENTS = [
-    { id: 'coal_1', name: 'Coal Mined I', desc: 'Mine 100 coal', icon: '⛏️', image: 'assets/Coal Mined I.png', type: 'coal', target: 100 },
-    { id: 'coal_2', name: 'Coal Mined II', desc: 'Mine 1,000 coal', icon: '⛏️', image: 'assets/Coal Mined II.png', type: 'coal', target: 1000 },
-    { id: 'coal_3', name: 'Coal Mined III', desc: 'Mine 10,000 coal', icon: '⛏️', image: 'assets/Coal Mined III.png', type: 'coal', target: 10000 },
-    { id: 'coal_4', name: 'Coal Mined IV', desc: 'Mine 100,000 coal', icon: '⛏️', image: 'assets/Coal Mined IV.png', type: 'coal', target: 100000 },
-    { id: 'coal_5', name: 'Coal Mined V', desc: 'Mine 1,000,000 coal', icon: '⛏️', image: 'assets/Coal Mined V.png', type: 'coal', target: 1000000 },
-    { id: 'copper_1', name: 'Copper Mined I', desc: 'Mine 100 copper', icon: '🥉', type: 'copper', target: 100 },
-    { id: 'copper_2', name: 'Copper Mined II', desc: 'Mine 1,000 copper', icon: '🥉', type: 'copper', target: 1000 },
-    { id: 'copper_3', name: 'Copper Mined III', desc: 'Mine 10,000 copper', icon: '🥉', type: 'copper', target: 10000 },
-    { id: 'copper_4', name: 'Copper Mined IV', desc: 'Mine 100,000 copper', icon: '🥉', type: 'copper', target: 100000 },
-    { id: 'copper_5', name: 'Copper Mined V', desc: 'Mine 1,000,000 copper', icon: '🥉', type: 'copper', target: 1000000 },
-    { id: 'shaft_1', name: 'Mineshaft I', desc: 'Own 2 mineshafts', icon: '🏭', type: 'shafts', target: 2 },
-    { id: 'shaft_2', name: 'Mineshaft II', desc: 'Own 5 mineshafts', icon: '🏭', type: 'shafts', target: 5 },
-    { id: 'shaft_3', name: 'Mineshaft III', desc: 'Own 20 mineshafts', icon: '🏭', type: 'shafts', target: 20 },
-    { id: 'shaft_4', name: 'Mineshaft IV', desc: 'Own 50 mineshafts', icon: '🏭', type: 'shafts', target: 50 },
-    { id: 'shaft_5', name: 'Mineshaft V', desc: 'Own 100 mineshafts', icon: '🏭', type: 'shafts', target: 100 }
-];
-
-// Mine definitions
-const MINES = {
-    mine22: {
-        id: 'mine22',
-        name: 'Mine 22',
-        shortName: '22',
-        ore: 'coal',
-        oreIcon: '⚫',
-        logo: 'assets/Mine 22.png',
-        valueMultiplier: 1,
-        unlocked: true,
-        order: 1
-    },
-    mine37: {
-        id: 'mine37',
-        name: 'Mine 37',
-        shortName: '37',
-        ore: 'copper',
-        logo: 'assets/Mine 37.png',
-        oreIcon: '🟤',
-        valueMultiplier: 3, // Copper worth 3x coal
-        unlocked: false,
-        unlockRequirement: { type: 'coal', amount: 10000 }, // Unlock after 10k coal mined
-        order: 2
-    }
-};
-
 // ============================================
-// GAME STATE
+// GAME STATE (Constants are now in config.js)
 // ============================================
 let totalCoalSold = 0;
 let totalCoalMined = 0;
@@ -2040,6 +1939,211 @@ const settingsUserEmail = document.getElementById('settingsUserEmail');
 const settingsSaveStatus = document.getElementById('settingsSaveStatus');
 const autoSaveStatus = document.getElementById('autoSaveStatus');
 
+// Autosave configuration
+const AUTOSAVE_INTERVAL = 60000; // Save every 60 seconds
+let autosaveIntervalId = null;
+let lastSaveTime = null;
+
+// Start autosave interval for cloud saves
+function startCloudAutosave() {
+    if (autosaveIntervalId) {
+        clearInterval(autosaveIntervalId);
+    }
+
+    autosaveIntervalId = setInterval(async () => {
+        if (currentUser) {
+            try {
+                await saveGameToCloud();
+                lastSaveTime = new Date();
+                updateAutoSaveStatusDisplay();
+            } catch (error) {
+                console.error('Autosave failed:', error);
+            }
+        }
+    }, AUTOSAVE_INTERVAL);
+}
+
+// Stop autosave interval
+function stopCloudAutosave() {
+    if (autosaveIntervalId) {
+        clearInterval(autosaveIntervalId);
+        autosaveIntervalId = null;
+    }
+}
+
+// Save to localStorage (for non-logged in users)
+function saveToLocalStorage() {
+    saveCurrentMineState();
+
+    const shaftsData = mineshafts.map(s => ({
+        level: s.level,
+        bucketCoal: s.bucketCoal,
+        hasManager: s.hasManager,
+        managerAbility: s.managerAbility ? {
+            type: s.managerAbility.type,
+            name: s.managerAbility.name,
+            desc: s.managerAbility.desc,
+            icon: s.managerAbility.icon,
+            activeUntil: s.managerAbility.activeUntil,
+            cooldownUntil: s.managerAbility.cooldownUntil
+        } : null
+    }));
+
+    const gameData = {
+        totalCoalSold,
+        totalCoalMined,
+        totalCopperMined,
+        totalMoneyEarned,
+        money,
+        elevatorLevel,
+        hasElevatorManager,
+        elevatorManagerAbility: elevatorManagerAbility ? {
+            type: elevatorManagerAbility.type,
+            name: elevatorManagerAbility.name,
+            desc: elevatorManagerAbility.desc,
+            icon: elevatorManagerAbility.icon,
+            activeUntil: elevatorManagerAbility.activeUntil,
+            cooldownUntil: elevatorManagerAbility.cooldownUntil
+        } : null,
+        achievementsState,
+        shafts: shaftsData,
+        currentMineId,
+        minesUnlocked,
+        mineStates,
+        playerXP,
+        savedAt: Date.now()
+    };
+
+    try {
+        localStorage.setItem('dunhillMinerSave', JSON.stringify(gameData));
+        lastSaveTime = new Date();
+        updateAutoSaveStatusDisplay();
+        return true;
+    } catch (error) {
+        console.error('localStorage save failed:', error);
+        return false;
+    }
+}
+
+// Load from localStorage
+function loadFromLocalStorage() {
+    try {
+        const saved = localStorage.getItem('dunhillMinerSave');
+        if (!saved) return false;
+
+        const data = JSON.parse(saved);
+
+        totalCoalSold = data.totalCoalSold || 0;
+        totalCoalMined = data.totalCoalMined || 0;
+        totalCopperMined = data.totalCopperMined || 0;
+        totalMoneyEarned = data.totalMoneyEarned || 0;
+        money = data.money || 0;
+        elevatorLevel = data.elevatorLevel || 1;
+
+        if (data.currentMineId) currentMineId = data.currentMineId;
+        if (data.minesUnlocked) minesUnlocked = data.minesUnlocked;
+        if (data.mineStates) mineStates = data.mineStates;
+        if (data.playerXP !== undefined) playerXP = data.playerXP;
+        if (data.achievementsState) achievementsState = data.achievementsState;
+
+        // Rebuild mineshafts
+        if (data.shafts && data.shafts.length > 0) {
+            while (mineshafts.length < data.shafts.length) {
+                const newShaft = createNewShaft(mineshafts.length + 1);
+                mineshafts.push(newShaft);
+                createShaftElement(newShaft);
+            }
+
+            data.shafts.forEach((savedShaft, index) => {
+                if (mineshafts[index]) {
+                    mineshafts[index].level = savedShaft.level;
+                    mineshafts[index].bucketCoal = savedShaft.bucketCoal || 0;
+                    if (savedShaft.hasManager && !mineshafts[index].hasManager) {
+                        hireManagerFor(index, true);
+                        if (savedShaft.managerAbility) {
+                            mineshafts[index].managerAbility = savedShaft.managerAbility;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Restore elevator manager
+        if (data.hasElevatorManager && !hasElevatorManager) {
+            hasElevatorManager = true;
+            const elevatorManagerSlot = document.getElementById('elevatorManagerSlot');
+            elevatorManagerSlot.classList.add('hired');
+            elevatorManagerSlot.innerHTML = `
+                <div class="worker manager" style="position: relative;">
+                    <div class="worker-body">
+                        <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
+                        <div class="worker-head"></div>
+                        <div class="worker-torso"></div>
+                        <div class="worker-legs"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('operatorStatus').textContent = 'Auto';
+            if (data.elevatorManagerAbility) {
+                elevatorManagerAbility = data.elevatorManagerAbility;
+            }
+            autoElevator();
+        }
+
+        updateStats();
+        updatePlayerStats();
+        checkAchievements();
+        updateAchievementBadge();
+        renderMapPanel();
+        updateMineIndicator();
+        updateMineTheme();
+        updateLevelDisplay();
+
+        return true;
+    } catch (error) {
+        console.error('localStorage load failed:', error);
+        return false;
+    }
+}
+
+// Update autosave status display
+function updateAutoSaveStatusDisplay() {
+    if (currentUser) {
+        if (lastSaveTime) {
+            const timeAgo = Math.floor((Date.now() - lastSaveTime.getTime()) / 1000);
+            if (timeAgo < 60) {
+                autoSaveStatus.textContent = `Saved ${timeAgo}s ago`;
+            } else {
+                autoSaveStatus.textContent = `Saved ${Math.floor(timeAgo / 60)}m ago`;
+            }
+        } else {
+            autoSaveStatus.textContent = 'Active (60s)';
+        }
+        autoSaveStatus.style.color = '#32CD32';
+    } else {
+        if (lastSaveTime) {
+            autoSaveStatus.textContent = 'Local save active';
+            autoSaveStatus.style.color = '#ffd700';
+        } else {
+            autoSaveStatus.textContent = 'Local save';
+            autoSaveStatus.style.color = '#aaa';
+        }
+    }
+}
+
+// Start local autosave for non-logged in users
+function startLocalAutosave() {
+    if (autosaveIntervalId) {
+        clearInterval(autosaveIntervalId);
+    }
+
+    autosaveIntervalId = setInterval(() => {
+        if (!currentUser) {
+            saveToLocalStorage();
+        }
+    }, AUTOSAVE_INTERVAL);
+}
+
 auth.onAuthStateChanged(async (user) => {
     currentUser = user;
     if (user) {
@@ -2052,8 +2156,10 @@ auth.onAuthStateChanged(async (user) => {
         settingsNotLoggedIn.style.display = 'none';
         settingsLoggedIn.style.display = 'block';
         settingsUserEmail.textContent = user.email;
-        autoSaveStatus.textContent = 'Enabled';
-        autoSaveStatus.style.color = '#32CD32';
+
+        // Start cloud autosave
+        startCloudAutosave();
+        updateAutoSaveStatusDisplay();
 
         // Auto-load saved game on login
         await autoLoadGame();
@@ -2065,8 +2171,18 @@ auth.onAuthStateChanged(async (user) => {
         // Update settings panel view
         settingsNotLoggedIn.style.display = 'block';
         settingsLoggedIn.style.display = 'none';
-        autoSaveStatus.textContent = 'Not logged in';
-        autoSaveStatus.style.color = '#aaa';
+
+        // Stop cloud autosave and start local autosave
+        stopCloudAutosave();
+        startLocalAutosave();
+
+        // Try to load from localStorage
+        if (loadFromLocalStorage()) {
+            updateAutoSaveStatusDisplay();
+        } else {
+            autoSaveStatus.textContent = 'Local save';
+            autoSaveStatus.style.color = '#aaa';
+        }
     }
 });
 
