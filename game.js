@@ -5,6 +5,7 @@ const MANAGER_COST = 50;
 const BASE_UPGRADE_COST = 50;
 const UPGRADE_COST_MULTIPLIER = 1.5;
 const COAL_PER_LEVEL_MULTIPLIER = 1.2;
+const ELEVATOR_CAPACITY_MULTIPLIER = 1.3; // Elevator capacity scales by 30% per level
 const NEW_SHAFT_COST = 500;
 const SHAFT_BASE_COAL_MULTIPLIER = 2; // Each shaft produces 2x base of previous
 const BASE_ELEVATOR_CAPACITY = 10;
@@ -129,7 +130,7 @@ function canActivateAbility(abilityState) {
 }
 
 function getElevatorCapacity() {
-    let capacity = Math.floor(BASE_ELEVATOR_CAPACITY * Math.pow(COAL_PER_LEVEL_MULTIPLIER, elevatorLevel - 1));
+    let capacity = Math.floor(BASE_ELEVATOR_CAPACITY * Math.pow(ELEVATOR_CAPACITY_MULTIPLIER, elevatorLevel - 1));
     // Apply capacity ability if active
     if (elevatorManagerAbility && elevatorManagerAbility.type === 'capacity' && isAbilityActive(elevatorManagerAbility)) {
         capacity = Math.floor(capacity * 1.4);
@@ -1018,22 +1019,61 @@ function updatePlayerStats() {
     document.getElementById('statTotalMoney').textContent = '$' + formatNumber(totalMoneyEarned);
 }
 
+function closeAllPanels() {
+    document.getElementById('statsPanel').classList.remove('show');
+    document.getElementById('achievementsPanel').classList.remove('show');
+    document.getElementById('updatesPanel').classList.remove('show');
+}
+
 function toggleStatsPanel() {
     const panel = document.getElementById('statsPanel');
-    const menuButtons = document.querySelector('.menu-buttons');
-
-    if (panel.classList.contains('show')) {
-        panel.classList.remove('show');
-        menuButtons.style.display = 'flex';
-    } else {
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
         panel.classList.add('show');
-        menuButtons.style.display = 'none';
         updatePlayerStats();
     }
 }
 
-function openAchievementsModal() {
-    const modal = document.getElementById('achievementsModal');
+function toggleAchievementsPanel() {
+    const panel = document.getElementById('achievementsPanel');
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
+        panel.classList.add('show');
+        renderAchievementsList();
+    }
+}
+
+function toggleUpdatesPanel() {
+    const panel = document.getElementById('updatesPanel');
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
+        panel.classList.add('show');
+        renderUpdatesList();
+    }
+}
+
+function renderUpdatesList() {
+    const list = document.getElementById('updatesList');
+    list.innerHTML = UPDATE_LOG.map(version => `
+        <div class="update-version">
+            <div class="update-version-header">
+                <span class="update-version-number">v${version.version}</span>
+                <span class="update-version-date">${version.date}</span>
+            </div>
+            ${version.changes.map(change => `
+                <div class="update-change">
+                    <span class="update-change-icon">${getChangeTypeIcon(change.type)}</span>
+                    <span class="update-change-text">${change.text}</span>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+}
+
+function renderAchievementsList() {
     const list = document.getElementById('achievementsList');
 
     // Render achievements
@@ -1056,12 +1096,15 @@ function openAchievementsModal() {
             </div>
         `;
     }).join('');
+}
 
-    modal.classList.add('show');
+// Legacy function for compatibility
+function openAchievementsModal() {
+    toggleAchievementsPanel();
 }
 
 function closeAchievementsModal() {
-    document.getElementById('achievementsModal').classList.remove('show');
+    document.getElementById('achievementsPanel').classList.remove('show');
 }
 
 function claimAchievement(achievementId) {
@@ -1083,12 +1126,6 @@ function claimAchievement(achievementId) {
     }, 500);
 }
 
-// Close achievements modal when clicking outside
-document.getElementById('achievementsModal').addEventListener('click', (e) => {
-    if (e.target.classList.contains('achievements-modal')) {
-        closeAchievementsModal();
-    }
-});
 
 // Initialize achievements on load
 initAchievements();

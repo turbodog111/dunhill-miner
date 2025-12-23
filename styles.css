@@ -96,6 +96,17 @@ body {
     transform: translateX(-5px);
 }
 
+.updates-btn {
+    background: linear-gradient(to bottom, #2e8b57, #1e5f3a);
+    color: white;
+}
+
+.updates-btn:hover {
+    background: linear-gradient(to bottom, #3e9b67, #2e6f4a);
+    box-shadow: 0 0 15px rgba(46, 139, 87, 0.7);
+    transform: translateX(-5px);
+}
+
 .menu-icon {
     font-size: 18px;
 }
@@ -127,12 +138,12 @@ body {
     50% { transform: scale(1.15); }
 }
 
-/* Stats Panel (toggleable) */
-.stats-panel {
+/* Side Panels (Stats, Achievements, Updates) */
+.side-panel, .stats-panel {
     position: fixed;
     top: 150px;
-    right: 20px;
-    width: 240px;
+    right: 180px;
+    width: 280px;
     background: linear-gradient(to bottom, rgba(20, 10, 0, 0.98), rgba(40, 20, 0, 0.95));
     border: 2px solid #ffd700;
     border-radius: 12px;
@@ -141,9 +152,10 @@ body {
     display: none;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     overflow: hidden;
+    max-height: 70vh;
 }
 
-.stats-panel.show {
+.side-panel.show, .stats-panel.show {
     display: block;
     animation: slideIn 0.3s ease;
 }
@@ -159,7 +171,7 @@ body {
     }
 }
 
-.stats-panel-header {
+.side-panel-header, .stats-panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -168,13 +180,13 @@ body {
     color: #1a0a00;
 }
 
-.stats-panel-header h3 {
+.side-panel-header h3, .stats-panel-header h3 {
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 1px;
 }
 
-.stats-close {
+.panel-close, .stats-close {
     background: none;
     border: none;
     color: #1a0a00;
@@ -185,8 +197,26 @@ body {
     transition: transform 0.2s;
 }
 
-.stats-close:hover {
+.panel-close:hover, .stats-close:hover {
     transform: scale(1.2);
+}
+
+.side-panel-content {
+    padding: 10px;
+    max-height: calc(70vh - 50px);
+    overflow-y: auto;
+}
+
+/* Achievements Panel Header */
+.achievements-panel .side-panel-header {
+    background: linear-gradient(to right, #9932CC, #6a1b9a);
+    color: white;
+}
+
+/* Updates Panel Header */
+.updates-panel .side-panel-header {
+    background: linear-gradient(to right, #2e8b57, #1e5f3a);
+    color: white;
 }
 
 .stats-panel .stat-item {
@@ -1597,76 +1627,7 @@ body {
     box-shadow: 0 0 10px #dc3545;
 }
 
-/* Achievements Modal */
-.achievements-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-
-.achievements-modal.show {
-    display: flex;
-}
-
-.achievements-content {
-    background: linear-gradient(to bottom, #2a1a0a, #1a0a00);
-    border: 3px solid #ffd700;
-    border-radius: 15px;
-    padding: 0;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
-    box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
-}
-
-.achievements-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    background: linear-gradient(to right, #ffd700, #b8860b);
-    color: #1a0a00;
-}
-
-.achievements-header h2 {
-    margin: 0;
-    font-size: 20px;
-    letter-spacing: 1px;
-}
-
-.achievements-close {
-    background: rgba(0, 0, 0, 0.3);
-    border: none;
-    color: #1a0a00;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 20px;
-    font-weight: bold;
-    line-height: 1;
-    transition: all 0.2s;
-}
-
-.achievements-close:hover {
-    background: rgba(0, 0, 0, 0.5);
-    transform: scale(1.1);
-}
-
-#achievementsList {
-    padding: 15px;
-    max-height: calc(80vh - 60px);
-    overflow-y: auto;
-}
-
+/* Achievement Items */
 .achievement-item {
     background: rgba(0, 0, 0, 0.4);
     border: 2px solid #444;
@@ -1783,6 +1744,57 @@ body {
 
 .achievement-item.claiming {
     animation: achievementClaim 0.5s ease-out;
+}
+
+/* Update Log Items */
+.update-version {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid #2e8b57;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.update-version-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(46, 139, 87, 0.4);
+}
+
+.update-version-number {
+    color: #2e8b57;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.update-version-date {
+    color: #888;
+    font-size: 11px;
+}
+
+.update-change {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+}
+
+.update-change:last-child {
+    margin-bottom: 0;
+}
+
+.update-change-icon {
+    flex-shrink: 0;
+    font-size: 14px;
+}
+
+.update-change-text {
+    color: #ccc;
+    line-height: 1.4;
 }
 
 /* Coal sparkle effect */
