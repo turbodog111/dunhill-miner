@@ -1524,6 +1524,7 @@ function closeAllPanels() {
     document.getElementById('achievementsPanel').classList.remove('show');
     document.getElementById('updatesPanel').classList.remove('show');
     document.getElementById('mapPanel').classList.remove('show');
+    document.getElementById('settingsPanel').classList.remove('show');
 }
 
 function toggleStatsPanel() {
@@ -1558,6 +1559,15 @@ function toggleUpdatesPanel() {
 
 function toggleMapPanel() {
     const panel = document.getElementById('mapPanel');
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
+        panel.classList.add('show');
+    }
+}
+
+function toggleSettingsPanel() {
+    const panel = document.getElementById('settingsPanel');
     const wasOpen = panel.classList.contains('show');
     closeAllPanels();
     if (!wasOpen) {
@@ -1867,49 +1877,96 @@ function initGame() {
 initGame();
 
 // ============================================
-// AUDIO CONTROLS
+// AUDIO CONTROLS (Settings Panel)
 // ============================================
 const bgMusic = document.getElementById('bgMusic');
-const audioBtn = document.getElementById('audioBtn');
-const audioIcon = document.getElementById('audioIcon');
-let isMuted = true;
+const volumeSlider = document.getElementById('volumeSlider');
+const volumeIcon = document.getElementById('volumeIcon');
+const volumeValue = document.getElementById('volumeValue');
+let currentVolume = 0;
+let audioInitialized = false;
 
-function toggleAudio() {
-    if (isMuted) {
-        bgMusic.volume = 0.5;
-        bgMusic.play().then(() => {
-            isMuted = false;
-            audioIcon.textContent = '🔊';
-            audioBtn.classList.remove('muted');
-        }).catch(err => {
-            console.error('Audio play failed:', err);
-            audioIcon.textContent = '❌';
-        });
+// Initialize volume slider
+function initVolumeControls() {
+    volumeSlider.addEventListener('input', handleVolumeChange);
+    volumeIcon.addEventListener('click', toggleMute);
+    updateVolumeDisplay(0);
+}
+
+function handleVolumeChange(e) {
+    const value = parseInt(e.target.value);
+    setVolume(value);
+}
+
+function setVolume(value) {
+    currentVolume = value;
+    const normalizedVolume = value / 100;
+
+    // Update slider background
+    volumeSlider.style.background = `linear-gradient(to right, #ffd700 0%, #ffd700 ${value}%, #333 ${value}%, #333 100%)`;
+
+    if (value > 0) {
+        bgMusic.volume = normalizedVolume;
+        if (bgMusic.paused && audioInitialized) {
+            bgMusic.play().catch(() => {});
+        } else if (!audioInitialized) {
+            // First time playing - requires user interaction
+            bgMusic.volume = normalizedVolume;
+            bgMusic.play().then(() => {
+                audioInitialized = true;
+            }).catch(() => {});
+        }
     } else {
         bgMusic.pause();
-        isMuted = true;
-        audioIcon.textContent = '🔇';
-        audioBtn.classList.add('muted');
+    }
+
+    updateVolumeDisplay(value);
+}
+
+function updateVolumeDisplay(value) {
+    volumeValue.textContent = value + '%';
+    if (value === 0) {
+        volumeIcon.textContent = '🔇';
+    } else if (value < 50) {
+        volumeIcon.textContent = '🔉';
+    } else {
+        volumeIcon.textContent = '🔊';
+    }
+}
+
+function toggleMute() {
+    if (currentVolume > 0) {
+        // Store current volume and mute
+        volumeSlider.dataset.previousVolume = currentVolume;
+        volumeSlider.value = 0;
+        setVolume(0);
+    } else {
+        // Restore previous volume
+        const prevVolume = parseInt(volumeSlider.dataset.previousVolume) || 50;
+        volumeSlider.value = prevVolume;
+        setVolume(prevVolume);
+    }
+}
+
+// Legacy toggleAudio function for compatibility
+function toggleAudio() {
+    if (currentVolume === 0) {
+        volumeSlider.value = 50;
+        setVolume(50);
+    } else {
+        volumeSlider.value = 0;
+        setVolume(0);
     }
 }
 
 // Audio error handling
 bgMusic.addEventListener('error', function(e) {
     console.error('Audio file failed to load:', e);
-    audioIcon.textContent = '❌';
+    volumeIcon.textContent = '❌';
 });
 
-document.addEventListener('click', function initAudio() {
-    if (isMuted && bgMusic.paused) {
-        bgMusic.volume = 0.5;
-        bgMusic.play().then(() => {
-            isMuted = false;
-            audioIcon.textContent = '🔊';
-            audioBtn.classList.remove('muted');
-            document.removeEventListener('click', initAudio);
-        }).catch(() => {});
-    }
-}, { once: false });
+// Initialize volume controls when DOM is ready
+initVolumeControls();
 
 // ============================================
 // FIREBASE AUTHENTICATION & CLOUD SAVE
@@ -1937,21 +1994,68 @@ const loggedInView = document.getElementById('loggedInView');
 const userEmailEl = document.getElementById('userEmail');
 const saveStatusEl = document.getElementById('saveStatus');
 
-auth.onAuthStateChanged((user) => {
+// Settings panel elements
+const settingsNotLoggedIn = document.getElementById('settingsNotLoggedIn');
+const settingsLoggedIn = document.getElementById('settingsLoggedIn');
+const settingsUserEmail = document.getElementById('settingsUserEmail');
+const settingsSaveStatus = document.getElementById('settingsSaveStatus');
+const autoSaveStatus = document.getElementById('autoSaveStatus');
+
+auth.onAuthStateChanged(async (user) => {
     currentUser = user;
     if (user) {
+        // Update auth modal view
         authBtn.textContent = user.email.split('@')[0];
         authBtn.classList.add('logged-in');
         authFormView.style.display = 'none';
         loggedInView.style.display = 'block';
         userEmailEl.textContent = user.email;
+
+        // Update settings panel view
+        settingsNotLoggedIn.style.display = 'none';
+        settingsLoggedIn.style.display = 'block';
+        settingsUserEmail.textContent = user.email;
+        autoSaveStatus.textContent = 'Enabled';
+        autoSaveStatus.style.color = '#32CD32';
+
+        // Auto-load saved game on login
+        await autoLoadGame();
     } else {
+        // Update auth modal view
         authBtn.textContent = 'Login';
         authBtn.classList.remove('logged-in');
         authFormView.style.display = 'block';
         loggedInView.style.display = 'none';
+
+        // Update settings panel view
+        settingsNotLoggedIn.style.display = 'block';
+        settingsLoggedIn.style.display = 'none';
+        autoSaveStatus.textContent = 'Not logged in';
+        autoSaveStatus.style.color = '#aaa';
     }
 });
+
+// Auto-load game when user logs in
+async function autoLoadGame() {
+    if (!currentUser) return;
+
+    try {
+        const doc = await db.collection('saves').doc(currentUser.uid).get();
+        if (doc.exists) {
+            // Only auto-load if there's saved data
+            await loadGameFromCloud();
+            updateSettingsStatus('Progress loaded!', '#32CD32');
+        }
+    } catch (error) {
+        console.error('Auto-load failed:', error);
+    }
+}
+
+function updateSettingsStatus(message, color = '#32CD32') {
+    settingsSaveStatus.textContent = message;
+    settingsSaveStatus.style.color = color;
+    setTimeout(() => { settingsSaveStatus.textContent = ''; }, 3000);
+}
 
 function openAuthModal() {
     authModal.classList.add('show');
@@ -2090,9 +2194,11 @@ async function saveGameToCloud() {
     try {
         await db.collection('saves').doc(currentUser.uid).set(gameData);
         saveStatusEl.textContent = 'Saved successfully!';
+        updateSettingsStatus('Saved successfully!', '#32CD32');
         setTimeout(() => { saveStatusEl.textContent = ''; }, 3000);
     } catch (error) {
         saveStatusEl.textContent = 'Save failed: ' + error.message;
+        updateSettingsStatus('Save failed!', '#dc3545');
     }
 }
 
@@ -2206,12 +2312,15 @@ async function loadGameFromCloud() {
             updateMineTheme();
             updateLevelDisplay();
             saveStatusEl.textContent = 'Loaded successfully!';
+            updateSettingsStatus('Loaded successfully!', '#32CD32');
         } else {
             saveStatusEl.textContent = 'No saved game found';
+            updateSettingsStatus('No saved game found', '#ffd700');
         }
         setTimeout(() => { saveStatusEl.textContent = ''; }, 3000);
     } catch (error) {
         saveStatusEl.textContent = 'Load failed: ' + error.message;
+        updateSettingsStatus('Load failed!', '#dc3545');
     }
 }
 

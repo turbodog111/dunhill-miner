@@ -13,6 +13,17 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.6.1",
+        date: "2025-12-23",
+        changes: [
+            { type: "feature", text: "New Settings panel with organized controls" },
+            { type: "feature", text: "Music volume slider with mute toggle" },
+            { type: "feature", text: "Auto-load saved progress when logging in" },
+            { type: "ui", text: "Cleaner UI - removed floating buttons" },
+            { type: "ui", text: "Account management moved to Settings menu" }
+        ]
+    },
+    {
         version: "1.6.0",
         date: "2025-12-23",
         changes: [
