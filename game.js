@@ -380,7 +380,6 @@ function collectIdleRewards() {
             totalCopperMined += pendingIdleRewards.oreMined;
         }
 
-        updateMoneyDisplay();
         updateStats();
         checkAchievements();
 
