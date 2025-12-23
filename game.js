@@ -48,6 +48,7 @@ const ACHIEVEMENTS = [
 // ============================================
 let totalCoalSold = 0;
 let totalCoalMined = 0;
+let totalMoneyEarned = 0;
 let money = 0;
 let operatorState = 'idle';
 let hasElevatorManager = false;
@@ -78,7 +79,6 @@ const elevatorOperator = document.getElementById('elevatorOperator');
 const operatorStatus = document.getElementById('operatorStatus');
 const operatorProgressFill = document.getElementById('operatorProgressFill');
 const elevatorCapacityDisplay = document.getElementById('elevatorCapacityDisplay');
-const coalCountEl = document.getElementById('coalCount');
 const moneyCountEl = document.getElementById('moneyCount');
 const buyShaftBtn = document.getElementById('buyShaftBtn');
 const buyShaftArea = document.getElementById('buyShaftArea');
@@ -193,8 +193,7 @@ function getNewShaftCost() {
 }
 
 function updateStats() {
-    coalCountEl.textContent = formatNumber(totalCoalSold);
-    moneyCountEl.textContent = Math.floor(money);
+    moneyCountEl.textContent = formatNumber(money);
     updateBuyShaftButton();
     updateElevatorCapacityDisplay();
     elevatorLevelDisplay.textContent = elevatorLevel;
@@ -553,6 +552,7 @@ async function doElevatorRun() {
         totalCoalSold += elevatorCarrying;
         const moneyEarned = elevatorCarrying * 10;
         money += moneyEarned;
+        totalMoneyEarned += moneyEarned;
         createSparkle(175, 80, '+$' + Math.floor(moneyEarned));
         elevatorCarrying = 0;
         updateStats();
@@ -1011,11 +1011,22 @@ function updateAchievementBadge() {
 function updatePlayerStats() {
     document.getElementById('statTotalCoal').textContent = formatNumber(totalCoalMined);
     document.getElementById('statMineshafts').textContent = mineshafts.length;
+    document.getElementById('statElevatorLevel').textContent = elevatorLevel;
+    document.getElementById('statTotalMoney').textContent = '$' + formatNumber(totalMoneyEarned);
+}
 
-    // Count managers
-    let managerCount = mineshafts.filter(s => s.hasManager).length;
-    if (hasElevatorManager) managerCount++;
-    document.getElementById('statManagers').textContent = managerCount;
+function toggleStatsPanel() {
+    const panel = document.getElementById('statsPanel');
+    const menuButtons = document.querySelector('.menu-buttons');
+
+    if (panel.classList.contains('show')) {
+        panel.classList.remove('show');
+        menuButtons.style.display = 'flex';
+    } else {
+        panel.classList.add('show');
+        menuButtons.style.display = 'none';
+        updatePlayerStats();
+    }
 }
 
 function openAchievementsModal() {
@@ -1347,6 +1358,7 @@ async function saveGameToCloud() {
     const gameData = {
         totalCoalSold,
         totalCoalMined,
+        totalMoneyEarned,
         money,
         elevatorLevel,
         hasElevatorManager,
@@ -1383,6 +1395,7 @@ async function loadGameFromCloud() {
 
             totalCoalSold = data.totalCoalSold || 0;
             totalCoalMined = data.totalCoalMined || 0;
+            totalMoneyEarned = data.totalMoneyEarned || 0;
             money = data.money || 0;
             elevatorLevel = data.elevatorLevel || 1;
 
