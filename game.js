@@ -52,6 +52,358 @@ function closeCreditsPanel() {
     document.getElementById('creditsPanelOverlay').classList.remove('show');
 }
 
+// ============================================
+// MINE SWITCHING SYSTEM
+// ============================================
+function getCurrentMine() {
+    return MINES[currentMineId];
+}
+
+function renderMapPanel() {
+    const mapJourney = document.getElementById('mapJourney');
+    const minesList = Object.values(MINES).sort((a, b) => a.order - b.order);
+
+    let html = '';
+    minesList.forEach((mine, index) => {
+        const isUnlocked = minesUnlocked[mine.id];
+        const isCurrent = currentMineId === mine.id;
+        let statusClass = 'locked';
+        let statusText = 'Locked';
+        let clickHandler = '';
+
+        if (isCurrent) {
+            statusClass = 'current';
+            statusText = 'Current';
+        } else if (isUnlocked) {
+            statusClass = 'unlocked';
+            statusText = 'Travel';
+            clickHandler = `onclick="switchToMine('${mine.id}')"`;
+        }
+
+        const icon = isUnlocked ? (mine.ore === 'coal' ? '⛏️' : '🔶') : '?';
+
+        html += `
+            <div class="map-location ${statusClass}" id="mapLocation-${mine.id}" ${clickHandler}>
+                <div class="map-location-icon">${icon}</div>
+                <div class="map-location-name">${mine.name}</div>
+                <div class="map-location-status">${statusText}</div>
+            </div>
+        `;
+
+        // Add path between mines (except after last)
+        if (index < minesList.length - 1) {
+            html += `
+                <div class="map-path">
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                </div>
+            `;
+        }
+    });
+
+    // Add future mine placeholder
+    html += `
+        <div class="map-path">
+            <span class="path-dot"></span>
+            <span class="path-dot"></span>
+            <span class="path-dot"></span>
+            <span class="path-dot"></span>
+            <span class="path-dot"></span>
+        </div>
+        <div class="map-location locked">
+            <div class="map-location-icon">?</div>
+            <div class="map-location-name">???</div>
+            <div class="map-location-status">Locked</div>
+        </div>
+    `;
+
+    mapJourney.innerHTML = html;
+}
+
+function checkMineUnlocks() {
+    Object.keys(MINES).forEach(mineId => {
+        if (!minesUnlocked[mineId]) {
+            const mine = MINES[mineId];
+            if (mine.unlockRequirement) {
+                const req = mine.unlockRequirement;
+                if (req.type === 'coal' && totalCoalMined >= req.amount) {
+                    minesUnlocked[mineId] = true;
+                    renderMapPanel();
+                }
+            }
+        }
+    });
+}
+
+function saveCurrentMineState() {
+    // Save current mine's state
+    mineStates[currentMineId] = {
+        mineshafts: JSON.parse(JSON.stringify(mineshafts)),
+        elevatorLevel: elevatorLevel,
+        hasElevatorManager: hasElevatorManager,
+        elevatorManagerAbility: elevatorManagerAbility,
+        totalOreMined: currentMineId === 'mine22' ? totalCoalMined : totalCopperMined,
+        lastActiveTime: Date.now()
+    };
+}
+
+function calculateIdleRewards(mineId) {
+    const state = mineStates[mineId];
+    if (!state || !state.lastActiveTime || !state.mineshafts || state.mineshafts.length === 0) {
+        return null;
+    }
+
+    const now = Date.now();
+    const elapsedMs = now - state.lastActiveTime;
+    const elapsedSeconds = elapsedMs / 1000;
+
+    // Cap idle time at 8 hours
+    const maxIdleSeconds = 8 * 60 * 60;
+    const cappedSeconds = Math.min(elapsedSeconds, maxIdleSeconds);
+
+    // Calculate production based on mine state
+    let totalOrePerSecond = 0;
+    const mine = MINES[mineId];
+
+    // Only calculate if there's a manager to automate
+    state.mineshafts.forEach((shaft, idx) => {
+        if (shaft.hasManager) {
+            // Approximate ore per second (assuming ~3 second mining cycle)
+            const baseCoal = Math.pow(SHAFT_BASE_COAL_MULTIPLIER, idx);
+            const coal = baseCoal * Math.pow(COAL_PER_LEVEL_MULTIPLIER, shaft.level - 1);
+            totalOrePerSecond += coal / 3;
+        }
+    });
+
+    // If elevator has manager, we can actually sell
+    if (state.hasElevatorManager && totalOrePerSecond > 0) {
+        const totalOre = Math.floor(totalOrePerSecond * cappedSeconds);
+        const moneyEarned = Math.floor(totalOre * mine.valueMultiplier);
+
+        return {
+            mineId: mineId,
+            mineName: mine.name,
+            ore: mine.ore,
+            oreIcon: mine.oreIcon,
+            oreMined: totalOre,
+            moneyEarned: moneyEarned
+        };
+    }
+
+    return null;
+}
+
+function switchToMine(targetMineId) {
+    if (targetMineId === currentMineId) return;
+    if (!minesUnlocked[targetMineId]) return;
+
+    // Save current mine state
+    saveCurrentMineState();
+
+    // Calculate idle rewards for target mine
+    pendingIdleRewards = calculateIdleRewards(targetMineId);
+
+    // Fade transition
+    const fadeOverlay = document.getElementById('fadeOverlay');
+    fadeOverlay.classList.add('active');
+
+    setTimeout(() => {
+        // Switch mine
+        currentMineId = targetMineId;
+        loadMineState(targetMineId);
+
+        // Update UI theme
+        updateMineTheme();
+
+        // Rebuild the game view
+        rebuildGameView();
+
+        // Close map panel
+        closeAllPanels();
+
+        setTimeout(() => {
+            fadeOverlay.classList.remove('active');
+
+            // Show idle rewards if any
+            if (pendingIdleRewards) {
+                showIdleRewardsModal(pendingIdleRewards);
+            }
+        }, 300);
+    }, 500);
+}
+
+function loadMineState(mineId) {
+    const state = mineStates[mineId];
+    if (state && state.mineshafts && state.mineshafts.length > 0) {
+        mineshafts = JSON.parse(JSON.stringify(state.mineshafts));
+        elevatorLevel = state.elevatorLevel || 1;
+        hasElevatorManager = state.hasElevatorManager || false;
+        elevatorManagerAbility = state.elevatorManagerAbility || null;
+    } else {
+        // Initialize new mine with one shaft
+        mineshafts = [];
+        elevatorLevel = 1;
+        hasElevatorManager = false;
+        elevatorManagerAbility = null;
+    }
+
+    // Update last active time
+    mineStates[mineId].lastActiveTime = Date.now();
+}
+
+function rebuildGameView() {
+    // Clear existing mineshafts
+    mineshaftsContainer.innerHTML = '';
+
+    // If no shafts, create initial one
+    if (mineshafts.length === 0) {
+        createNewShaft();
+    } else {
+        // Recreate DOM for existing shafts
+        mineshafts.forEach((shaft, idx) => {
+            createShaftDOM(idx, shaft);
+        });
+    }
+
+    // Update mine indicator
+    updateMineIndicator();
+
+    // Update elevator
+    updateElevatorCapacityDisplay();
+    document.getElementById('elevatorLevelDisplay').textContent = elevatorLevel;
+
+    // Update buy shaft button
+    updateBuyShaftButton();
+}
+
+function createShaftDOM(index, shaftData) {
+    const shaftTop = 100 + (index * SHAFT_HEIGHT);
+
+    const shaftDiv = document.createElement('div');
+    shaftDiv.className = 'mineshaft';
+    shaftDiv.id = `shaft-${index}`;
+    shaftDiv.style.top = `${shaftTop}px`;
+
+    const mine = getCurrentMine();
+
+    shaftDiv.innerHTML = `
+        <div class="shaft-interior">
+            <div class="coal-deposit"></div>
+        </div>
+        <div class="mining-tunnel">
+            <div class="coal-vein" style="top: 15px; left: 10px;"></div>
+            <div class="coal-vein" style="top: 35px; left: 25px;"></div>
+            <div class="coal-vein" style="top: 50px; left: 5px;"></div>
+        </div>
+        <div class="support-beam"></div>
+        <div class="bucket" id="bucket-${index}">
+            <div class="bucket-fill" id="bucketFill-${index}" style="height: 0%"></div>
+        </div>
+        <div class="worker miner" id="miner-${index}" onclick="handleMinerClick(${index})">
+            <div class="worker-status" id="minerStatus-${index}">Click to mine!</div>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="minerProgressFill-${index}"></div>
+            </div>
+            <div class="worker-body">
+                <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
+                <div class="worker-head"></div>
+                <div class="worker-torso"></div>
+                <div class="worker-legs"></div>
+            </div>
+            <div class="carried-coal" id="carriedCoal-${index}"></div>
+        </div>
+        <button class="upgrade-btn shaft-upgrade-btn" id="upgradeBtn-${index}" onclick="openShaftUpgradeModal(${index})">
+            <span id="shaftLevel-${index}">${shaftData.level}</span>
+        </button>
+        <div class="manager-slot" id="managerSlot-${index}">
+            <span class="plus-icon">+</span>
+        </div>
+    `;
+
+    mineshaftsContainer.appendChild(shaftDiv);
+
+    // Setup manager slot
+    setupManagerSlot(index, shaftData);
+
+    // Restart miner state if they have a manager
+    if (shaftData.hasManager) {
+        shaftData.state = 'mining';
+        shaftData.progress = 0;
+    }
+}
+
+function setupManagerSlot(index, shaftData) {
+    const slot = document.getElementById(`managerSlot-${index}`);
+
+    if (shaftData.hasManager) {
+        slot.innerHTML = `<span class="manager-icon" id="managerIcon-${index}">${shaftData.managerAbility ? shaftData.managerAbility.icon : 'M'}</span>`;
+        slot.classList.add('has-manager');
+        slot.onclick = () => showManagerInfo(index);
+    } else {
+        slot.innerHTML = '<span class="plus-icon">+</span>';
+        slot.classList.remove('has-manager');
+        slot.onclick = () => showHirePopup(index);
+    }
+}
+
+function updateMineIndicator() {
+    const mine = getCurrentMine();
+    const indicator = document.getElementById('mineIndicator');
+    const nameEl = document.getElementById('mineIndicatorName');
+
+    nameEl.textContent = mine.shortName;
+
+    // Update theme class
+    indicator.classList.remove('copper');
+    if (mine.ore === 'copper') {
+        indicator.classList.add('copper');
+    }
+}
+
+function updateMineTheme() {
+    const mine = getCurrentMine();
+    const gameContainer = document.getElementById('gameContainer');
+
+    gameContainer.classList.remove('copper-theme');
+    if (mine.ore === 'copper') {
+        gameContainer.classList.add('copper-theme');
+    }
+}
+
+function showIdleRewardsModal(rewards) {
+    document.getElementById('idleRewardsMine').textContent = rewards.mineName;
+    document.getElementById('idleRewardIcon').textContent = rewards.oreIcon;
+    document.getElementById('idleRewardOre').textContent = formatNumber(rewards.oreMined);
+    document.getElementById('idleRewardMoney').textContent = '$' + formatNumber(rewards.moneyEarned);
+
+    document.getElementById('idleRewardsModal').classList.add('show');
+}
+
+function collectIdleRewards() {
+    if (pendingIdleRewards) {
+        // Apply rewards
+        money += pendingIdleRewards.moneyEarned;
+        totalMoneyEarned += pendingIdleRewards.moneyEarned;
+
+        if (pendingIdleRewards.ore === 'coal') {
+            totalCoalMined += pendingIdleRewards.oreMined;
+        } else if (pendingIdleRewards.ore === 'copper') {
+            totalCopperMined += pendingIdleRewards.oreMined;
+        }
+
+        updateMoneyDisplay();
+        updateStats();
+        checkAchievements();
+
+        pendingIdleRewards = null;
+    }
+
+    document.getElementById('idleRewardsModal').classList.remove('show');
+}
+
 // Mineshaft manager ability types
 const SHAFT_ABILITIES = [
     { id: 'discount', name: '30% Discount', desc: '30% off upgrades', icon: '$' },
@@ -68,29 +420,87 @@ const ELEVATOR_ABILITIES = [
 
 // Achievement definitions
 const ACHIEVEMENTS = [
-    { id: 'coal_1', name: 'Coal Mined I', desc: 'You mined 100 coal!', icon: '⛏️', type: 'coal', target: 100 },
-    { id: 'coal_2', name: 'Coal Mined II', desc: 'You mined 1,000 coal!', icon: '⛏️', type: 'coal', target: 1000 },
-    { id: 'coal_3', name: 'Coal Mined III', desc: 'You mined 10,000 coal!', icon: '⛏️', type: 'coal', target: 10000 },
-    { id: 'coal_4', name: 'Coal Mined IV', desc: 'You mined 100,000 coal!', icon: '⛏️', type: 'coal', target: 100000 },
-    { id: 'coal_5', name: 'Coal Mined V', desc: 'You mined 1,000,000 coal!', icon: '⛏️', type: 'coal', target: 1000000 },
-    { id: 'shaft_1', name: 'Mineshaft I', desc: '2 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 2 },
-    { id: 'shaft_2', name: 'Mineshaft II', desc: '5 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 5 },
-    { id: 'shaft_3', name: 'Mineshaft III', desc: '20 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 20 },
-    { id: 'shaft_4', name: 'Mineshaft IV', desc: '50 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 50 },
-    { id: 'shaft_5', name: 'Mineshaft V', desc: '100 mineshafts unlocked!', icon: '🏭', type: 'shafts', target: 100 }
+    { id: 'coal_1', name: 'Coal Mined I', desc: 'Mine 100 coal', icon: '⛏️', type: 'coal', target: 100 },
+    { id: 'coal_2', name: 'Coal Mined II', desc: 'Mine 1,000 coal', icon: '⛏️', type: 'coal', target: 1000 },
+    { id: 'coal_3', name: 'Coal Mined III', desc: 'Mine 10,000 coal', icon: '⛏️', type: 'coal', target: 10000 },
+    { id: 'coal_4', name: 'Coal Mined IV', desc: 'Mine 100,000 coal', icon: '⛏️', type: 'coal', target: 100000 },
+    { id: 'coal_5', name: 'Coal Mined V', desc: 'Mine 1,000,000 coal', icon: '⛏️', type: 'coal', target: 1000000 },
+    { id: 'copper_1', name: 'Copper Mined I', desc: 'Mine 100 copper', icon: '🥉', type: 'copper', target: 100 },
+    { id: 'copper_2', name: 'Copper Mined II', desc: 'Mine 1,000 copper', icon: '🥉', type: 'copper', target: 1000 },
+    { id: 'copper_3', name: 'Copper Mined III', desc: 'Mine 10,000 copper', icon: '🥉', type: 'copper', target: 10000 },
+    { id: 'copper_4', name: 'Copper Mined IV', desc: 'Mine 100,000 copper', icon: '🥉', type: 'copper', target: 100000 },
+    { id: 'copper_5', name: 'Copper Mined V', desc: 'Mine 1,000,000 copper', icon: '🥉', type: 'copper', target: 1000000 },
+    { id: 'shaft_1', name: 'Mineshaft I', desc: 'Own 2 mineshafts', icon: '🏭', type: 'shafts', target: 2 },
+    { id: 'shaft_2', name: 'Mineshaft II', desc: 'Own 5 mineshafts', icon: '🏭', type: 'shafts', target: 5 },
+    { id: 'shaft_3', name: 'Mineshaft III', desc: 'Own 20 mineshafts', icon: '🏭', type: 'shafts', target: 20 },
+    { id: 'shaft_4', name: 'Mineshaft IV', desc: 'Own 50 mineshafts', icon: '🏭', type: 'shafts', target: 50 },
+    { id: 'shaft_5', name: 'Mineshaft V', desc: 'Own 100 mineshafts', icon: '🏭', type: 'shafts', target: 100 }
 ];
+
+// Mine definitions
+const MINES = {
+    mine22: {
+        id: 'mine22',
+        name: 'Mine 22',
+        shortName: '22',
+        ore: 'coal',
+        oreIcon: '⚫',
+        valueMultiplier: 1,
+        unlocked: true,
+        order: 1
+    },
+    mine37: {
+        id: 'mine37',
+        name: 'Mine 37',
+        shortName: '37',
+        ore: 'copper',
+        oreIcon: '🟤',
+        valueMultiplier: 3, // Copper worth 3x coal
+        unlocked: false,
+        unlockRequirement: { type: 'coal', amount: 10000 }, // Unlock after 10k coal mined
+        order: 2
+    }
+};
 
 // ============================================
 // GAME STATE
 // ============================================
 let totalCoalSold = 0;
 let totalCoalMined = 0;
+let totalCopperMined = 0;
 let totalMoneyEarned = 0;
 let money = 0;
 let operatorState = 'idle';
 let hasElevatorManager = false;
 let elevatorLevel = 1;
 let elevatorCarrying = 0;
+
+// Current mine state
+let currentMineId = 'mine22';
+let minesUnlocked = { mine22: true, mine37: false };
+
+// Mine-specific state storage (for idle rewards)
+let mineStates = {
+    mine22: {
+        mineshafts: [],
+        elevatorLevel: 1,
+        hasElevatorManager: false,
+        elevatorManagerAbility: null,
+        totalOreMined: 0,
+        lastActiveTime: Date.now()
+    },
+    mine37: {
+        mineshafts: [],
+        elevatorLevel: 1,
+        hasElevatorManager: false,
+        elevatorManagerAbility: null,
+        totalOreMined: 0,
+        lastActiveTime: null
+    }
+};
+
+// Pending idle rewards when switching mines
+let pendingIdleRewards = null;
 
 // Elevator manager ability state
 let elevatorManagerAbility = null; // { type, activeUntil, cooldownUntil }
@@ -436,10 +846,19 @@ async function doMining(shaftIndex) {
     await new Promise(r => setTimeout(r, 300));
     miner.classList.remove('has-coal');
     shaft.bucketCoal += coalToMine;
-    totalCoalMined += coalToMine;
+
+    // Track ore mined by type
+    const mine = getCurrentMine();
+    if (mine.ore === 'coal') {
+        totalCoalMined += coalToMine;
+    } else if (mine.ore === 'copper') {
+        totalCopperMined += coalToMine;
+    }
+
     updateShaftBucket(shaftIndex);
     updatePlayerStats();
     checkAchievements();
+    checkMineUnlocks();
 
     // 5. Return to idle
     miner.classList.add('walking');
@@ -589,8 +1008,12 @@ async function doElevatorRun() {
     elevatorOperator.classList.remove('has-coal');
 
     if (elevatorCarrying > 0) {
+        const mine = getCurrentMine();
         totalCoalSold += elevatorCarrying;
-        const moneyEarned = elevatorCarrying * 10;
+
+        // Calculate money based on mine's value multiplier
+        const baseValue = 10;
+        const moneyEarned = elevatorCarrying * baseValue * mine.valueMultiplier;
         money += moneyEarned;
         totalMoneyEarned += moneyEarned;
         createSparkle(175, 80, '+$' + Math.floor(moneyEarned));
@@ -1015,8 +1438,17 @@ function initAchievements() {
 function getAchievementProgress(achievement) {
     if (achievement.type === 'coal') {
         return Math.min(totalCoalMined, achievement.target);
+    } else if (achievement.type === 'copper') {
+        return Math.min(totalCopperMined, achievement.target);
     } else if (achievement.type === 'shafts') {
-        return Math.min(mineshafts.length, achievement.target);
+        // Count total shafts across all mines
+        let totalShafts = mineshafts.length;
+        Object.keys(mineStates).forEach(mineId => {
+            if (mineId !== currentMineId && mineStates[mineId].mineshafts) {
+                totalShafts += mineStates[mineId].mineshafts.length;
+            }
+        });
+        return Math.min(totalShafts, achievement.target);
     }
     return 0;
 }
@@ -1144,11 +1576,15 @@ function renderUpdatesList() {
 function renderAchievementsList() {
     const list = document.getElementById('achievementsList');
 
+    // Update summary
+    updateAchievementsSummary();
+
     // Render achievements
     list.innerHTML = ACHIEVEMENTS.map(achievement => {
         const state = achievementsState[achievement.id] || 'locked';
         const progress = getAchievementProgress(achievement);
         const progressPercent = Math.min((progress / achievement.target) * 100, 100);
+        const progressText = formatNumber(progress) + ' / ' + formatNumber(achievement.target);
 
         return `
             <div class="achievement-item ${state}" id="achievement-${achievement.id}">
@@ -1159,11 +1595,24 @@ function renderAchievementsList() {
                     <div class="achievement-progress">
                         <div class="achievement-progress-fill" style="width: ${progressPercent}%"></div>
                     </div>
+                    <div class="achievement-progress-text">${progressText}</div>
                 </div>
                 ${state === 'unlocked' ? `<button class="claim-btn" onclick="claimAchievement('${achievement.id}')">Claim</button>` : ''}
             </div>
         `;
     }).join('');
+}
+
+function updateAchievementsSummary() {
+    const total = ACHIEVEMENTS.length;
+    const claimed = ACHIEVEMENTS.filter(a => achievementsState[a.id] === 'claimed').length;
+    const unlocked = ACHIEVEMENTS.filter(a => achievementsState[a.id] === 'unlocked').length;
+    const completed = claimed + unlocked;
+    const percent = total > 0 ? Math.floor((completed / total) * 100) : 0;
+
+    document.getElementById('achievementsUnlocked').textContent = completed;
+    document.getElementById('achievementsTotal').textContent = total;
+    document.getElementById('achievementsPercent').textContent = percent;
 }
 
 // Legacy function for compatibility
@@ -1277,6 +1726,12 @@ function initGame() {
     // Create first mineshaft
     createMineshaft(0);
     updateStats();
+
+    // Initialize map panel
+    renderMapPanel();
+
+    // Update mine indicator
+    updateMineIndicator();
 }
 
 initGame();
@@ -1472,9 +1927,13 @@ async function saveGameToCloud() {
         } : null
     }));
 
+    // Save current mine state before saving
+    saveCurrentMineState();
+
     const gameData = {
         totalCoalSold,
         totalCoalMined,
+        totalCopperMined,
         totalMoneyEarned,
         money,
         elevatorLevel,
@@ -1489,6 +1948,10 @@ async function saveGameToCloud() {
         } : null,
         achievementsState,
         shafts: shaftsData,
+        // Mine system state
+        currentMineId,
+        minesUnlocked,
+        mineStates,
         savedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -1512,9 +1975,21 @@ async function loadGameFromCloud() {
 
             totalCoalSold = data.totalCoalSold || 0;
             totalCoalMined = data.totalCoalMined || 0;
+            totalCopperMined = data.totalCopperMined || 0;
             totalMoneyEarned = data.totalMoneyEarned || 0;
             money = data.money || 0;
             elevatorLevel = data.elevatorLevel || 1;
+
+            // Restore mine system state
+            if (data.currentMineId) {
+                currentMineId = data.currentMineId;
+            }
+            if (data.minesUnlocked) {
+                minesUnlocked = data.minesUnlocked;
+            }
+            if (data.mineStates) {
+                mineStates = data.mineStates;
+            }
 
             // Restore achievements state
             if (data.achievementsState) {
@@ -1589,6 +2064,9 @@ async function loadGameFromCloud() {
             updatePlayerStats();
             checkAchievements();
             updateAchievementBadge();
+            renderMapPanel();
+            updateMineIndicator();
+            updateMineTheme();
             saveStatusEl.textContent = 'Loaded successfully!';
         } else {
             saveStatusEl.textContent = 'No saved game found';

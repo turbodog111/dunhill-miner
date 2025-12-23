@@ -2408,3 +2408,202 @@ body {
     opacity: 1;
     pointer-events: all;
 }
+
+/* ============================================ */
+/* ACHIEVEMENTS SUMMARY                         */
+/* ============================================ */
+
+.achievements-summary {
+    background: linear-gradient(to right, rgba(255, 215, 0, 0.2), rgba(184, 134, 11, 0.2));
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    padding: 12px 15px;
+    margin: 0 15px 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.achievements-count {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffd700;
+}
+
+.achievements-percent {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 16px;
+    color: #aaa;
+}
+
+/* Achievement progress text */
+.achievement-progress-text {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.achievement-item.unlocked .achievement-progress-text,
+.achievement-item.claimed .achievement-progress-text {
+    color: #ffd700;
+}
+
+/* ============================================ */
+/* IDLE REWARDS MODAL                           */
+/* ============================================ */
+
+.idle-rewards-modal {
+    z-index: 10001;
+}
+
+.idle-rewards-box {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 4px solid #ffd700;
+    border-radius: 20px;
+    padding: 30px 40px;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
+    animation: rewardsPopIn 0.4s ease-out;
+}
+
+@keyframes rewardsPopIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.idle-rewards-box h2 {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 28px;
+    color: #ffd700;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.idle-rewards-mine {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 16px;
+    color: #888;
+    margin-bottom: 25px;
+}
+
+.idle-rewards-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.idle-reward-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 10px;
+    padding: 15px 25px;
+}
+
+.idle-reward-item .reward-icon {
+    font-size: 28px;
+}
+
+.idle-reward-item .reward-label {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 16px;
+    color: #aaa;
+}
+
+.idle-reward-item .reward-value {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.idle-rewards-btn {
+    background: linear-gradient(to bottom, #32CD32, #228B22);
+    border: 3px solid #90EE90;
+    color: white;
+    padding: 15px 40px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.idle-rewards-btn:hover {
+    background: linear-gradient(to bottom, #3de03d, #2da02d);
+    box-shadow: 0 0 20px rgba(50, 205, 50, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Map legend unlocked state */
+.legend-icon.unlocked {
+    color: #32CD32;
+}
+
+/* Map location clickable states */
+.map-location.unlocked {
+    cursor: pointer;
+    border-color: #32CD32;
+}
+
+.map-location.unlocked:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(50, 205, 50, 0.5);
+}
+
+.map-location.unlocked .map-location-icon {
+    background: linear-gradient(to bottom, #32CD32, #228B22);
+}
+
+/* ============================================ */
+/* COPPER MINE THEME                            */
+/* ============================================ */
+
+/* Copper mine colors - applied when on copper mine */
+.copper-theme .coal-deposit::before,
+.copper-theme .coal-vein {
+    background: linear-gradient(135deg, #cd7f32, #b87333, #8b4513) !important;
+}
+
+.copper-theme .carried-coal {
+    background: radial-gradient(circle at 30% 30%, #cd7f32, #8b4513) !important;
+}
+
+.copper-theme .bucket-fill {
+    background: linear-gradient(to top, #cd7f32, #b87333) !important;
+}
+
+.copper-theme .elevator-capacity {
+    color: #cd7f32 !important;
+}
+
+/* Copper colored elements */
+.copper-ore {
+    background: radial-gradient(circle at 30% 30%, #cd7f32, #8b4513);
+}
+
+/* Copper mine indicator */
+.mine-indicator.copper {
+    border-color: #cd7f32;
+}
+
+.mine-indicator.copper .mine-indicator-name {
+    color: #cd7f32;
+}
