@@ -453,11 +453,11 @@ const ELEVATOR_ABILITIES = [
 
 // Achievement definitions
 const ACHIEVEMENTS = [
-    { id: 'coal_1', name: 'Coal Mined I', desc: 'Mine 100 coal', icon: '⛏️', image: 'assets/icons/coal_mined_1.png', type: 'coal', target: 100 },
-    { id: 'coal_2', name: 'Coal Mined II', desc: 'Mine 1,000 coal', icon: '⛏️', image: 'assets/icons/coal_mined_2.png', type: 'coal', target: 1000 },
-    { id: 'coal_3', name: 'Coal Mined III', desc: 'Mine 10,000 coal', icon: '⛏️', image: 'assets/icons/coal_mined_3.png', type: 'coal', target: 10000 },
-    { id: 'coal_4', name: 'Coal Mined IV', desc: 'Mine 100,000 coal', icon: '⛏️', image: 'assets/icons/coal_mined_4.png', type: 'coal', target: 100000 },
-    { id: 'coal_5', name: 'Coal Mined V', desc: 'Mine 1,000,000 coal', icon: '⛏️', image: 'assets/icons/coal_mined_5.png', type: 'coal', target: 1000000 },
+    { id: 'coal_1', name: 'Coal Mined I', desc: 'Mine 100 coal', icon: '⛏️', image: 'assets/Coal Mined I.png', type: 'coal', target: 100 },
+    { id: 'coal_2', name: 'Coal Mined II', desc: 'Mine 1,000 coal', icon: '⛏️', image: 'assets/Coal Mined II.png', type: 'coal', target: 1000 },
+    { id: 'coal_3', name: 'Coal Mined III', desc: 'Mine 10,000 coal', icon: '⛏️', image: 'assets/Coal Mined III.png', type: 'coal', target: 10000 },
+    { id: 'coal_4', name: 'Coal Mined IV', desc: 'Mine 100,000 coal', icon: '⛏️', image: 'assets/Coal Mined IV.png', type: 'coal', target: 100000 },
+    { id: 'coal_5', name: 'Coal Mined V', desc: 'Mine 1,000,000 coal', icon: '⛏️', image: 'assets/Coal Mined V.png', type: 'coal', target: 1000000 },
     { id: 'copper_1', name: 'Copper Mined I', desc: 'Mine 100 copper', icon: '🥉', type: 'copper', target: 100 },
     { id: 'copper_2', name: 'Copper Mined II', desc: 'Mine 1,000 copper', icon: '🥉', type: 'copper', target: 1000 },
     { id: 'copper_3', name: 'Copper Mined III', desc: 'Mine 10,000 copper', icon: '🥉', type: 'copper', target: 10000 },
@@ -478,7 +478,7 @@ const MINES = {
         shortName: '22',
         ore: 'coal',
         oreIcon: '⚫',
-        logo: 'assets/icons/mine_22_logo.png',
+        logo: 'assets/Mine 22.png',
         valueMultiplier: 1,
         unlocked: true,
         order: 1
@@ -488,7 +488,7 @@ const MINES = {
         name: 'Mine 37',
         shortName: '37',
         ore: 'copper',
-        logo: 'assets/icons/mine_37_logo.png',
+        logo: 'assets/Mine 37.png',
         oreIcon: '🟤',
         valueMultiplier: 3, // Copper worth 3x coal
         unlocked: false,
