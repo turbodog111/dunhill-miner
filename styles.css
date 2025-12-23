@@ -2607,3 +2607,107 @@ body {
 .mine-indicator.copper .mine-indicator-name {
     color: #cd7f32;
 }
+
+/* ============================================ */
+/* PLAYER LEVEL DISPLAY                         */
+/* ============================================ */
+
+.level-display {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 8px 15px;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.level-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+}
+
+.level-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.level-number {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffd700;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+.level-progress-bar {
+    width: 80px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #444;
+}
+
+.level-progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #ffd700, #ffec8b);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.level-xp-text {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 10px;
+    color: #888;
+    text-align: center;
+}
+
+/* Level Up Notification */
+.level-up-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 4px solid #ffd700;
+    border-radius: 20px;
+    padding: 30px 50px;
+    text-align: center;
+    z-index: 10002;
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+}
+
+.level-up-notification.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.level-up-notification span:first-child {
+    display: block;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    margin-bottom: 10px;
+    letter-spacing: 3px;
+}
+
+.level-up-notification .new-level {
+    display: block;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
