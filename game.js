@@ -18,7 +18,7 @@ const ABILITY_COOLDOWN = 30 * 60 * 1000; // 30 minutes in ms
 
 // Player leveling system
 const MAX_PLAYER_LEVEL = 20;
-const XP_PER_RESOURCE = 0.5;
+const XP_PER_RESOURCE = 0.1;
 const LEVEL_XP_THRESHOLDS = [
     0,      // Level 1
     50,     // Level 2
@@ -274,6 +274,9 @@ function switchToMine(targetMineId) {
 }
 
 function loadMineState(mineId) {
+    // Stop any running elevator loops before switching
+    elevatorLoopId++;
+
     const state = mineStates[mineId];
     if (state && state.mineshafts && state.mineshafts.length > 0) {
         mineshafts = JSON.parse(JSON.stringify(state.mineshafts));
@@ -534,6 +537,9 @@ let elevatorManagerAbility = null; // { type, activeUntil, cooldownUntil }
 
 // Achievements state: { achievementId: 'locked' | 'unlocked' | 'claimed' }
 let achievementsState = {};
+
+// Elevator loop tracking - prevents multiple autoElevator loops
+let elevatorLoopId = 0;
 
 // Array of mineshafts
 let mineshafts = [];
@@ -1073,7 +1079,11 @@ function handleElevatorClick() {
 }
 
 async function autoElevator() {
-    while (hasElevatorManager) {
+    // Increment loop ID to invalidate any previous loops
+    elevatorLoopId++;
+    const myLoopId = elevatorLoopId;
+
+    while (hasElevatorManager && myLoopId === elevatorLoopId) {
         const hasCoal = mineshafts.some(s => s.bucketCoal > 0);
         if (operatorState === 'idle' && hasCoal) {
             await doElevatorRun();
@@ -1460,9 +1470,13 @@ setInterval(() => {
 // ============================================
 function initAchievements() {
     // Initialize all achievements as locked if not already set
+    // Also reset claimed achievements to unlocked (v1.6.2 XP reset)
     ACHIEVEMENTS.forEach(achievement => {
         if (!achievementsState[achievement.id]) {
             achievementsState[achievement.id] = 'locked';
+        } else if (achievementsState[achievement.id] === 'claimed') {
+            // Reset claimed to unlocked so players can reclaim XP
+            achievementsState[achievement.id] = 'unlocked';
         }
     });
 }
@@ -1770,8 +1784,6 @@ function showLevelUpNotification(level) {
 function updateLevelDisplay() {
     const level = getPlayerLevel();
     const progress = getLevelProgress();
-    const currentXP = playerXP;
-    const nextLevelXP = getXPForNextLevel();
 
     document.getElementById('playerLevel').textContent = level;
     document.getElementById('levelProgressFill').style.width = progress + '%';
@@ -1779,8 +1791,13 @@ function updateLevelDisplay() {
     if (level >= MAX_PLAYER_LEVEL) {
         document.getElementById('levelXPText').textContent = 'MAX';
     } else {
+        // Show XP progress within current level (not total XP)
+        const currentLevelXP = LEVEL_XP_THRESHOLDS[level - 1];
+        const nextLevelXP = LEVEL_XP_THRESHOLDS[level];
+        const xpIntoLevel = Math.floor(playerXP - currentLevelXP);
+        const xpNeeded = nextLevelXP - currentLevelXP;
         document.getElementById('levelXPText').textContent =
-            `${formatNumber(currentXP)}/${formatNumber(nextLevelXP)}`;
+            `${formatNumber(xpIntoLevel)}/${formatNumber(xpNeeded)}`;
     }
 }
 
