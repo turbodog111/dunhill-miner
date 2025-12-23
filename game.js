@@ -250,6 +250,10 @@ function loadMineState(mineId) {
         elevatorManagerAbility = null;
     }
 
+    // Reset elevator state for the new mine
+    operatorState = 'idle';
+    elevatorCarrying = 0;
+
     // Update last active time
     mineStates[mineId].lastActiveTime = Date.now();
 }
@@ -258,14 +262,44 @@ function rebuildGameView() {
     // Clear existing mineshafts
     mineshaftsContainer.innerHTML = '';
 
-    // If no shafts, create initial one
-    if (mineshafts.length === 0) {
-        createNewShaft();
+    // Store the saved shaft data before clearing
+    const savedShaftData = JSON.parse(JSON.stringify(mineshafts));
+    mineshafts = [];
+
+    // If no saved shafts, create initial one
+    if (savedShaftData.length === 0) {
+        createMineshaft(0);
     } else {
-        // Recreate DOM for existing shafts
-        mineshafts.forEach((shaft, idx) => {
-            createShaftDOM(idx, shaft);
-        });
+        // Recreate shafts with saved data
+        for (let i = 0; i < savedShaftData.length; i++) {
+            const shaft = createMineshaft(i);
+            const saved = savedShaftData[i];
+
+            // Restore saved state
+            shaft.level = saved.level || 1;
+            shaft.bucketCoal = saved.bucketCoal || 0;
+            shaft.elements.levelBtn.textContent = shaft.level;
+            updateShaftBucket(i);
+
+            // Restore manager if had one
+            if (saved.hasManager) {
+                shaft.hasManager = true;
+                shaft.managerAbility = saved.managerAbility;
+                shaft.elements.managerSlot.classList.add('hired');
+                shaft.elements.managerSlot.innerHTML = `
+                    <div class="worker manager" style="position: relative;">
+                        <div class="worker-body">
+                            <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
+                            <div class="worker-head"></div>
+                            <div class="worker-torso"></div>
+                            <div class="worker-legs"></div>
+                        </div>
+                    </div>
+                `;
+                shaft.elements.minerStatus.textContent = 'Auto';
+                autoMine(i);
+            }
+        }
     }
 
     // Update mine indicator
@@ -275,78 +309,30 @@ function rebuildGameView() {
     updateElevatorCapacityDisplay();
     document.getElementById('elevatorLevelDisplay').textContent = elevatorLevel;
 
+    // Reset elevator manager slot first
+    elevatorManagerSlot.classList.remove('hired');
+    elevatorManagerSlot.innerHTML = '<span class="plus-icon">+</span>';
+    operatorStatus.textContent = 'Click elevator!';
+
+    // Restore elevator manager if had one
+    if (hasElevatorManager) {
+        elevatorManagerSlot.classList.add('hired');
+        elevatorManagerSlot.innerHTML = `
+            <div class="worker manager" style="position: relative;">
+                <div class="worker-body">
+                    <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
+                    <div class="worker-head"></div>
+                    <div class="worker-torso"></div>
+                    <div class="worker-legs"></div>
+                </div>
+            </div>
+        `;
+        operatorStatus.textContent = 'Auto';
+        autoElevator();
+    }
+
     // Update buy shaft button
     updateBuyShaftButton();
-}
-
-function createShaftDOM(index, shaftData) {
-    const shaftTop = 100 + (index * SHAFT_HEIGHT);
-
-    const shaftDiv = document.createElement('div');
-    shaftDiv.className = 'mineshaft';
-    shaftDiv.id = `shaft-${index}`;
-    shaftDiv.style.top = `${shaftTop}px`;
-
-    const mine = getCurrentMine();
-
-    shaftDiv.innerHTML = `
-        <div class="shaft-interior">
-            <div class="coal-deposit"></div>
-        </div>
-        <div class="mining-tunnel">
-            <div class="coal-vein" style="top: 15px; left: 10px;"></div>
-            <div class="coal-vein" style="top: 35px; left: 25px;"></div>
-            <div class="coal-vein" style="top: 50px; left: 5px;"></div>
-        </div>
-        <div class="support-beam"></div>
-        <div class="bucket" id="bucket-${index}">
-            <div class="bucket-fill" id="bucketFill-${index}" style="height: 0%"></div>
-        </div>
-        <div class="worker miner" id="miner-${index}" onclick="handleMinerClick(${index})">
-            <div class="worker-status" id="minerStatus-${index}">Click to mine!</div>
-            <div class="progress-bar">
-                <div class="progress-bar-fill" id="minerProgressFill-${index}"></div>
-            </div>
-            <div class="worker-body">
-                <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
-                <div class="worker-head"></div>
-                <div class="worker-torso"></div>
-                <div class="worker-legs"></div>
-            </div>
-            <div class="carried-coal" id="carriedCoal-${index}"></div>
-        </div>
-        <button class="upgrade-btn shaft-upgrade-btn" id="upgradeBtn-${index}" onclick="openShaftUpgradeModal(${index})">
-            <span id="shaftLevel-${index}">${shaftData.level}</span>
-        </button>
-        <div class="manager-slot" id="managerSlot-${index}">
-            <span class="plus-icon">+</span>
-        </div>
-    `;
-
-    mineshaftsContainer.appendChild(shaftDiv);
-
-    // Setup manager slot
-    setupManagerSlot(index, shaftData);
-
-    // Restart miner state if they have a manager
-    if (shaftData.hasManager) {
-        shaftData.state = 'mining';
-        shaftData.progress = 0;
-    }
-}
-
-function setupManagerSlot(index, shaftData) {
-    const slot = document.getElementById(`managerSlot-${index}`);
-
-    if (shaftData.hasManager) {
-        slot.innerHTML = `<span class="manager-icon" id="managerIcon-${index}">${shaftData.managerAbility ? shaftData.managerAbility.icon : 'M'}</span>`;
-        slot.classList.add('has-manager');
-        slot.onclick = () => showManagerInfo(index);
-    } else {
-        slot.innerHTML = '<span class="plus-icon">+</span>';
-        slot.classList.remove('has-manager');
-        slot.onclick = () => showHirePopup(index);
-    }
 }
 
 function updateMineIndicator() {
