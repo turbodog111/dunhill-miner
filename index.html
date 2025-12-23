@@ -20,7 +20,7 @@
 <body>
     <!-- Background Music -->
     <audio id="bgMusic" loop>
-        <source src="Background1.mp3" type="audio/mpeg">
+        <source src="assets/audio/Background1.mp3" type="audio/mpeg">
     </audio>
 
     <!-- Mute Button -->
@@ -78,6 +78,12 @@
         </div>
     </div>
 
+    <!-- Current Mine Indicator -->
+    <div class="mine-indicator" id="mineIndicator">
+        <span class="mine-indicator-label">Mine</span>
+        <span class="mine-indicator-name">M22</span>
+    </div>
+
     <div class="game-header">
         <div class="stats-container">
             <div class="money-counter">
@@ -97,6 +103,10 @@
             <span class="menu-icon">🏆</span>
             <span class="menu-label">Achievements</span>
             <span class="achievement-badge" id="achievementBadge" style="display: none;">0</span>
+        </button>
+        <button class="menu-btn map-btn" id="mapBtn" onclick="toggleMapPanel()">
+            <span class="menu-icon">🗺️</span>
+            <span class="menu-label">Map</span>
         </button>
         <button class="menu-btn updates-btn" id="updatesBtn" onclick="toggleUpdatesPanel()">
             <span class="menu-icon">📋</span>
@@ -273,6 +283,57 @@
             <button class="panel-close" onclick="toggleUpdatesPanel()">×</button>
         </div>
         <div class="side-panel-content" id="updatesList"></div>
+    </div>
+
+    <!-- Map Panel (side panel) -->
+    <div class="side-panel map-panel" id="mapPanel">
+        <div class="side-panel-header map-header">
+            <h3>World Map</h3>
+            <button class="panel-close" onclick="toggleMapPanel()">×</button>
+        </div>
+        <div class="side-panel-content map-content">
+            <div class="map-journey">
+                <div class="map-location current" id="mapLocation-m22">
+                    <div class="map-location-icon">⛏️</div>
+                    <div class="map-location-name">Mine 22</div>
+                    <div class="map-location-status">Current</div>
+                </div>
+                <div class="map-path">
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                </div>
+                <div class="map-location locked" id="mapLocation-copper">
+                    <div class="map-location-icon">?</div>
+                    <div class="map-location-name">TBD Copper</div>
+                    <div class="map-location-status">Locked</div>
+                </div>
+                <div class="map-path">
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                    <span class="path-dot"></span>
+                </div>
+                <div class="map-location locked">
+                    <div class="map-location-icon">?</div>
+                    <div class="map-location-name">???</div>
+                    <div class="map-location-status">Locked</div>
+                </div>
+            </div>
+            <div class="map-legend">
+                <div class="map-legend-item">
+                    <span class="legend-icon current">●</span>
+                    <span>Current Mine</span>
+                </div>
+                <div class="map-legend-item">
+                    <span class="legend-icon locked">●</span>
+                    <span>Locked</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="updates.js"></script>

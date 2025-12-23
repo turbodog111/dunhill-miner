@@ -1,13 +1,38 @@
 // Update Log Data
+// Change types are ordered: feature -> balance -> ui -> fix
+
+const UPDATE_LOG_LEGEND = [
+    { type: 'feature', icon: '✨', label: 'New Feature' },
+    { type: 'balance', icon: '⚖️', label: 'Balance Change' },
+    { type: 'ui', icon: '🎨', label: 'Visual/UI' },
+    { type: 'fix', icon: '🔧', label: 'Bug Fix' }
+];
+
+// Order for sorting changes within a version
+const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
+
 const UPDATE_LOG = [
+    {
+        version: "1.3.0",
+        date: "2024-12-23",
+        changes: [
+            { type: "feature", text: "Added World Map with mine locations" },
+            { type: "feature", text: "Added mine indicator showing current location (M22)" },
+            { type: "feature", text: "Preparing for multiple mineral types (Copper coming soon!)" },
+            { type: "ui", text: "Improved mining tunnel with realistic dirt and coal textures" },
+            { type: "ui", text: "Enhanced coal deposit visuals" },
+            { type: "fix", text: "Fixed elevator operator appearing behind building" },
+            { type: "fix", text: "Fixed audio file path for background music" }
+        ]
+    },
     {
         version: "1.2.0",
         date: "2024-12-23",
         changes: [
             { type: "feature", text: "Added Update Log to track changes" },
+            { type: "balance", text: "Elevator capacity now scales by 30% per level (was 20%)" },
             { type: "ui", text: "Stats and Achievements now open as consistent side panels" },
-            { type: "ui", text: "Menu buttons remain visible when panels are open" },
-            { type: "balance", text: "Elevator capacity now scales by 30% per level (was 20%)" }
+            { type: "ui", text: "Menu buttons remain visible when panels are open" }
         ]
     },
     {
@@ -54,4 +79,11 @@ function getChangeTypeColor(type) {
         case 'ui': return '#87CEEB';
         default: return '#aaa';
     }
+}
+
+// Sort changes by type order
+function sortChangesByType(changes) {
+    return [...changes].sort((a, b) => {
+        return TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type);
+    });
 }

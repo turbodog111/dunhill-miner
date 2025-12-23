@@ -1023,6 +1023,7 @@ function closeAllPanels() {
     document.getElementById('statsPanel').classList.remove('show');
     document.getElementById('achievementsPanel').classList.remove('show');
     document.getElementById('updatesPanel').classList.remove('show');
+    document.getElementById('mapPanel').classList.remove('show');
 }
 
 function toggleStatsPanel() {
@@ -1055,22 +1056,53 @@ function toggleUpdatesPanel() {
     }
 }
 
+function toggleMapPanel() {
+    const panel = document.getElementById('mapPanel');
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
+        panel.classList.add('show');
+    }
+}
+
 function renderUpdatesList() {
     const list = document.getElementById('updatesList');
-    list.innerHTML = UPDATE_LOG.map(version => `
-        <div class="update-version">
-            <div class="update-version-header">
-                <span class="update-version-number">v${version.version}</span>
-                <span class="update-version-date">${version.date}</span>
+
+    // Render legend first
+    const legendHtml = `
+        <div class="update-legend">
+            <div class="update-legend-title">Legend</div>
+            <div class="update-legend-items">
+                ${UPDATE_LOG_LEGEND.map(item => `
+                    <span class="update-legend-item">
+                        <span class="update-legend-icon">${item.icon}</span>
+                        <span class="update-legend-label">${item.label}</span>
+                    </span>
+                `).join('')}
             </div>
-            ${version.changes.map(change => `
-                <div class="update-change">
-                    <span class="update-change-icon">${getChangeTypeIcon(change.type)}</span>
-                    <span class="update-change-text">${change.text}</span>
-                </div>
-            `).join('')}
         </div>
-    `).join('');
+    `;
+
+    // Render versions with sorted changes
+    const versionsHtml = UPDATE_LOG.map(version => {
+        const sortedChanges = sortChangesByType(version.changes);
+        return `
+            <div class="update-version">
+                <div class="update-version-header">
+                    <span class="update-version-number">v${version.version}</span>
+                    <span class="update-version-date">${version.date}</span>
+                </div>
+                ${sortedChanges.map(change => `
+                    <div class="update-change">
+                        <span class="update-change-icon">${getChangeTypeIcon(change.type)}</span>
+                        <span class="update-change-text">${change.text}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }).join('');
+
+    list.innerHTML = legendHtml + versionsHtml;
 }
 
 function renderAchievementsList() {
