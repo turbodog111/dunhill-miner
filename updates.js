@@ -13,6 +13,21 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.5.0",
+        date: "2025-12-22",
+        changes: [
+            { type: "feature", text: "Added Mine 37 - Copper Mine (copper worth 3x coal!)" },
+            { type: "feature", text: "Multi-mine system with idle rewards when switching mines" },
+            { type: "feature", text: "Added Copper Mined I-V achievements" },
+            { type: "feature", text: "Mine unlocks after reaching milestones" },
+            { type: "ui", text: "Achievement progress now shows numbers (X / Y)" },
+            { type: "ui", text: "Achievement panel shows total unlocked with percentage" },
+            { type: "ui", text: "Copper mine features bronze-colored ore and buckets" },
+            { type: "ui", text: "Interactive World Map for mine switching" },
+            { type: "fix", text: "Fixed mine indicator format (Mine 22, not M22)" }
+        ]
+    },
+    {
         version: "1.4.0",
         date: "2025-12-22",
         changes: [

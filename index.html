@@ -137,7 +137,7 @@
 
                 <div class="credits-footer">
                     <p>Thank you for playing!</p>
-                    <p class="version-info">Version 1.4.0</p>
+                    <p class="version-info">Version 1.5.0</p>
                 </div>
             </div>
         </div>
@@ -209,7 +209,7 @@
     <!-- Current Mine Indicator -->
     <div class="mine-indicator" id="mineIndicator">
         <span class="mine-indicator-label">Mine</span>
-        <span class="mine-indicator-name">M22</span>
+        <span class="mine-indicator-name" id="mineIndicatorName">22</span>
     </div>
 
     <div class="game-header">
@@ -401,6 +401,10 @@
             <h3>Achievements</h3>
             <button class="panel-close" onclick="toggleAchievementsPanel()">×</button>
         </div>
+        <div class="achievements-summary" id="achievementsSummary">
+            <span class="achievements-count"><span id="achievementsUnlocked">0</span>/<span id="achievementsTotal">0</span></span>
+            <span class="achievements-percent">(<span id="achievementsPercent">0</span>%)</span>
+        </div>
         <div class="side-panel-content" id="achievementsList"></div>
     </div>
 
@@ -420,36 +424,8 @@
             <button class="panel-close" onclick="toggleMapPanel()">×</button>
         </div>
         <div class="side-panel-content map-content">
-            <div class="map-journey">
-                <div class="map-location current" id="mapLocation-m22">
-                    <div class="map-location-icon">⛏️</div>
-                    <div class="map-location-name">Mine 22</div>
-                    <div class="map-location-status">Current</div>
-                </div>
-                <div class="map-path">
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                </div>
-                <div class="map-location locked" id="mapLocation-copper">
-                    <div class="map-location-icon">?</div>
-                    <div class="map-location-name">TBD Copper</div>
-                    <div class="map-location-status">Locked</div>
-                </div>
-                <div class="map-path">
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                </div>
-                <div class="map-location locked">
-                    <div class="map-location-icon">?</div>
-                    <div class="map-location-name">???</div>
-                    <div class="map-location-status">Locked</div>
-                </div>
+            <div class="map-journey" id="mapJourney">
+                <!-- Map locations rendered by JS -->
             </div>
             <div class="map-legend">
                 <div class="map-legend-item">
@@ -457,10 +433,35 @@
                     <span>Current Mine</span>
                 </div>
                 <div class="map-legend-item">
+                    <span class="legend-icon unlocked">●</span>
+                    <span>Unlocked</span>
+                </div>
+                <div class="map-legend-item">
                     <span class="legend-icon locked">●</span>
                     <span>Locked</span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Idle Rewards Modal -->
+    <div class="modal-overlay idle-rewards-modal" id="idleRewardsModal">
+        <div class="idle-rewards-box">
+            <h2>Welcome Back!</h2>
+            <div class="idle-rewards-mine" id="idleRewardsMine">Mine 22</div>
+            <div class="idle-rewards-content">
+                <div class="idle-reward-item">
+                    <span class="reward-icon" id="idleRewardIcon">⚫</span>
+                    <span class="reward-label">Mined:</span>
+                    <span class="reward-value" id="idleRewardOre">0</span>
+                </div>
+                <div class="idle-reward-item">
+                    <span class="reward-icon">💰</span>
+                    <span class="reward-label">Earned:</span>
+                    <span class="reward-value" id="idleRewardMoney">$0</span>
+                </div>
+            </div>
+            <button class="idle-rewards-btn" onclick="collectIdleRewards()">Collect Rewards</button>
         </div>
     </div>
 
