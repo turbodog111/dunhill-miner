@@ -151,16 +151,20 @@
         <source src="assets/audio/Background1.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- Player Level Display -->
-    <div class="level-display" id="levelDisplay">
-        <div class="level-icon">⭐</div>
-        <div class="level-info">
-            <div class="level-number">Lv. <span id="playerLevel">1</span></div>
-            <div class="level-progress-bar">
-                <div class="level-progress-fill" id="levelProgressFill"></div>
+    <!-- Player Level Display - Blue Ribbon Style -->
+    <div class="level-ribbon" id="levelDisplay">
+        <div class="ribbon-badge">
+            <div class="badge-inner">
+                <span class="badge-level" id="playerLevel">1</span>
             </div>
-            <div class="level-xp-text" id="levelXPText">0/50</div>
         </div>
+        <div class="ribbon-banner">
+            <div class="ribbon-progress-track">
+                <div class="ribbon-progress-fill" id="levelProgressFill"></div>
+            </div>
+            <div class="ribbon-xp-text" id="levelXPText">0/50</div>
+        </div>
+        <div class="ribbon-tail"></div>
     </div>
 
     <!-- Auth Modal -->

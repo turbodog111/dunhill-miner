@@ -13,6 +13,17 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.7.0",
+        date: "2025-12-23",
+        changes: [
+            { type: "feature", text: "New blue ribbon level display with badge design" },
+            { type: "feature", text: "Custom achievement icons for Coal Mined I-V" },
+            { type: "feature", text: "Mine logo support for map locations" },
+            { type: "ui", text: "Darker mining aesthetic with vignette edge fade" },
+            { type: "ui", text: "XP shows exact numbers without rounding" }
+        ]
+    },
+    {
         version: "1.6.2",
         date: "2025-12-23",
         changes: [
