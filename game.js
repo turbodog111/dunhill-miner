@@ -16,6 +16,42 @@ const WALKING_SPEED = 0.15; // pixels per millisecond (uniform speed)
 const ABILITY_DURATION = 10 * 60 * 1000; // 10 minutes in ms
 const ABILITY_COOLDOWN = 30 * 60 * 1000; // 30 minutes in ms
 
+// ============================================
+// TITLE SCREEN CONTROLS
+// ============================================
+function startGame() {
+    const fadeOverlay = document.getElementById('fadeOverlay');
+    const titleScreen = document.getElementById('titleScreen');
+
+    // Fade to black
+    fadeOverlay.classList.add('active');
+
+    // After fade completes, hide title screen and fade back in
+    setTimeout(() => {
+        titleScreen.classList.add('hidden');
+        // Small delay then fade out the overlay
+        setTimeout(() => {
+            fadeOverlay.classList.remove('active');
+        }, 300);
+    }, 500);
+}
+
+function openAboutPanel() {
+    document.getElementById('aboutPanelOverlay').classList.add('show');
+}
+
+function closeAboutPanel() {
+    document.getElementById('aboutPanelOverlay').classList.remove('show');
+}
+
+function openCreditsPanel() {
+    document.getElementById('creditsPanelOverlay').classList.add('show');
+}
+
+function closeCreditsPanel() {
+    document.getElementById('creditsPanelOverlay').classList.remove('show');
+}
+
 // Mineshaft manager ability types
 const SHAFT_ABILITIES = [
     { id: 'discount', name: '30% Discount', desc: '30% off upgrades', icon: '$' },

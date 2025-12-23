@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Idle Miner</title>
+    <title>Dunhill Miner</title>
 
     <!-- Google Font - Chakra Petch -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +18,134 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Title Screen -->
+    <div class="title-screen" id="titleScreen">
+        <div class="title-content">
+            <img src="assets/LoadingScreen.jpg" alt="Dunhill Miner Logo" class="title-logo">
+            <h1 class="title-name">Dunhill Miner</h1>
+            <div class="title-buttons">
+                <button class="title-btn play-btn" onclick="startGame()">
+                    <span class="btn-icon">▶</span>
+                    <span>Play</span>
+                </button>
+                <button class="title-btn about-btn" onclick="openAboutPanel()">
+                    <span class="btn-icon">📖</span>
+                    <span>About</span>
+                </button>
+                <button class="title-btn credits-btn" onclick="openCreditsPanel()">
+                    <span class="btn-icon">👥</span>
+                    <span>Credits</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- About Panel -->
+        <div class="title-panel about-panel-overlay" id="aboutPanelOverlay">
+            <div class="title-panel-content">
+                <button class="title-panel-close" onclick="closeAboutPanel()">×</button>
+                <h2>About Dunhill Miner</h2>
+
+                <div class="about-section">
+                    <h3>⛏️ Welcome to the Mine!</h3>
+                    <p>Dunhill Miner is an idle mining game where you build and manage your own mining empire. Start from humble beginnings in Mine 22 and work your way up to becoming the most successful mining tycoon!</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>🏗️ Mineshafts</h3>
+                    <p>Mineshafts are the heart of your mining operation. Each shaft has a miner who digs coal and deposits it into a bucket. Click on a miner to make them work faster, or hire a manager to automate the process entirely.</p>
+                    <p><strong>Upgrades:</strong> Level up your shafts to increase coal production. Each upgrade increases output by 25% per level!</p>
+                    <p><strong>Expansion:</strong> Purchase additional shafts to multiply your mining capacity. Each new shaft produces more base coal than the last.</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>👔 Managers</h3>
+                    <p>Managers are the key to automation. Once hired, they automatically control their assigned worker, freeing you from constant clicking.</p>
+                    <p><strong>Special Abilities:</strong> Each manager has a unique ability that can be activated for powerful bonuses:</p>
+                    <ul>
+                        <li><em>Discount Master</em> - Reduces upgrade costs</li>
+                        <li><em>Speed Demon</em> - Temporarily boosts work speed</li>
+                        <li><em>Production Boost</em> - Increases coal output</li>
+                        <li><em>And more!</em></li>
+                    </ul>
+                    <p>Click on a manager to view their ability, activate it, or fire them if needed.</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>🛗 Elevator</h3>
+                    <p>The elevator transports coal from your mineshafts to the surface for selling. It travels between shafts, collecting coal from each bucket along the way.</p>
+                    <p><strong>Capacity:</strong> Upgrade the elevator to carry more coal per trip. Each level increases capacity by 30%!</p>
+                    <p><strong>Operator:</strong> The elevator operator sells the coal when it reaches the surface. Hire a manager to automate this process.</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>📊 Statistics</h3>
+                    <p>Track your mining empire's progress! The Stats panel shows:</p>
+                    <ul>
+                        <li>Total coal mined throughout your career</li>
+                        <li>Number of mineshafts owned</li>
+                        <li>Current elevator level</li>
+                        <li>Total money earned</li>
+                    </ul>
+                </div>
+
+                <div class="about-section">
+                    <h3>🏆 Achievements</h3>
+                    <p>Complete challenges to earn achievements! These milestones track your accomplishments as you progress through the game. From mining your first coal to becoming a mining mogul, there's always a new goal to strive for.</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>🗺️ World Map</h3>
+                    <p>The World Map shows your journey through different mining locations. You start at Mine 22, a coal mine, but as you progress, new locations with different minerals will become available!</p>
+                    <p><strong>Coming Soon:</strong> Copper mines, gold deposits, and more exotic materials await the most dedicated miners!</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>💡 Tips for Success</h3>
+                    <ul>
+                        <li>Hire managers early to automate your operation</li>
+                        <li>Balance upgrades between shafts and the elevator</li>
+                        <li>Use manager abilities strategically for maximum effect</li>
+                        <li>Expand to new shafts when you can afford them</li>
+                        <li>Save your progress with a free account!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credits Panel -->
+        <div class="title-panel credits-panel-overlay" id="creditsPanelOverlay">
+            <div class="title-panel-content credits-content">
+                <button class="title-panel-close" onclick="closeCreditsPanel()">×</button>
+                <h2>Credits</h2>
+
+                <div class="credits-section">
+                    <div class="credit-entry lead">
+                        <div class="credit-role">Lead Developer</div>
+                        <div class="credit-name">Joshua G.</div>
+                    </div>
+
+                    <div class="credit-entry">
+                        <div class="credit-role">Developer</div>
+                        <div class="credit-name">Claude</div>
+                    </div>
+
+                    <div class="credit-entry">
+                        <div class="credit-role">Developer</div>
+                        <div class="credit-name">Matthew G.</div>
+                    </div>
+                </div>
+
+                <div class="credits-footer">
+                    <p>Thank you for playing!</p>
+                    <p class="version-info">Version 1.4.0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fade Overlay for Transitions -->
+    <div class="fade-overlay" id="fadeOverlay"></div>
+
     <!-- Background Music -->
     <audio id="bgMusic" loop>
         <source src="assets/audio/Background1.mp3" type="audio/mpeg">

@@ -13,6 +13,16 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.4.0",
+        date: "2025-12-22",
+        changes: [
+            { type: "feature", text: "Added title screen with game logo" },
+            { type: "feature", text: "Added About section with detailed game guide" },
+            { type: "feature", text: "Added Credits section" },
+            { type: "ui", text: "Smooth fade-to-black transition when starting game" }
+        ]
+    },
+    {
         version: "1.3.1",
         date: "2025-12-22",
         changes: [
