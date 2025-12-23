@@ -151,16 +151,6 @@
         <source src="assets/audio/Background1.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- Mute Button -->
-    <button class="audio-btn" id="audioBtn" onclick="toggleAudio()">
-        <span id="audioIcon">🔇</span>
-    </button>
-
-    <!-- Auth Button -->
-    <button class="auth-btn" id="authBtn" onclick="openAuthModal()">
-        Login
-    </button>
-
     <!-- Player Level Display -->
     <div class="level-display" id="levelDisplay">
         <div class="level-icon">⭐</div>
@@ -251,6 +241,10 @@
         <button class="menu-btn updates-btn" id="updatesBtn" onclick="toggleUpdatesPanel()">
             <span class="menu-icon">📋</span>
             <span class="menu-label">Updates</span>
+        </button>
+        <button class="menu-btn settings-btn" id="settingsBtn" onclick="toggleSettingsPanel()">
+            <span class="menu-icon">⚙️</span>
+            <span class="menu-label">Settings</span>
         </button>
     </div>
 
@@ -451,6 +445,74 @@
                 <div class="map-legend-item">
                     <span class="legend-icon locked">●</span>
                     <span>Locked</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Panel (side panel) -->
+    <div class="side-panel settings-panel" id="settingsPanel">
+        <div class="side-panel-header settings-header">
+            <h3>Settings</h3>
+            <button class="panel-close" onclick="toggleSettingsPanel()">×</button>
+        </div>
+        <div class="side-panel-content settings-content">
+            <!-- Audio Section -->
+            <div class="settings-section">
+                <h4 class="settings-section-title">Audio</h4>
+                <div class="settings-row">
+                    <span class="settings-label">Music Volume</span>
+                    <div class="volume-control">
+                        <span class="volume-icon" id="volumeIcon">🔇</span>
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="0">
+                        <span class="volume-value" id="volumeValue">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Section -->
+            <div class="settings-section">
+                <h4 class="settings-section-title">Account</h4>
+
+                <!-- Not Logged In View -->
+                <div id="settingsNotLoggedIn">
+                    <p class="settings-info">Log in to save your progress to the cloud!</p>
+                    <button class="settings-account-btn login-btn" onclick="openAuthModal()">
+                        <span class="btn-icon">👤</span>
+                        <span>Login / Sign Up</span>
+                    </button>
+                </div>
+
+                <!-- Logged In View -->
+                <div id="settingsLoggedIn" style="display: none;">
+                    <div class="settings-user-info">
+                        <span class="user-icon">👤</span>
+                        <span class="user-email-display" id="settingsUserEmail">user@email.com</span>
+                    </div>
+                    <div class="settings-save-row">
+                        <button class="settings-account-btn save-btn" onclick="saveGameToCloud()">
+                            <span class="btn-icon">💾</span>
+                            <span>Save Progress</span>
+                        </button>
+                        <button class="settings-account-btn load-btn" onclick="loadGameFromCloud()">
+                            <span class="btn-icon">📥</span>
+                            <span>Load Progress</span>
+                        </button>
+                    </div>
+                    <div class="settings-status" id="settingsSaveStatus"></div>
+                    <button class="settings-account-btn logout-btn" onclick="handleLogout()">
+                        <span class="btn-icon">🚪</span>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Auto-Save Info -->
+            <div class="settings-section">
+                <h4 class="settings-section-title">Auto-Save</h4>
+                <div class="settings-row">
+                    <span class="settings-label">Status</span>
+                    <span class="settings-value" id="autoSaveStatus">Not logged in</span>
                 </div>
             </div>
         </div>

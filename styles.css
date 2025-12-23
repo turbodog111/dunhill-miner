@@ -1580,51 +1580,10 @@ body {
     background: linear-gradient(to bottom, #777, #555);
 }
 
-/* Audio button */
-.audio-btn {
-    position: fixed;
-    top: 55px;
-    left: 10px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(to bottom, rgba(30, 15, 0, 0.9), rgba(50, 25, 0, 0.9));
-    border: 2px solid #ffd700;
-    cursor: pointer;
-    z-index: 101;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    transition: all 0.2s;
-}
-
-.audio-btn:hover {
-    background: linear-gradient(to bottom, rgba(50, 25, 0, 0.95), rgba(70, 35, 0, 0.95));
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-/* Auth button */
+/* Old audio/auth buttons - hidden, now in Settings panel */
+.audio-btn,
 .auth-btn {
-    position: fixed;
-    top: 55px;
-    left: 60px;
-    padding: 8px 15px;
-    border-radius: 8px;
-    background: linear-gradient(to bottom, #4169E1, #2850b0);
-    border: 2px solid #ffd700;
-    color: white;
-    cursor: pointer;
-    z-index: 101;
-    font-weight: bold;
-    font-size: 13px;
-    transition: all 0.2s;
-    font-family: 'Chakra Petch', sans-serif;
-}
-
-.auth-btn:hover {
-    background: linear-gradient(to bottom, #5179f1, #3860c0);
-    box-shadow: 0 0 10px rgba(65, 105, 225, 0.5);
+    display: none !important;
 }
 
 /* Auth modal */
@@ -2710,4 +2669,237 @@ body {
     font-weight: 700;
     color: #fff;
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================ */
+/* SETTINGS PANEL                              */
+/* ============================================ */
+
+.settings-btn {
+    background: linear-gradient(to bottom, #555, #333);
+}
+
+.settings-btn:hover {
+    background: linear-gradient(to bottom, #666, #444);
+    box-shadow: 0 0 15px rgba(150, 150, 150, 0.5);
+}
+
+.settings-panel .side-panel-header {
+    background: linear-gradient(to bottom, #444, #333);
+}
+
+.settings-content {
+    padding: 15px;
+}
+
+.settings-section {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.settings-section-title {
+    color: #ffd700;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.settings-row:last-child {
+    margin-bottom: 0;
+}
+
+.settings-label {
+    color: #ddd;
+    font-size: 13px;
+}
+
+.settings-value {
+    color: #aaa;
+    font-size: 13px;
+}
+
+/* Volume Control */
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.volume-icon {
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.volume-icon:hover {
+    transform: scale(1.1);
+}
+
+.volume-slider {
+    width: 100px;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(to right, #ffd700, #ffd700) 0% 0% / 0% 100% no-repeat, #333;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(to bottom, #ffd700, #cc9900);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(to bottom, #ffd700, #cc9900);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.volume-value {
+    color: #ffd700;
+    font-size: 12px;
+    min-width: 35px;
+    text-align: right;
+}
+
+/* Account Settings */
+.settings-info {
+    color: #aaa;
+    font-size: 12px;
+    margin: 0 0 12px 0;
+    text-align: center;
+}
+
+.settings-account-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 2px solid;
+    cursor: pointer;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+}
+
+.settings-account-btn:last-child {
+    margin-bottom: 0;
+}
+
+.settings-account-btn .btn-icon {
+    font-size: 16px;
+}
+
+.settings-account-btn.login-btn {
+    background: linear-gradient(to bottom, #4169E1, #2850b0);
+    border-color: #1a3a8a;
+    color: white;
+}
+
+.settings-account-btn.login-btn:hover {
+    background: linear-gradient(to bottom, #5179f1, #3860c0);
+    box-shadow: 0 0 10px rgba(65, 105, 225, 0.5);
+}
+
+.settings-account-btn.save-btn {
+    background: linear-gradient(to bottom, #ffd700, #cc9900);
+    border-color: #996600;
+    color: #1a1a1a;
+}
+
+.settings-account-btn.save-btn:hover {
+    background: linear-gradient(to bottom, #ffe033, #ddaa00);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.settings-account-btn.load-btn {
+    background: linear-gradient(to bottom, #32CD32, #228B22);
+    border-color: #006400;
+    color: white;
+}
+
+.settings-account-btn.load-btn:hover {
+    background: linear-gradient(to bottom, #44dd44, #339933);
+    box-shadow: 0 0 10px rgba(50, 205, 50, 0.5);
+}
+
+.settings-account-btn.logout-btn {
+    background: linear-gradient(to bottom, #dc3545, #a71d2a);
+    border-color: #721c24;
+    color: white;
+    margin-top: 10px;
+}
+
+.settings-account-btn.logout-btn:hover {
+    background: linear-gradient(to bottom, #e4606d, #bd2130);
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+}
+
+.settings-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.user-icon {
+    font-size: 24px;
+}
+
+.user-email-display {
+    color: #ddd;
+    font-size: 13px;
+    word-break: break-all;
+}
+
+.settings-save-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.settings-save-row .settings-account-btn {
+    margin-bottom: 0;
+}
+
+.settings-status {
+    text-align: center;
+    font-size: 12px;
+    color: #32CD32;
+    min-height: 18px;
+    margin-bottom: 5px;
 }
