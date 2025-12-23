@@ -221,6 +221,9 @@ function switchToMine(targetMineId) {
         // Rebuild the game view
         rebuildGameView();
 
+        // Update map to show new current mine
+        renderMapPanel();
+
         // Close map panel
         closeAllPanels();
 
@@ -820,7 +823,9 @@ async function doMining(shaftIndex) {
     miner.classList.add('has-coal');
 
     // 3. Walk back to bucket
-    status.textContent = 'Got coal!';
+    const currentMine = getCurrentMine();
+    const oreName = currentMine.ore === 'copper' ? 'copper' : 'coal';
+    status.textContent = `Got ${oreName}!`;
     miner.classList.add('walking');
     await setPosition(miner, mineEntrance.left, mineEntrance.top, mineToEntrance);
     await setPosition(miner, bucketPos.left, bucketPos.top, entranceToBucket);
