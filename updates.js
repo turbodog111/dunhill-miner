@@ -13,6 +13,15 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.6.2",
+        date: "2025-12-23",
+        changes: [
+            { type: "balance", text: "XP per resource reduced from 0.5 to 0.1" },
+            { type: "ui", text: "XP bar now shows progress within current level" },
+            { type: "fix", text: "Fixed elevator operator teleporting when switching mines" }
+        ]
+    },
+    {
         version: "1.6.1",
         date: "2025-12-23",
         changes: [
