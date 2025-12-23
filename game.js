@@ -115,11 +115,15 @@ function renderMapPanel() {
             clickHandler = `onclick="switchToMine('${mine.id}')"`;
         }
 
-        const icon = isUnlocked ? (mine.ore === 'coal' ? '⛏️' : '🔶') : '?';
+        const fallbackIcon = isUnlocked ? (mine.ore === 'coal' ? '⛏️' : '🔶') : '?';
+        // Use logo if available and mine is unlocked
+        const iconHtml = (mine.logo && isUnlocked)
+            ? `<img src="${mine.logo}" alt="${mine.name}" class="map-location-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="map-location-fallback" style="display:none">${fallbackIcon}</span>`
+            : fallbackIcon;
 
         html += `
             <div class="map-location ${statusClass}" id="mapLocation-${mine.id}" ${clickHandler}>
-                <div class="map-location-icon">${icon}</div>
+                <div class="map-location-icon">${iconHtml}</div>
                 <div class="map-location-name">${mine.name}</div>
                 <div class="map-location-status">${statusText}</div>
             </div>
@@ -449,11 +453,11 @@ const ELEVATOR_ABILITIES = [
 
 // Achievement definitions
 const ACHIEVEMENTS = [
-    { id: 'coal_1', name: 'Coal Mined I', desc: 'Mine 100 coal', icon: '⛏️', type: 'coal', target: 100 },
-    { id: 'coal_2', name: 'Coal Mined II', desc: 'Mine 1,000 coal', icon: '⛏️', type: 'coal', target: 1000 },
-    { id: 'coal_3', name: 'Coal Mined III', desc: 'Mine 10,000 coal', icon: '⛏️', type: 'coal', target: 10000 },
-    { id: 'coal_4', name: 'Coal Mined IV', desc: 'Mine 100,000 coal', icon: '⛏️', type: 'coal', target: 100000 },
-    { id: 'coal_5', name: 'Coal Mined V', desc: 'Mine 1,000,000 coal', icon: '⛏️', type: 'coal', target: 1000000 },
+    { id: 'coal_1', name: 'Coal Mined I', desc: 'Mine 100 coal', icon: '⛏️', image: 'assets/icons/coal_mined_1.png', type: 'coal', target: 100 },
+    { id: 'coal_2', name: 'Coal Mined II', desc: 'Mine 1,000 coal', icon: '⛏️', image: 'assets/icons/coal_mined_2.png', type: 'coal', target: 1000 },
+    { id: 'coal_3', name: 'Coal Mined III', desc: 'Mine 10,000 coal', icon: '⛏️', image: 'assets/icons/coal_mined_3.png', type: 'coal', target: 10000 },
+    { id: 'coal_4', name: 'Coal Mined IV', desc: 'Mine 100,000 coal', icon: '⛏️', image: 'assets/icons/coal_mined_4.png', type: 'coal', target: 100000 },
+    { id: 'coal_5', name: 'Coal Mined V', desc: 'Mine 1,000,000 coal', icon: '⛏️', image: 'assets/icons/coal_mined_5.png', type: 'coal', target: 1000000 },
     { id: 'copper_1', name: 'Copper Mined I', desc: 'Mine 100 copper', icon: '🥉', type: 'copper', target: 100 },
     { id: 'copper_2', name: 'Copper Mined II', desc: 'Mine 1,000 copper', icon: '🥉', type: 'copper', target: 1000 },
     { id: 'copper_3', name: 'Copper Mined III', desc: 'Mine 10,000 copper', icon: '🥉', type: 'copper', target: 10000 },
@@ -474,6 +478,7 @@ const MINES = {
         shortName: '22',
         ore: 'coal',
         oreIcon: '⚫',
+        logo: 'assets/icons/mine_22_logo.png',
         valueMultiplier: 1,
         unlocked: true,
         order: 1
@@ -483,6 +488,7 @@ const MINES = {
         name: 'Mine 37',
         shortName: '37',
         ore: 'copper',
+        logo: 'assets/icons/mine_37_logo.png',
         oreIcon: '🟤',
         valueMultiplier: 3, // Copper worth 3x coal
         unlocked: false,
@@ -1470,13 +1476,9 @@ setInterval(() => {
 // ============================================
 function initAchievements() {
     // Initialize all achievements as locked if not already set
-    // Also reset claimed achievements to unlocked (v1.6.2 XP reset)
     ACHIEVEMENTS.forEach(achievement => {
         if (!achievementsState[achievement.id]) {
             achievementsState[achievement.id] = 'locked';
-        } else if (achievementsState[achievement.id] === 'claimed') {
-            // Reset claimed to unlocked so players can reclaim XP
-            achievementsState[achievement.id] = 'unlocked';
         }
     });
 }
@@ -1642,9 +1644,14 @@ function renderAchievementsList() {
         const progressPercent = Math.min((progress / achievement.target) * 100, 100);
         const progressText = formatNumber(progress) + ' / ' + formatNumber(achievement.target);
 
+        // Use image if available, otherwise use emoji icon
+        const iconHtml = achievement.image
+            ? `<img src="${achievement.image}" alt="${achievement.name}" class="achievement-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="achievement-icon-fallback" style="display:none">${achievement.icon}</span>`
+            : `<span>${achievement.icon}</span>`;
+
         return `
             <div class="achievement-item ${state}" id="achievement-${achievement.id}">
-                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-icon">${iconHtml}</div>
                 <div class="achievement-info">
                     <div class="achievement-name">${achievement.name}</div>
                     <div class="achievement-desc">${achievement.desc}</div>
@@ -1791,13 +1798,13 @@ function updateLevelDisplay() {
     if (level >= MAX_PLAYER_LEVEL) {
         document.getElementById('levelXPText').textContent = 'MAX';
     } else {
-        // Show XP progress within current level (not total XP)
+        // Show exact XP progress within current level (no rounding)
         const currentLevelXP = LEVEL_XP_THRESHOLDS[level - 1];
         const nextLevelXP = LEVEL_XP_THRESHOLDS[level];
         const xpIntoLevel = Math.floor(playerXP - currentLevelXP);
         const xpNeeded = nextLevelXP - currentLevelXP;
         document.getElementById('levelXPText').textContent =
-            `${formatNumber(xpIntoLevel)}/${formatNumber(xpNeeded)}`;
+            `${xpIntoLevel}/${xpNeeded}`;
     }
 }
 

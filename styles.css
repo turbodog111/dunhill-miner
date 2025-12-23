@@ -6,12 +6,32 @@
 
 body {
     font-family: 'Chakra Petch', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #1a0a00 0%, #3d1a00 50%, #1a0a00 100%);
+    background: #0a0503;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     overflow-x: hidden;
+}
+
+/* Dark vignette overlay - fades to black at edges */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    background: radial-gradient(
+        ellipse 50% 50% at 50% 50%,
+        transparent 0%,
+        transparent 40%,
+        rgba(0, 0, 0, 0.3) 60%,
+        rgba(0, 0, 0, 0.6) 80%,
+        rgba(0, 0, 0, 0.85) 100%
+    );
 }
 
 .game-header {
@@ -303,6 +323,13 @@ body {
     margin-bottom: 5px;
 }
 
+.map-location-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
 .map-location.locked .map-location-icon {
     color: #666;
 }
@@ -402,7 +429,7 @@ body {
     width: 400px;
 }
 
-/* Rock Walls */
+/* Rock Walls - Dark Mining Theme */
 .rock-wall {
     position: absolute;
     top: 80px;
@@ -412,10 +439,10 @@ body {
     background:
         repeating-linear-gradient(
             180deg,
-            #4a3728 0px,
-            #3d2d22 8px,
-            #5a4738 16px,
-            #4a3728 24px
+            #2a1f18 0px,
+            #1f1610 8px,
+            #352820 16px,
+            #2a1f18 24px
         );
 }
 
@@ -426,23 +453,23 @@ body {
     width: 100%;
     height: 100%;
     background:
-        radial-gradient(ellipse 8px 6px at 5px 10px, #6b5548 0%, transparent 70%),
-        radial-gradient(ellipse 10px 8px at 15px 30px, #5a4438 0%, transparent 70%),
-        radial-gradient(ellipse 6px 5px at 8px 55px, #6b5548 0%, transparent 70%),
-        radial-gradient(ellipse 9px 7px at 18px 80px, #4a3428 0%, transparent 70%),
-        radial-gradient(ellipse 7px 6px at 6px 105px, #5a4438 0%, transparent 70%),
-        radial-gradient(ellipse 8px 6px at 12px 130px, #6b5548 0%, transparent 70%);
+        radial-gradient(ellipse 8px 6px at 5px 10px, #3d3028 0%, transparent 70%),
+        radial-gradient(ellipse 10px 8px at 15px 30px, #352820 0%, transparent 70%),
+        radial-gradient(ellipse 6px 5px at 8px 55px, #3d3028 0%, transparent 70%),
+        radial-gradient(ellipse 9px 7px at 18px 80px, #2a1f18 0%, transparent 70%),
+        radial-gradient(ellipse 7px 6px at 6px 105px, #352820 0%, transparent 70%),
+        radial-gradient(ellipse 8px 6px at 12px 130px, #3d3028 0%, transparent 70%);
     background-size: 25px 150px;
 }
 
 .left-wall {
     left: -25px;
-    border-right: 3px solid #2d1810;
+    border-right: 3px solid #1a0e08;
 }
 
 .right-wall {
     right: -25px;
-    border-left: 3px solid #2d1810;
+    border-left: 3px solid #1a0e08;
 }
 
 /* Enhanced Surface area */
@@ -818,22 +845,22 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Enhanced Mineshaft level */
+/* Enhanced Mineshaft level - Dark Theme */
 .mineshaft {
     position: relative;
     width: 100%;
     height: 120px;
     background:
-        linear-gradient(to bottom, #1a1a1a 0%, #252525 50%, #1a1a1a 100%),
+        linear-gradient(to bottom, #0d0d0d 0%, #151515 50%, #0d0d0d 100%),
         repeating-linear-gradient(
             90deg,
             transparent 0px,
             transparent 20px,
-            rgba(60, 50, 40, 0.3) 20px,
-            rgba(60, 50, 40, 0.3) 21px
+            rgba(40, 30, 20, 0.3) 20px,
+            rgba(40, 30, 20, 0.3) 21px
         );
-    border-top: 4px solid #4a4a4a;
-    border-bottom: 4px solid #3a3a3a;
+    border-top: 4px solid #2a2a2a;
+    border-bottom: 4px solid #1a1a1a;
     overflow: hidden;
 }
 
@@ -845,9 +872,9 @@ body {
     width: 100%;
     height: 100%;
     background:
-        radial-gradient(ellipse 40px 30px at 30px 40px, rgba(80, 60, 40, 0.2) 0%, transparent 70%),
-        radial-gradient(ellipse 50px 35px at 350px 70px, rgba(80, 60, 40, 0.15) 0%, transparent 70%),
-        radial-gradient(ellipse 30px 25px at 100px 90px, rgba(80, 60, 40, 0.2) 0%, transparent 70%);
+        radial-gradient(ellipse 40px 30px at 30px 40px, rgba(50, 35, 20, 0.2) 0%, transparent 70%),
+        radial-gradient(ellipse 50px 35px at 350px 70px, rgba(50, 35, 20, 0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 30px 25px at 100px 90px, rgba(50, 35, 20, 0.2) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -857,8 +884,8 @@ body {
     left: 0;
     width: 100%;
     height: 20px;
-    background: linear-gradient(to bottom, #5a4a3a, #4a3a2a, #3a2a1a);
-    border-top: 2px solid #6a5a4a;
+    background: linear-gradient(to bottom, #3a2a1a, #2a1a0a, #1a0a00);
+    border-top: 2px solid #4a3a2a;
 }
 
 .shaft-label {
@@ -875,7 +902,7 @@ body {
     border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
-/* Mining tunnel - improved dirt and coal visuals */
+/* Mining tunnel - Dark Theme with dirt and coal visuals */
 .mining-tunnel {
     position: absolute;
     top: 30px;
@@ -884,15 +911,15 @@ body {
     height: 70px;
     background:
         linear-gradient(to left,
-            #3d2817 0%,
-            #4a3520 20%,
-            #5c4028 40%,
-            #4a3520 60%,
+            #251810 0%,
+            #302015 20%,
+            #3a2818 40%,
+            #302015 60%,
             transparent 100%
         );
-    border-top: 4px solid #6b4423;
-    border-bottom: 4px solid #5a3a1d;
-    border-left: 4px solid #6b4423;
+    border-top: 4px solid #4a3018;
+    border-bottom: 4px solid #3a2010;
+    border-left: 4px solid #4a3018;
     border-radius: 10px 0 0 10px;
     overflow: hidden;
 }
@@ -906,14 +933,14 @@ body {
     height: 100%;
     background:
         /* Dirt texture spots */
-        radial-gradient(ellipse 8px 6px at 15px 15px, rgba(90, 60, 30, 0.6) 0%, transparent 70%),
-        radial-gradient(ellipse 10px 8px at 45px 25px, rgba(80, 50, 25, 0.5) 0%, transparent 70%),
-        radial-gradient(ellipse 6px 5px at 25px 45px, rgba(100, 70, 40, 0.4) 0%, transparent 70%),
-        radial-gradient(ellipse 9px 7px at 60px 55px, rgba(70, 45, 20, 0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 8px 6px at 15px 15px, rgba(60, 40, 20, 0.6) 0%, transparent 70%),
+        radial-gradient(ellipse 10px 8px at 45px 25px, rgba(50, 30, 15, 0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 6px 5px at 25px 45px, rgba(70, 45, 25, 0.4) 0%, transparent 70%),
+        radial-gradient(ellipse 9px 7px at 60px 55px, rgba(45, 30, 15, 0.5) 0%, transparent 70%),
         /* Small rock/pebble details */
-        radial-gradient(ellipse 4px 3px at 35px 18px, rgba(120, 80, 50, 0.7) 0%, transparent 70%),
-        radial-gradient(ellipse 3px 3px at 55px 40px, rgba(110, 75, 45, 0.6) 0%, transparent 70%),
-        radial-gradient(ellipse 5px 4px at 20px 55px, rgba(130, 90, 55, 0.5) 0%, transparent 70%);
+        radial-gradient(ellipse 4px 3px at 35px 18px, rgba(80, 50, 30, 0.7) 0%, transparent 70%),
+        radial-gradient(ellipse 3px 3px at 55px 40px, rgba(70, 45, 25, 0.6) 0%, transparent 70%),
+        radial-gradient(ellipse 5px 4px at 20px 55px, rgba(90, 60, 35, 0.5) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -926,10 +953,10 @@ body {
     height: 100%;
     background:
         /* Embedded coal veins */
-        radial-gradient(ellipse 12px 8px at 70px 20px, rgba(30, 30, 30, 0.9) 0%, transparent 60%),
-        radial-gradient(ellipse 8px 10px at 85px 35px, rgba(25, 25, 25, 0.85) 0%, transparent 60%),
-        radial-gradient(ellipse 10px 6px at 75px 50px, rgba(35, 35, 35, 0.9) 0%, transparent 60%),
-        radial-gradient(ellipse 6px 8px at 90px 55px, rgba(20, 20, 20, 0.8) 0%, transparent 60%);
+        radial-gradient(ellipse 12px 8px at 70px 20px, rgba(15, 15, 15, 0.9) 0%, transparent 60%),
+        radial-gradient(ellipse 8px 10px at 85px 35px, rgba(10, 10, 10, 0.85) 0%, transparent 60%),
+        radial-gradient(ellipse 10px 6px at 75px 50px, rgba(20, 20, 20, 0.9) 0%, transparent 60%),
+        radial-gradient(ellipse 6px 8px at 90px 55px, rgba(8, 8, 8, 0.8) 0%, transparent 60%);
     pointer-events: none;
 }
 
@@ -1811,6 +1838,14 @@ body {
     justify-content: center;
     font-size: 24px;
     flex-shrink: 0;
+    overflow: hidden;
+}
+
+.achievement-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
 .achievement-item.unlocked .achievement-icon,
@@ -2568,65 +2603,109 @@ body {
 }
 
 /* ============================================ */
-/* PLAYER LEVEL DISPLAY                         */
+/* PLAYER LEVEL DISPLAY - BLUE RIBBON          */
 /* ============================================ */
 
-.level-display {
+.level-ribbon {
     position: fixed;
-    top: 15px;
-    left: 15px;
+    top: 12px;
+    left: 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
-    border: 2px solid #ffd700;
-    border-radius: 12px;
-    padding: 8px 15px;
     z-index: 1000;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
 }
 
-.level-icon {
-    font-size: 24px;
-    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+.ribbon-badge {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #1e3a5f, #0d1f33);
+    border: 3px solid #4a9eff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    box-shadow:
+        0 0 15px rgba(74, 158, 255, 0.4),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.level-info {
+.badge-inner {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(180deg, #2563eb, #1d4ed8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #60a5fa;
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+.badge-level {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.5),
+        0 2px 2px rgba(0, 0, 0, 0.3);
+}
+
+.ribbon-banner {
+    background: linear-gradient(180deg, #1e40af, #1e3a8a);
+    height: 36px;
+    margin-left: -10px;
+    padding: 4px 12px 4px 16px;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    justify-content: center;
+    gap: 2px;
+    border: 2px solid #3b82f6;
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+    position: relative;
+    min-width: 100px;
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1);
 }
 
-.level-number {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: #ffd700;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
-}
-
-.level-progress-bar {
-    width: 80px;
-    height: 8px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 4px;
+.ribbon-progress-track {
+    width: 90px;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 5px;
     overflow: hidden;
-    border: 1px solid #444;
+    border: 1px solid #1e3a8a;
 }
 
-.level-progress-fill {
+.ribbon-progress-fill {
     height: 100%;
-    background: linear-gradient(to right, #ffd700, #ffec8b);
-    border-radius: 4px;
+    background: linear-gradient(180deg, #60a5fa, #3b82f6);
+    border-radius: 5px;
     transition: width 0.3s ease;
     width: 0%;
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
 }
 
-.level-xp-text {
+.ribbon-xp-text {
     font-family: 'Chakra Petch', sans-serif;
-    font-size: 10px;
-    color: #888;
-    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #93c5fd;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.ribbon-tail {
+    width: 0;
+    height: 0;
+    border-top: 18px solid transparent;
+    border-bottom: 18px solid transparent;
+    border-left: 12px solid #1e3a8a;
+    margin-left: -2px;
+    filter: drop-shadow(2px 0 2px rgba(0, 0, 0, 0.3));
 }
 
 /* Level Up Notification */
