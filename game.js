@@ -232,6 +232,8 @@ function createSparkle(x, y, text, container = gameContainer) {
 
 function animateProgress(progressFill, duration) {
     return new Promise(resolve => {
+        const progressBar = progressFill.parentElement;
+        progressBar.classList.add('active');
         const startTime = Date.now();
         const animate = () => {
             const elapsed = Date.now() - startTime;
@@ -241,6 +243,7 @@ function animateProgress(progressFill, duration) {
                 requestAnimationFrame(animate);
             } else {
                 progressFill.style.width = '0%';
+                progressBar.classList.remove('active');
                 resolve();
             }
         };
