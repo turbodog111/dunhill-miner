@@ -13,6 +13,18 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.6.0",
+        date: "2025-12-23",
+        changes: [
+            { type: "feature", text: "Player leveling system with max level 20" },
+            { type: "feature", text: "Earn XP from mining resources and claiming achievements" },
+            { type: "feature", text: "Level display with progress bar in top-left corner" },
+            { type: "balance", text: "Shaft prices now quadruple (4x) instead of doubling" },
+            { type: "ui", text: "Level-up celebration animation" },
+            { type: "fix", text: "Elevator capacity now uses consistent number formatting" }
+        ]
+    },
+    {
         version: "1.5.0",
         date: "2025-12-22",
         changes: [

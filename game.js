@@ -16,6 +16,41 @@ const WALKING_SPEED = 0.15; // pixels per millisecond (uniform speed)
 const ABILITY_DURATION = 10 * 60 * 1000; // 10 minutes in ms
 const ABILITY_COOLDOWN = 30 * 60 * 1000; // 30 minutes in ms
 
+// Player leveling system
+const MAX_PLAYER_LEVEL = 20;
+const XP_PER_RESOURCE = 0.5;
+const LEVEL_XP_THRESHOLDS = [
+    0,      // Level 1
+    50,     // Level 2
+    150,    // Level 3
+    350,    // Level 4
+    750,    // Level 5
+    1500,   // Level 6
+    2500,   // Level 7
+    4000,   // Level 8
+    5000,   // Level 9
+    6000,   // Level 10
+    7500,   // Level 11
+    8500,   // Level 12
+    10000,  // Level 13
+    12000,  // Level 14
+    14000,  // Level 15
+    16000,  // Level 16
+    18000,  // Level 17
+    21000,  // Level 18
+    25000,  // Level 19
+    30000   // Level 20
+];
+
+// Achievement XP rewards by class (I-V)
+const ACHIEVEMENT_XP_REWARDS = {
+    1: 100,    // Class I
+    2: 500,    // Class II
+    3: 2000,   // Class III
+    4: 5000,   // Class IV
+    5: 10000   // Class V
+};
+
 // ============================================
 // TITLE SCREEN CONTROLS
 // ============================================
@@ -383,6 +418,9 @@ function collectIdleRewards() {
             totalCopperMined += pendingIdleRewards.oreMined;
         }
 
+        // Award XP for idle mining
+        addXP(pendingIdleRewards.oreMined * XP_PER_RESOURCE);
+
         updateStats();
         checkAchievements();
 
@@ -458,6 +496,7 @@ let totalCoalMined = 0;
 let totalCopperMined = 0;
 let totalMoneyEarned = 0;
 let money = 0;
+let playerXP = 0;
 let operatorState = 'idle';
 let hasElevatorManager = false;
 let elevatorLevel = 1;
@@ -624,7 +663,7 @@ function getShaftSpeedMultiplier(shaftIndex) {
 }
 
 function getNewShaftCost() {
-    return NEW_SHAFT_COST * Math.pow(2, mineshafts.length - 1);
+    return NEW_SHAFT_COST * Math.pow(4, mineshafts.length - 1);
 }
 
 function updateStats() {
@@ -636,7 +675,7 @@ function updateStats() {
 
 function updateElevatorCapacityDisplay() {
     const capacity = getElevatorCapacity();
-    elevatorCapacityDisplay.textContent = `${formatNumber(elevatorCarrying)}/${capacity}`;
+    elevatorCapacityDisplay.textContent = `${formatNumber(elevatorCarrying)}/${formatNumber(capacity)}`;
 }
 
 function updateBuyShaftButton() {
@@ -837,13 +876,16 @@ async function doMining(shaftIndex) {
     miner.classList.remove('has-coal');
     shaft.bucketCoal += coalToMine;
 
-    // Track ore mined by type
+    // Track ore mined by type and award XP
     const mine = getCurrentMine();
     if (mine.ore === 'coal') {
         totalCoalMined += coalToMine;
     } else if (mine.ore === 'copper') {
         totalCopperMined += coalToMine;
     }
+
+    // Award XP for mining (0.5 XP per resource)
+    addXP(coalToMine * XP_PER_RESOURCE);
 
     updateShaftBucket(shaftIndex);
     updatePlayerStats();
@@ -1629,13 +1671,108 @@ function claimAchievement(achievementId) {
         const claimBtn = element.querySelector('.claim-btn');
         if (claimBtn) claimBtn.remove();
 
+        // Award XP based on achievement class
+        const achievementClass = getAchievementClass(achievementId);
+        const xpReward = ACHIEVEMENT_XP_REWARDS[achievementClass] || 100;
+        addXP(xpReward);
+
         updateAchievementBadge();
+        updateAchievementsSummary();
     }, 500);
 }
 
 
 // Initialize achievements on load
 initAchievements();
+
+// ============================================
+// PLAYER LEVELING SYSTEM
+// ============================================
+function getPlayerLevel() {
+    for (let i = LEVEL_XP_THRESHOLDS.length - 1; i >= 0; i--) {
+        if (playerXP >= LEVEL_XP_THRESHOLDS[i]) {
+            return i + 1;
+        }
+    }
+    return 1;
+}
+
+function getXPForNextLevel() {
+    const level = getPlayerLevel();
+    if (level >= MAX_PLAYER_LEVEL) {
+        return LEVEL_XP_THRESHOLDS[MAX_PLAYER_LEVEL - 1];
+    }
+    return LEVEL_XP_THRESHOLDS[level];
+}
+
+function getXPForCurrentLevel() {
+    const level = getPlayerLevel();
+    return LEVEL_XP_THRESHOLDS[level - 1];
+}
+
+function getLevelProgress() {
+    const level = getPlayerLevel();
+    if (level >= MAX_PLAYER_LEVEL) {
+        return 100;
+    }
+    const currentLevelXP = LEVEL_XP_THRESHOLDS[level - 1];
+    const nextLevelXP = LEVEL_XP_THRESHOLDS[level];
+    const xpIntoLevel = playerXP - currentLevelXP;
+    const xpNeeded = nextLevelXP - currentLevelXP;
+    return Math.floor((xpIntoLevel / xpNeeded) * 100);
+}
+
+function addXP(amount) {
+    const oldLevel = getPlayerLevel();
+    playerXP += amount;
+    const newLevel = getPlayerLevel();
+
+    updateLevelDisplay();
+
+    // Check for level up
+    if (newLevel > oldLevel) {
+        showLevelUpNotification(newLevel);
+    }
+}
+
+function getAchievementClass(achievementId) {
+    // Extract class from achievement ID (e.g., 'coal_3' -> 3)
+    const match = achievementId.match(/_(\d+)$/);
+    return match ? parseInt(match[1]) : 1;
+}
+
+function showLevelUpNotification(level) {
+    const notification = document.createElement('div');
+    notification.className = 'level-up-notification';
+    notification.innerHTML = `<span>LEVEL UP!</span><span class="new-level">Level ${level}</span>`;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 500);
+    }, 2500);
+}
+
+function updateLevelDisplay() {
+    const level = getPlayerLevel();
+    const progress = getLevelProgress();
+    const currentXP = playerXP;
+    const nextLevelXP = getXPForNextLevel();
+
+    document.getElementById('playerLevel').textContent = level;
+    document.getElementById('levelProgressFill').style.width = progress + '%';
+
+    if (level >= MAX_PLAYER_LEVEL) {
+        document.getElementById('levelXPText').textContent = 'MAX';
+    } else {
+        document.getElementById('levelXPText').textContent =
+            `${formatNumber(currentXP)}/${formatNumber(nextLevelXP)}`;
+    }
+}
 
 // ============================================
 // UPGRADE MODALS
@@ -1722,6 +1859,9 @@ function initGame() {
 
     // Update mine indicator
     updateMineIndicator();
+
+    // Initialize level display
+    updateLevelDisplay();
 }
 
 initGame();
@@ -1942,6 +2082,8 @@ async function saveGameToCloud() {
         currentMineId,
         minesUnlocked,
         mineStates,
+        // Player progression
+        playerXP,
         savedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -1979,6 +2121,11 @@ async function loadGameFromCloud() {
             }
             if (data.mineStates) {
                 mineStates = data.mineStates;
+            }
+
+            // Restore player progression
+            if (data.playerXP !== undefined) {
+                playerXP = data.playerXP;
             }
 
             // Restore achievements state
@@ -2057,6 +2204,7 @@ async function loadGameFromCloud() {
             renderMapPanel();
             updateMineIndicator();
             updateMineTheme();
+            updateLevelDisplay();
             saveStatusEl.textContent = 'Loaded successfully!';
         } else {
             saveStatusEl.textContent = 'No saved game found';
