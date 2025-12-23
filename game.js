@@ -95,10 +95,21 @@ function getCurrentMine() {
 }
 
 function renderMapPanel() {
-    const mapJourney = document.getElementById('mapJourney');
+    const mapMines = document.getElementById('mapMines');
+    const mapPaths = document.getElementById('mapPaths');
     const minesList = Object.values(MINES).sort((a, b) => a.order - b.order);
 
-    let html = '';
+    // Define mine positions on the visual map (percentage-based)
+    const minePositions = {
+        mine22: { left: 25, top: 65 },  // Coal mine - bottom left area
+        mine37: { left: 65, top: 35 },  // Copper mine - upper right area
+        future: { left: 50, top: 80 }   // Future mine placeholder
+    };
+
+    let minesHtml = '';
+    let pathsHtml = '';
+    const positions = [];
+
     minesList.forEach((mine, index) => {
         const isUnlocked = minesUnlocked[mine.id];
         const isCurrent = currentMineId === mine.id;
@@ -108,58 +119,62 @@ function renderMapPanel() {
 
         if (isCurrent) {
             statusClass = 'current';
-            statusText = 'Current';
+            statusText = 'Current Location';
         } else if (isUnlocked) {
             statusClass = 'unlocked';
-            statusText = 'Travel';
+            statusText = 'Click to Travel';
             clickHandler = `onclick="switchToMine('${mine.id}')"`;
         }
 
-        const fallbackIcon = isUnlocked ? (mine.ore === 'coal' ? '⛏️' : '🔶') : '?';
+        const pos = minePositions[mine.id] || { left: 50 + index * 15, top: 50 };
+        positions.push({ ...pos, id: mine.id });
+
+        const fallbackIcon = isUnlocked ? (mine.ore === 'coal' ? '⛏️' : '🔶') : '🔒';
         // Use logo if available and mine is unlocked
         const iconHtml = (mine.logo && isUnlocked)
-            ? `<img src="${mine.logo}" alt="${mine.name}" class="map-location-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="map-location-fallback" style="display:none">${fallbackIcon}</span>`
+            ? `<img src="${mine.logo}" alt="${mine.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${fallbackIcon}</span>`
             : fallbackIcon;
 
-        html += `
-            <div class="map-location ${statusClass}" id="mapLocation-${mine.id}" ${clickHandler}>
-                <div class="map-location-icon">${iconHtml}</div>
-                <div class="map-location-name">${mine.name}</div>
-                <div class="map-location-status">${statusText}</div>
+        minesHtml += `
+            <div class="map-mine-marker ${statusClass}" id="mapMine-${mine.id}"
+                 style="left: ${pos.left}%; top: ${pos.top}%; transform: translate(-50%, -50%);"
+                 ${clickHandler}>
+                <div class="mine-marker-icon">${iconHtml}</div>
+                <div class="mine-marker-label">
+                    <div class="mine-marker-name">${mine.name}</div>
+                    <div class="mine-marker-status">${statusText}</div>
+                </div>
             </div>
         `;
-
-        // Add path between mines (except after last)
-        if (index < minesList.length - 1) {
-            html += `
-                <div class="map-path">
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                    <span class="path-dot"></span>
-                </div>
-            `;
-        }
     });
 
     // Add future mine placeholder
-    html += `
-        <div class="map-path">
-            <span class="path-dot"></span>
-            <span class="path-dot"></span>
-            <span class="path-dot"></span>
-            <span class="path-dot"></span>
-            <span class="path-dot"></span>
-        </div>
-        <div class="map-location locked">
-            <div class="map-location-icon">?</div>
-            <div class="map-location-name">???</div>
-            <div class="map-location-status">Locked</div>
+    const futurePos = minePositions.future;
+    minesHtml += `
+        <div class="map-mine-marker locked"
+             style="left: ${futurePos.left}%; top: ${futurePos.top}%; transform: translate(-50%, -50%);">
+            <div class="mine-marker-icon">❓</div>
+            <div class="mine-marker-label">
+                <div class="mine-marker-name">???</div>
+                <div class="mine-marker-status">Locked</div>
+            </div>
         </div>
     `;
 
-    mapJourney.innerHTML = html;
+    // Draw paths between mines (SVG lines)
+    for (let i = 0; i < positions.length - 1; i++) {
+        const from = positions[i];
+        const to = positions[i + 1];
+        pathsHtml += `<path d="M ${from.left}% ${from.top}% L ${to.left}% ${to.top}%" />`;
+    }
+    // Path to future mine
+    if (positions.length > 0) {
+        const lastMine = positions[positions.length - 1];
+        pathsHtml += `<path d="M ${lastMine.left}% ${lastMine.top}% L ${futurePos.left}% ${futurePos.top}%" style="opacity: 0.4;" />`;
+    }
+
+    mapMines.innerHTML = minesHtml;
+    mapPaths.innerHTML = pathsHtml;
 }
 
 function checkMineUnlocks() {
@@ -1579,6 +1594,7 @@ function toggleMapPanel() {
     closeAllPanels();
     if (!wasOpen) {
         panel.classList.add('show');
+        renderMapPanel();
     }
 }
 
