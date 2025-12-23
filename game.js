@@ -4,7 +4,7 @@
 const MANAGER_COST = 50;
 const BASE_UPGRADE_COST = 50;
 const UPGRADE_COST_MULTIPLIER = 1.5;
-const COAL_PER_LEVEL_MULTIPLIER = 1.2;
+const COAL_PER_LEVEL_MULTIPLIER = 1.25;
 const ELEVATOR_CAPACITY_MULTIPLIER = 1.3; // Elevator capacity scales by 30% per level
 const NEW_SHAFT_COST = 500;
 const SHAFT_BASE_COAL_MULTIPLIER = 2; // Each shaft produces 2x base of previous
@@ -1255,12 +1255,14 @@ let isMuted = true;
 
 function toggleAudio() {
     if (isMuted) {
+        bgMusic.volume = 0.5;
         bgMusic.play().then(() => {
             isMuted = false;
             audioIcon.textContent = '🔊';
             audioBtn.classList.remove('muted');
         }).catch(err => {
-            console.log('Audio play failed:', err);
+            console.error('Audio play failed:', err);
+            audioIcon.textContent = '❌';
         });
     } else {
         bgMusic.pause();
@@ -1270,8 +1272,15 @@ function toggleAudio() {
     }
 }
 
+// Audio error handling
+bgMusic.addEventListener('error', function(e) {
+    console.error('Audio file failed to load:', e);
+    audioIcon.textContent = '❌';
+});
+
 document.addEventListener('click', function initAudio() {
     if (isMuted && bgMusic.paused) {
+        bgMusic.volume = 0.5;
         bgMusic.play().then(() => {
             isMuted = false;
             audioIcon.textContent = '🔊';
