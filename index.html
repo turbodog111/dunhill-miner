@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idle Miner</title>
 
+    <!-- Google Font - Chakra Petch -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -75,10 +80,6 @@
 
     <div class="game-header">
         <div class="stats-container">
-            <div class="coal-counter">
-                <span class="coal-icon"></span>
-                <span id="coalCount">0</span> Coal Sold
-            </div>
             <div class="money-counter">
                 <span class="money-icon">$</span>
                 <span id="moneyCount">0</span>
@@ -86,11 +87,51 @@
         </div>
     </div>
 
+    <!-- Menu Buttons -->
+    <div class="menu-buttons">
+        <button class="menu-btn stats-btn" id="statsBtn" onclick="toggleStatsPanel()">
+            <span class="menu-icon">📊</span>
+            <span class="menu-label">Stats</span>
+        </button>
+        <button class="menu-btn achievements-menu-btn" id="achievementsMenuBtn" onclick="openAchievementsModal()">
+            <span class="menu-icon">🏆</span>
+            <span class="menu-label">Achievements</span>
+            <span class="achievement-badge" id="achievementBadge" style="display: none;">0</span>
+        </button>
+    </div>
+
     <div class="game-wrapper">
         <div class="game-container" id="gameContainer">
+            <!-- Rock walls on sides -->
+            <div class="rock-wall left-wall"></div>
+            <div class="rock-wall right-wall"></div>
+
             <!-- Surface -->
             <div class="surface">
-                <div class="surface-building"></div>
+                <div class="sky"></div>
+                <div class="clouds">
+                    <div class="cloud cloud-1"></div>
+                    <div class="cloud cloud-2"></div>
+                    <div class="cloud cloud-3"></div>
+                </div>
+                <div class="sun"></div>
+                <div class="grass"></div>
+                <div class="surface-building">
+                    <div class="building-roof"></div>
+                    <div class="building-body">
+                        <div class="building-window"></div>
+                        <div class="building-window"></div>
+                        <div class="building-door"></div>
+                    </div>
+                    <div class="chimney">
+                        <div class="smoke"></div>
+                    </div>
+                </div>
+                <div class="ground-rocks">
+                    <div class="small-rock"></div>
+                    <div class="small-rock"></div>
+                    <div class="small-rock"></div>
+                </div>
             </div>
 
             <!-- Elevator Upgrade Button -->
@@ -194,25 +235,28 @@
         <p>Buy new shafts ($500) | Upgrade elevator capacity!</p>
     </div>
 
-    <!-- Player Stats Panel -->
-    <div class="player-stats-panel" id="playerStatsPanel">
-        <h3>Player Stats</h3>
+    <!-- Statistics Panel (toggleable) -->
+    <div class="stats-panel" id="statsPanel">
+        <div class="stats-panel-header">
+            <h3>Statistics</h3>
+            <button class="stats-close" onclick="toggleStatsPanel()">×</button>
+        </div>
         <div class="stat-item">
-            <span class="stat-label">Total Coal Mined:</span>
+            <span class="stat-label">Total Coal Mined</span>
             <span class="stat-value" id="statTotalCoal">0</span>
         </div>
         <div class="stat-item">
-            <span class="stat-label">Mineshafts:</span>
+            <span class="stat-label">Mineshafts Owned</span>
             <span class="stat-value" id="statMineshafts">1</span>
         </div>
         <div class="stat-item">
-            <span class="stat-label">Managers:</span>
-            <span class="stat-value" id="statManagers">0</span>
+            <span class="stat-label">Elevator Level</span>
+            <span class="stat-value" id="statElevatorLevel">1</span>
         </div>
-        <button class="achievements-btn" id="achievementsBtn" onclick="openAchievementsModal()">
-            Achievements
-            <span class="achievement-badge" id="achievementBadge" style="display: none;">0</span>
-        </button>
+        <div class="stat-item">
+            <span class="stat-label">Total Money Earned</span>
+            <span class="stat-value" id="statTotalMoney">$0</span>
+        </div>
     </div>
 
     <!-- Achievements Modal -->
@@ -220,7 +264,7 @@
         <div class="achievements-content">
             <div class="achievements-header">
                 <h2>Achievements</h2>
-                <button class="achievements-close" onclick="closeAchievementsModal()">X</button>
+                <button class="achievements-close" onclick="closeAchievementsModal()">×</button>
             </div>
             <div id="achievementsList"></div>
         </div>
