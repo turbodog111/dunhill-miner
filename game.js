@@ -1987,7 +1987,6 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
-const authBtn = document.getElementById('authBtn');
 const authModal = document.getElementById('authModal');
 const authFormView = document.getElementById('authFormView');
 const loggedInView = document.getElementById('loggedInView');
@@ -2005,8 +2004,6 @@ auth.onAuthStateChanged(async (user) => {
     currentUser = user;
     if (user) {
         // Update auth modal view
-        authBtn.textContent = user.email.split('@')[0];
-        authBtn.classList.add('logged-in');
         authFormView.style.display = 'none';
         loggedInView.style.display = 'block';
         userEmailEl.textContent = user.email;
@@ -2022,8 +2019,6 @@ auth.onAuthStateChanged(async (user) => {
         await autoLoadGame();
     } else {
         // Update auth modal view
-        authBtn.textContent = 'Login';
-        authBtn.classList.remove('logged-in');
         authFormView.style.display = 'block';
         loggedInView.style.display = 'none';
 
