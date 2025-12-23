@@ -2040,6 +2040,211 @@ const settingsUserEmail = document.getElementById('settingsUserEmail');
 const settingsSaveStatus = document.getElementById('settingsSaveStatus');
 const autoSaveStatus = document.getElementById('autoSaveStatus');
 
+// Autosave configuration
+const AUTOSAVE_INTERVAL = 60000; // Save every 60 seconds
+let autosaveIntervalId = null;
+let lastSaveTime = null;
+
+// Start autosave interval for cloud saves
+function startCloudAutosave() {
+    if (autosaveIntervalId) {
+        clearInterval(autosaveIntervalId);
+    }
+
+    autosaveIntervalId = setInterval(async () => {
+        if (currentUser) {
+            try {
+                await saveGameToCloud();
+                lastSaveTime = new Date();
+                updateAutoSaveStatusDisplay();
+            } catch (error) {
+                console.error('Autosave failed:', error);
+            }
+        }
+    }, AUTOSAVE_INTERVAL);
+}
+
+// Stop autosave interval
+function stopCloudAutosave() {
+    if (autosaveIntervalId) {
+        clearInterval(autosaveIntervalId);
+        autosaveIntervalId = null;
+    }
+}
+
+// Save to localStorage (for non-logged in users)
+function saveToLocalStorage() {
+    saveCurrentMineState();
+
+    const shaftsData = mineshafts.map(s => ({
+        level: s.level,
+        bucketCoal: s.bucketCoal,
+        hasManager: s.hasManager,
+        managerAbility: s.managerAbility ? {
+            type: s.managerAbility.type,
+            name: s.managerAbility.name,
+            desc: s.managerAbility.desc,
+            icon: s.managerAbility.icon,
+            activeUntil: s.managerAbility.activeUntil,
+            cooldownUntil: s.managerAbility.cooldownUntil
+        } : null
+    }));
+
+    const gameData = {
+        totalCoalSold,
+        totalCoalMined,
+        totalCopperMined,
+        totalMoneyEarned,
+        money,
+        elevatorLevel,
+        hasElevatorManager,
+        elevatorManagerAbility: elevatorManagerAbility ? {
+            type: elevatorManagerAbility.type,
+            name: elevatorManagerAbility.name,
+            desc: elevatorManagerAbility.desc,
+            icon: elevatorManagerAbility.icon,
+            activeUntil: elevatorManagerAbility.activeUntil,
+            cooldownUntil: elevatorManagerAbility.cooldownUntil
+        } : null,
+        achievementsState,
+        shafts: shaftsData,
+        currentMineId,
+        minesUnlocked,
+        mineStates,
+        playerXP,
+        savedAt: Date.now()
+    };
+
+    try {
+        localStorage.setItem('dunhillMinerSave', JSON.stringify(gameData));
+        lastSaveTime = new Date();
+        updateAutoSaveStatusDisplay();
+        return true;
+    } catch (error) {
+        console.error('localStorage save failed:', error);
+        return false;
+    }
+}
+
+// Load from localStorage
+function loadFromLocalStorage() {
+    try {
+        const saved = localStorage.getItem('dunhillMinerSave');
+        if (!saved) return false;
+
+        const data = JSON.parse(saved);
+
+        totalCoalSold = data.totalCoalSold || 0;
+        totalCoalMined = data.totalCoalMined || 0;
+        totalCopperMined = data.totalCopperMined || 0;
+        totalMoneyEarned = data.totalMoneyEarned || 0;
+        money = data.money || 0;
+        elevatorLevel = data.elevatorLevel || 1;
+
+        if (data.currentMineId) currentMineId = data.currentMineId;
+        if (data.minesUnlocked) minesUnlocked = data.minesUnlocked;
+        if (data.mineStates) mineStates = data.mineStates;
+        if (data.playerXP !== undefined) playerXP = data.playerXP;
+        if (data.achievementsState) achievementsState = data.achievementsState;
+
+        // Rebuild mineshafts
+        if (data.shafts && data.shafts.length > 0) {
+            while (mineshafts.length < data.shafts.length) {
+                const newShaft = createNewShaft(mineshafts.length + 1);
+                mineshafts.push(newShaft);
+                createShaftElement(newShaft);
+            }
+
+            data.shafts.forEach((savedShaft, index) => {
+                if (mineshafts[index]) {
+                    mineshafts[index].level = savedShaft.level;
+                    mineshafts[index].bucketCoal = savedShaft.bucketCoal || 0;
+                    if (savedShaft.hasManager && !mineshafts[index].hasManager) {
+                        hireManagerFor(index, true);
+                        if (savedShaft.managerAbility) {
+                            mineshafts[index].managerAbility = savedShaft.managerAbility;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Restore elevator manager
+        if (data.hasElevatorManager && !hasElevatorManager) {
+            hasElevatorManager = true;
+            const elevatorManagerSlot = document.getElementById('elevatorManagerSlot');
+            elevatorManagerSlot.classList.add('hired');
+            elevatorManagerSlot.innerHTML = `
+                <div class="worker manager" style="position: relative;">
+                    <div class="worker-body">
+                        <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
+                        <div class="worker-head"></div>
+                        <div class="worker-torso"></div>
+                        <div class="worker-legs"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('operatorStatus').textContent = 'Auto';
+            if (data.elevatorManagerAbility) {
+                elevatorManagerAbility = data.elevatorManagerAbility;
+            }
+            autoElevator();
+        }
+
+        updateStats();
+        updatePlayerStats();
+        checkAchievements();
+        updateAchievementBadge();
+        renderMapPanel();
+        updateMineIndicator();
+        updateMineTheme();
+        updateLevelDisplay();
+
+        return true;
+    } catch (error) {
+        console.error('localStorage load failed:', error);
+        return false;
+    }
+}
+
+// Update autosave status display
+function updateAutoSaveStatusDisplay() {
+    if (currentUser) {
+        if (lastSaveTime) {
+            const timeAgo = Math.floor((Date.now() - lastSaveTime.getTime()) / 1000);
+            if (timeAgo < 60) {
+                autoSaveStatus.textContent = `Saved ${timeAgo}s ago`;
+            } else {
+                autoSaveStatus.textContent = `Saved ${Math.floor(timeAgo / 60)}m ago`;
+            }
+        } else {
+            autoSaveStatus.textContent = 'Active (60s)';
+        }
+        autoSaveStatus.style.color = '#32CD32';
+    } else {
+        if (lastSaveTime) {
+            autoSaveStatus.textContent = 'Local save active';
+            autoSaveStatus.style.color = '#ffd700';
+        } else {
+            autoSaveStatus.textContent = 'Local save';
+            autoSaveStatus.style.color = '#aaa';
+        }
+    }
+}
+
+// Start local autosave for non-logged in users
+function startLocalAutosave() {
+    if (autosaveIntervalId) {
+        clearInterval(autosaveIntervalId);
+    }
+
+    autosaveIntervalId = setInterval(() => {
+        if (!currentUser) {
+            saveToLocalStorage();
+        }
+    }, AUTOSAVE_INTERVAL);
+}
+
 auth.onAuthStateChanged(async (user) => {
     currentUser = user;
     if (user) {
@@ -2052,8 +2257,10 @@ auth.onAuthStateChanged(async (user) => {
         settingsNotLoggedIn.style.display = 'none';
         settingsLoggedIn.style.display = 'block';
         settingsUserEmail.textContent = user.email;
-        autoSaveStatus.textContent = 'Enabled';
-        autoSaveStatus.style.color = '#32CD32';
+
+        // Start cloud autosave
+        startCloudAutosave();
+        updateAutoSaveStatusDisplay();
 
         // Auto-load saved game on login
         await autoLoadGame();
@@ -2065,8 +2272,18 @@ auth.onAuthStateChanged(async (user) => {
         // Update settings panel view
         settingsNotLoggedIn.style.display = 'block';
         settingsLoggedIn.style.display = 'none';
-        autoSaveStatus.textContent = 'Not logged in';
-        autoSaveStatus.style.color = '#aaa';
+
+        // Stop cloud autosave and start local autosave
+        stopCloudAutosave();
+        startLocalAutosave();
+
+        // Try to load from localStorage
+        if (loadFromLocalStorage()) {
+            updateAutoSaveStatusDisplay();
+        } else {
+            autoSaveStatus.textContent = 'Local save';
+            autoSaveStatus.style.color = '#aaa';
+        }
     }
 });
 
