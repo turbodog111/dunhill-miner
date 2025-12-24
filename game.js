@@ -10,7 +10,7 @@ let introMusicFading = false;
 
 function playIntroMusic() {
     if (!introMusic) return;
-    introMusic.volume = 0.5;
+    introMusic.volume = 0.75;
     introMusic.currentTime = 0;
     introMusic.play().catch(e => console.log('Intro music autoplay blocked:', e));
 }
@@ -36,7 +36,7 @@ function fadeOutIntroMusic(duration = 500, callback = null) {
             clearInterval(fadeInterval);
             introMusic.pause();
             introMusic.currentTime = 0;
-            introMusic.volume = 0.5;
+            introMusic.volume = 0.75;
             introMusicFading = false;
             if (callback) callback();
         }
