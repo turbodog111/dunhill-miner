@@ -3,13 +3,63 @@
 // ============================================
 
 // ============================================
-// INTRO MUSIC CONTROLS
+// SCENE AUDIO MANAGEMENT
 // ============================================
 const introMusic = document.getElementById('introMusic');
+const foremanMusic = document.getElementById('foremanMusic');
 let introMusicFading = false;
+let foremanMusicFading = false;
+
+// Track current scene for audio failsafes
+let currentSceneAudio = null; // 'intro', 'foreman', 'background', or null
+
+// Stop all scene music - failsafe function
+function stopAllSceneMusic() {
+    // Stop intro music
+    if (introMusic) {
+        introMusic.pause();
+        introMusic.currentTime = 0;
+        introMusic.volume = 0.75;
+    }
+    introMusicFading = false;
+
+    // Stop foreman music
+    if (foremanMusic) {
+        foremanMusic.pause();
+        foremanMusic.currentTime = 0;
+        foremanMusic.volume = 0.75;
+    }
+    foremanMusicFading = false;
+
+    // Stop background music
+    if (bgMusic) {
+        bgMusic.pause();
+    }
+
+    currentSceneAudio = null;
+}
+
+// Ensure only the specified audio is playing
+function ensureOnlyAudioPlaying(audioType) {
+    // Stop everything first
+    if (audioType !== 'intro' && introMusic && !introMusic.paused) {
+        introMusic.pause();
+        introMusic.currentTime = 0;
+    }
+    if (audioType !== 'foreman' && foremanMusic && !foremanMusic.paused) {
+        foremanMusic.pause();
+        foremanMusic.currentTime = 0;
+    }
+    if (audioType !== 'background' && bgMusic && !bgMusic.paused) {
+        bgMusic.pause();
+    }
+
+    currentSceneAudio = audioType;
+}
 
 function playIntroMusic() {
     if (!introMusic) return;
+    ensureOnlyAudioPlaying('intro');
     introMusic.volume = 0.75;
     introMusic.currentTime = 0;
     introMusic.play().catch(e => console.log('Intro music autoplay blocked:', e));
@@ -38,6 +88,44 @@ function fadeOutIntroMusic(duration = 500, callback = null) {
             introMusic.currentTime = 0;
             introMusic.volume = 0.75;
             introMusicFading = false;
+            currentSceneAudio = null;
+            if (callback) callback();
+        }
+    }, stepDuration);
+}
+
+function playForemanMusic() {
+    if (!foremanMusic) return;
+    ensureOnlyAudioPlaying('foreman');
+    foremanMusic.volume = 0.75;
+    foremanMusic.currentTime = 0;
+    foremanMusic.play().catch(e => console.log('Foreman music autoplay blocked:', e));
+}
+
+function fadeOutForemanMusic(duration = 800, callback = null) {
+    if (!foremanMusic || foremanMusicFading) {
+        if (callback) callback();
+        return;
+    }
+
+    foremanMusicFading = true;
+    const startVolume = foremanMusic.volume;
+    const steps = 20;
+    const stepDuration = duration / steps;
+    const volumeStep = startVolume / steps;
+
+    let currentStep = 0;
+    const fadeInterval = setInterval(() => {
+        currentStep++;
+        foremanMusic.volume = Math.max(0, startVolume - (volumeStep * currentStep));
+
+        if (currentStep >= steps) {
+            clearInterval(fadeInterval);
+            foremanMusic.pause();
+            foremanMusic.currentTime = 0;
+            foremanMusic.volume = 0.75;
+            foremanMusicFading = false;
+            currentSceneAudio = null;
             if (callback) callback();
         }
     }, stepDuration);
@@ -45,6 +133,9 @@ function fadeOutIntroMusic(duration = 500, callback = null) {
 
 function startBackgroundMusic() {
     if (!bgMusic || dialogueActive) return;
+
+    // Ensure no other scene music is playing
+    ensureOnlyAudioPlaying('background');
 
     // Use saved volume or default to 30%
     const volume = currentVolume || 30;
@@ -182,12 +273,18 @@ function beginForemanScene() {
     foremanSceneActive = true;
     foremanTextRevealing = false;
 
+    // Stop any other music before starting scene
+    stopAllSceneMusic();
+
     // Fade to black
     fadeOverlay.classList.add('active');
 
     setTimeout(() => {
         // Show foreman scene
         foremanScreen.classList.add('active');
+
+        // Play Foreman/Shaft21 music
+        playForemanMusic();
 
         // Display first dialogue
         displayForemanDialogue();
@@ -351,12 +448,21 @@ function endForemanScene() {
     storyProgress.hasSeenForemanIntro = true;
     saveStoryProgress();
 
+    // Fade out Foreman music
+    fadeOutForemanMusic(800);
+
     // Fade to black
     fadeOverlay.classList.add('active');
 
     setTimeout(() => {
         // Hide foreman scene
         foremanScreen.classList.remove('active');
+
+        // Ensure foreman music is stopped (failsafe)
+        if (foremanMusic) {
+            foremanMusic.pause();
+            foremanMusic.currentTime = 0;
+        }
 
         // Start the game
         setTimeout(() => {
@@ -462,10 +568,8 @@ function goToTitleScreen() {
     elevatorLoopId++;
     miningLoopId++;
 
-    // Pause background music
-    if (bgMusic && !bgMusic.paused) {
-        bgMusic.pause();
-    }
+    // Stop ALL music (failsafe)
+    stopAllSceneMusic();
 
     // Close any open panels
     closeAllPanels();
@@ -3073,10 +3177,8 @@ function devTriggerScene(sceneId) {
 }
 
 function devTriggerForemanScene() {
-    // Pause background music while showing scene
-    if (bgMusic && !bgMusic.paused) {
-        bgMusic.pause();
-    }
+    // Stop all music (beginForemanScene will handle it, but this is a failsafe)
+    stopAllSceneMusic();
 
     beginForemanScene();
     devLog('Foreman scene triggered', 'success');
@@ -3086,10 +3188,8 @@ function devTriggerIntroLetter() {
     const introLetterScreen = document.getElementById('introLetterScreen');
     const fadeOverlay = document.getElementById('fadeOverlay');
 
-    // Pause background music while showing intro
-    if (bgMusic && !bgMusic.paused) {
-        bgMusic.pause();
-    }
+    // Stop all music before showing intro (failsafe)
+    stopAllSceneMusic();
 
     // Fade to black
     fadeOverlay.classList.add('active');
