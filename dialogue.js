@@ -15,6 +15,7 @@ let fullCurrentText = '';
 // Story progress flags
 let storyProgress = {
     hasSeenIntro: false,
+    hasSeenForemanIntro: false,
     hasSeenMine22Intro: false,
     hasSeenMine37Intro: false,
     completedScenes: []
