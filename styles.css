@@ -68,6 +68,20 @@ body::before {
     font-weight: 700;
 }
 
+.notes-counter {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #e8d5b7;
+    text-shadow: 0 0 10px rgba(232, 213, 183, 0.5);
+}
+
+.notes-icon {
+    display: inline-block;
+    margin-right: 5px;
+    font-size: 22px;
+}
+
 /* Menu Buttons */
 .menu-buttons {
     position: fixed;
@@ -3251,11 +3265,131 @@ body::before {
 }
 
 /* ============================================
+   SHOP MODAL
+   ============================================ */
+
+.shop-modal .fullscreen-modal-content {
+    max-width: 900px;
+    background: linear-gradient(135deg, #3d2d5c 0%, #2a1a4a 50%, #1a0d3a 100%);
+}
+
+.shop-modal .fullscreen-modal-header {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.4), rgba(108, 52, 131, 0.3));
+    border-bottom-color: rgba(155, 89, 182, 0.6);
+}
+
+.shop-modal .fullscreen-modal-header h2 {
+    color: #e8b4f8;
+    text-shadow: 0 0 20px rgba(155, 89, 182, 0.5);
+}
+
+.shop-container {
+    padding: 25px;
+}
+
+.shop-currency-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 30px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(232, 213, 183, 0.3);
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+.shop-notes-icon {
+    font-size: 28px;
+}
+
+.shop-notes-count {
+    font-size: 32px;
+    font-weight: 700;
+    color: #e8d5b7;
+    text-shadow: 0 0 10px rgba(232, 213, 183, 0.5);
+}
+
+.shop-notes-label {
+    font-size: 18px;
+    color: #aaa;
+}
+
+.shop-section {
+    margin-bottom: 25px;
+}
+
+.shop-section-title {
+    color: #e8b4f8;
+    font-size: 20px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(155, 89, 182, 0.3);
+}
+
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.shop-item {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(155, 89, 182, 0.4);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.shop-item:hover {
+    border-color: rgba(155, 89, 182, 0.8);
+    box-shadow: 0 0 15px rgba(155, 89, 182, 0.3);
+}
+
+.shop-item.coming-soon {
+    opacity: 0.7;
+}
+
+.shop-item-preview {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.shop-item-name {
+    color: #e8b4f8;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.shop-item-desc {
+    color: #888;
+    font-size: 13px;
+}
+
+.shop-info {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(232, 213, 183, 0.2);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-top: 20px;
+}
+
+.shop-info p {
+    color: #aaa;
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+/* ============================================
    MAP MODAL - VISUAL MAP STYLE
    ============================================ */
 
 .map-modal .fullscreen-modal-content {
-    max-width: 1000px;
+    max-width: 100%;
+    width: 95vw;
+    height: 90vh;
     background: linear-gradient(135deg, #2d4a2d 0%, #1a3a1a 50%, #0d2a0d 100%);
 }
 
@@ -3373,32 +3507,62 @@ body::before {
 /* Compass */
 .map-compass {
     position: absolute;
-    top: 15px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #f4d03f, #c9a227);
-    border: 3px solid #8b4513;
+    top: 20px;
+    right: 25px;
+    width: 70px;
+    height: 70px;
+    background: radial-gradient(circle at 30% 30%, #f4e4bc, #d4b896 50%, #a08060 100%);
+    border: 4px solid #5c4033;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.5),
+        inset 0 2px 5px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .compass-n {
     position: absolute;
-    top: 5px;
+    top: 8px;
     font-weight: 700;
-    font-size: 14px;
-    color: #8b4513;
+    font-size: 12px;
+    color: #5c4033;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 
 .compass-needle {
-    width: 4px;
-    height: 35px;
-    background: linear-gradient(to bottom, #dc3545 50%, #333 50%);
-    border-radius: 2px;
+    width: 6px;
+    height: 40px;
+    position: relative;
+    background: transparent;
+}
+
+.compass-needle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 18px solid #dc3545;
+}
+
+.compass-needle::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 18px solid #333;
 }
 
 /* Mine Locations on Map */
@@ -4120,6 +4284,23 @@ body::before {
 .menu-btn.title-screen-btn:hover {
     background: linear-gradient(to bottom, #5aa0b4, #3c6d7e);
     box-shadow: 0 0 15px rgba(74, 144, 164, 0.5);
+}
+
+/* Shop Button */
+.menu-btn.shop-btn {
+    background: linear-gradient(to bottom, #9b59b6, #6c3483);
+    border-color: #9b59b6;
+}
+
+.menu-btn.shop-btn:hover {
+    background: linear-gradient(to bottom, #ab69c6, #7c4493);
+    box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);
+}
+
+/* White labels for Settings and Title */
+.menu-label.settings-label,
+.menu-label.title-label {
+    color: #ffffff;
 }
 
 /* Dev Panel Set Cash Row */
