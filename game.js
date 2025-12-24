@@ -8,24 +8,49 @@
 function startGame() {
     const fadeOverlay = document.getElementById('fadeOverlay');
     const titleScreen = document.getElementById('titleScreen');
+    const introLetterScreen = document.getElementById('introLetterScreen');
 
     // Fade to black
     fadeOverlay.classList.add('active');
 
-    // After fade completes, hide title screen and show intro
+    // After fade completes, hide title screen and show intro letter
     setTimeout(() => {
         titleScreen.classList.add('hidden');
 
-        // Fade back in
+        // Check if player has seen intro before
+        if (!storyProgress.hasSeenIntro) {
+            // Show the intro letter screen
+            introLetterScreen.classList.add('active');
+            setTimeout(() => {
+                fadeOverlay.classList.remove('active');
+            }, 300);
+        } else {
+            // Skip to game if already seen
+            setTimeout(() => {
+                fadeOverlay.classList.remove('active');
+            }, 300);
+        }
+    }, 500);
+}
+
+function beginGameFromLetter() {
+    const fadeOverlay = document.getElementById('fadeOverlay');
+    const introLetterScreen = document.getElementById('introLetterScreen');
+
+    // Mark intro as seen
+    storyProgress.hasSeenIntro = true;
+    saveStoryProgress();
+
+    // Fade to black
+    fadeOverlay.classList.add('active');
+
+    setTimeout(() => {
+        // Hide the intro letter
+        introLetterScreen.classList.remove('active');
+
+        // Fade back in to reveal the game
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
-
-            // Show intro letter if first time
-            if (!storyProgress.hasSeenIntro) {
-                setTimeout(() => {
-                    playIntroSequence();
-                }, 500);
-            }
         }, 300);
     }, 500);
 }
