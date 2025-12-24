@@ -258,6 +258,10 @@
             <span class="menu-icon">⚙️</span>
             <span class="menu-label">Settings</span>
         </button>
+        <button class="menu-btn dev-btn" id="devBtn" onclick="toggleDevPanel()" style="display: none;">
+            <span class="menu-icon">🛠️</span>
+            <span class="menu-label">Dev Tools</span>
+        </button>
     </div>
 
     <div class="game-wrapper">
@@ -559,6 +563,128 @@
                 <div class="settings-row">
                     <span class="settings-label">Status</span>
                     <span class="settings-value" id="autoSaveStatus">Not logged in</span>
+                </div>
+            </div>
+
+            <!-- Admin Mode Section -->
+            <div class="settings-section admin-section">
+                <h4 class="settings-section-title">Admin Mode</h4>
+                <div id="adminModeInactive">
+                    <div class="settings-row">
+                        <input type="password" class="admin-password-input" id="adminPasswordInput" placeholder="Enter password...">
+                        <button class="admin-activate-btn" onclick="activateAdminMode()">Activate</button>
+                    </div>
+                    <div class="admin-error" id="adminError"></div>
+                </div>
+                <div id="adminModeActive" style="display: none;">
+                    <div class="admin-status-active">
+                        <span class="admin-check">✓</span>
+                        <span>Admin Mode Active</span>
+                    </div>
+                    <button class="admin-deactivate-btn" onclick="deactivateAdminMode()">Deactivate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Developer Panel (full-screen modal) -->
+    <div class="fullscreen-modal dev-modal" id="devPanel">
+        <div class="fullscreen-modal-content dev-modal-content">
+            <div class="fullscreen-modal-header dev-header">
+                <h2>🛠️ Developer Tools</h2>
+                <button class="fullscreen-close" onclick="toggleDevPanel()">×</button>
+            </div>
+            <div class="fullscreen-modal-body dev-body">
+                <!-- Cutscene Triggers Section -->
+                <div class="dev-section">
+                    <h3 class="dev-section-title">Cutscene Triggers</h3>
+                    <div class="dev-grid">
+                        <button class="dev-action-btn" onclick="devTriggerScene('intro_letter')">
+                            <span class="dev-btn-icon">📜</span>
+                            <span class="dev-btn-label">Intro Letter</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devTriggerScene('mine22_arrival')">
+                            <span class="dev-btn-icon">⛏️</span>
+                            <span class="dev-btn-label">Mine 22 Arrival</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devTriggerScene('mine37_unlock')">
+                            <span class="dev-btn-icon">🔓</span>
+                            <span class="dev-btn-label">Mine 37 Unlock</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resource Cheats Section -->
+                <div class="dev-section">
+                    <h3 class="dev-section-title">Resources</h3>
+                    <div class="dev-grid">
+                        <button class="dev-action-btn" onclick="devAddMoney(1000)">
+                            <span class="dev-btn-icon">💵</span>
+                            <span class="dev-btn-label">+$1,000</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devAddMoney(10000)">
+                            <span class="dev-btn-icon">💰</span>
+                            <span class="dev-btn-label">+$10,000</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devAddMoney(100000)">
+                            <span class="dev-btn-icon">🤑</span>
+                            <span class="dev-btn-label">+$100,000</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devAddXP(500)">
+                            <span class="dev-btn-icon">✨</span>
+                            <span class="dev-btn-label">+500 XP</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devAddXP(5000)">
+                            <span class="dev-btn-icon">⭐</span>
+                            <span class="dev-btn-label">+5,000 XP</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devMaxLevel()">
+                            <span class="dev-btn-icon">🏆</span>
+                            <span class="dev-btn-label">Max Level</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mine Management Section -->
+                <div class="dev-section">
+                    <h3 class="dev-section-title">Mines & Progress</h3>
+                    <div class="dev-grid">
+                        <button class="dev-action-btn" onclick="devUnlockAllMines()">
+                            <span class="dev-btn-icon">🗺️</span>
+                            <span class="dev-btn-label">Unlock All Mines</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devUnlockAllAchievements()">
+                            <span class="dev-btn-icon">🏅</span>
+                            <span class="dev-btn-label">Unlock Achievements</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devAddShafts(5)">
+                            <span class="dev-btn-icon">🏗️</span>
+                            <span class="dev-btn-label">+5 Shafts</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reset Section -->
+                <div class="dev-section dev-section-danger">
+                    <h3 class="dev-section-title">Reset Options</h3>
+                    <div class="dev-grid">
+                        <button class="dev-action-btn dev-danger-btn" onclick="devResetStoryProgress()">
+                            <span class="dev-btn-icon">📖</span>
+                            <span class="dev-btn-label">Reset Story</span>
+                        </button>
+                        <button class="dev-action-btn dev-danger-btn" onclick="devResetGame()">
+                            <span class="dev-btn-icon">🗑️</span>
+                            <span class="dev-btn-label">Reset All</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dev Console Log -->
+                <div class="dev-section">
+                    <h3 class="dev-section-title">Console</h3>
+                    <div class="dev-console" id="devConsole">
+                        <div class="dev-console-line">Developer mode activated</div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1484,6 +1484,7 @@ function closeAllPanels() {
     document.getElementById('updatesPanel').classList.remove('show');
     document.getElementById('mapPanel').classList.remove('show');
     document.getElementById('settingsPanel').classList.remove('show');
+    document.getElementById('devPanel').classList.remove('show');
 }
 
 function toggleStatsPanel() {
@@ -2511,3 +2512,174 @@ authModal.addEventListener('click', (e) => {
         closeAuthModal();
     }
 });
+
+// ============================================
+// ADMIN MODE & DEVELOPER TOOLS
+// ============================================
+
+const ADMIN_PASSWORD = 'FNAFDDLC';
+let adminModeActive = false;
+
+function activateAdminMode() {
+    const passwordInput = document.getElementById('adminPasswordInput');
+    const errorEl = document.getElementById('adminError');
+    const password = passwordInput.value;
+
+    if (password === ADMIN_PASSWORD) {
+        adminModeActive = true;
+        errorEl.textContent = '';
+        passwordInput.value = '';
+
+        // Show admin active state
+        document.getElementById('adminModeInactive').style.display = 'none';
+        document.getElementById('adminModeActive').style.display = 'block';
+
+        // Show dev tools button
+        document.getElementById('devBtn').style.display = 'flex';
+
+        devLog('Admin mode activated', 'success');
+    } else {
+        errorEl.textContent = 'Incorrect password';
+        setTimeout(() => { errorEl.textContent = ''; }, 3000);
+    }
+}
+
+function deactivateAdminMode() {
+    adminModeActive = false;
+
+    // Hide admin active state
+    document.getElementById('adminModeInactive').style.display = 'block';
+    document.getElementById('adminModeActive').style.display = 'none';
+
+    // Hide dev tools button and close panel
+    document.getElementById('devBtn').style.display = 'none';
+    document.getElementById('devPanel').classList.remove('show');
+
+    devLog('Admin mode deactivated');
+}
+
+function toggleDevPanel() {
+    if (!adminModeActive) return;
+
+    const panel = document.getElementById('devPanel');
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
+        panel.classList.add('show');
+    }
+}
+
+function devLog(message, type = 'info') {
+    const console = document.getElementById('devConsole');
+    if (!console) return;
+
+    const timestamp = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'dev-console-line';
+    if (type === 'error') line.classList.add('error');
+    if (type === 'warning') line.classList.add('warning');
+    if (type === 'success') line.classList.add('success');
+    line.textContent = `[${timestamp}] ${message}`;
+
+    console.appendChild(line);
+    console.scrollTop = console.scrollHeight;
+}
+
+// ============================================
+// DEV TOOL FUNCTIONS
+// ============================================
+
+function devTriggerScene(sceneId) {
+    if (!STORY_SCENES[sceneId]) {
+        devLog(`Scene "${sceneId}" not found`, 'error');
+        return;
+    }
+
+    // Close dev panel first
+    document.getElementById('devPanel').classList.remove('show');
+
+    showDialogue(sceneId, () => {
+        devLog(`Scene "${sceneId}" completed`, 'success');
+    });
+
+    devLog(`Triggering scene: ${sceneId}`);
+}
+
+function devAddMoney(amount) {
+    money += amount;
+    updateStats();
+    devLog(`Added $${formatNumber(amount)} (Total: $${formatNumber(money)})`, 'success');
+}
+
+function devAddXP(amount) {
+    playerXP += amount;
+    checkLevelUp();
+    updateLevelDisplay();
+    devLog(`Added ${formatNumber(amount)} XP (Total: ${formatNumber(playerXP)})`, 'success');
+}
+
+function devMaxLevel() {
+    playerLevel = MAX_PLAYER_LEVEL;
+    playerXP = LEVEL_XP_THRESHOLDS[MAX_PLAYER_LEVEL - 1];
+    updateLevelDisplay();
+    devLog(`Set to max level ${MAX_PLAYER_LEVEL}`, 'success');
+}
+
+function devUnlockAllMines() {
+    Object.keys(MINES).forEach(mineId => {
+        minesUnlocked[mineId] = true;
+    });
+    renderMapPanel();
+    devLog('All mines unlocked', 'success');
+}
+
+function devUnlockAllAchievements() {
+    ACHIEVEMENTS.forEach(achievement => {
+        if (achievementsState[achievement.id] !== 'claimed') {
+            achievementsState[achievement.id] = 'unlocked';
+        }
+    });
+    updateAchievementBadge();
+    renderAchievementsList();
+    devLog('All achievements unlocked (ready to claim)', 'success');
+}
+
+function devAddShafts(count) {
+    for (let i = 0; i < count; i++) {
+        if (mineshafts.length < 100) {
+            createMineshaft(mineshafts.length);
+        }
+    }
+    updateBuyShaftButton();
+    devLog(`Added ${count} shafts (Total: ${mineshafts.length})`, 'success');
+}
+
+function devResetStoryProgress() {
+    if (confirm('Reset all story progress? This will reset the intro letter and all scene flags.')) {
+        storyProgress = {
+            hasSeenIntro: false,
+            hasSeenMine22Intro: false,
+            hasSeenMine37Intro: false,
+            completedScenes: []
+        };
+        saveStoryProgress();
+        devLog('Story progress reset', 'warning');
+    }
+}
+
+function devResetGame() {
+    if (confirm('RESET ALL GAME DATA? This cannot be undone!')) {
+        if (confirm('Are you REALLY sure? All progress will be lost!')) {
+            // Clear local storage
+            localStorage.removeItem('dunhillMinerSave');
+            localStorage.removeItem('dunhillMinerStory');
+
+            devLog('Game reset - reloading...', 'error');
+
+            // Reload the page
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+    }
+}
