@@ -13,10 +13,22 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.3.2",
+        date: "2025-12-24",
+        changes: [
+            { type: "feature", text: "Notes currency - earned by actively playing (1 per minute)" },
+            { type: "feature", text: "Shop panel for purchasing cosmetic skins (coming soon)" },
+            { type: "feature", text: "Mine 22 limited to 20 shafts (for story reasons)" },
+            { type: "ui", text: "Full-screen world map with improved layout" },
+            { type: "ui", text: "Redesigned compass with proper needle styling" },
+            { type: "ui", text: "Linear mine layout with room for 4 total mines" }
+        ]
+    },
+    {
         version: "1.3.1",
         date: "2025-12-24",
         changes: [
-            { type: "feature", text: "Foreman Harris scene with Shaft 21 lore and warnings" },
+            { type: "feature", text: "New story scene after intro letter" },
             { type: "feature", text: "Admin/Developer mode with password protection" },
             { type: "feature", text: "Title Screen button to return to main menu" },
             { type: "feature", text: "Set Cash input with K/M/B/T suffix support" },

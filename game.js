@@ -602,9 +602,10 @@ function renderMapPanel() {
 
     // Define mine positions on the visual map (percentage-based)
     const minePositions = {
-        mine22: { left: 25, top: 65 },  // Coal mine - bottom left area
-        mine37: { left: 65, top: 35 },  // Copper mine - upper right area
-        future: { left: 50, top: 80 }   // Future mine placeholder
+        mine22: { left: 15, top: 20 },  // Coal mine - upper left (starting mine)
+        mine37: { left: 40, top: 35 },  // Copper mine - second position
+        mine3:  { left: 65, top: 50 },  // Future mine - third position
+        mine4:  { left: 85, top: 65 }   // Future mine - fourth position
     };
 
     let minesHtml = '';
@@ -966,11 +967,38 @@ let totalCoalMined = 0;
 let totalCopperMined = 0;
 let totalMoneyEarned = 0;
 let money = 0;
+let notes = 0; // Premium currency earned by active play
 let playerXP = 0;
 let operatorState = 'idle';
 let hasElevatorManager = false;
 let elevatorLevel = 1;
 let elevatorCarrying = 0;
+
+// Notes earning system (1 note per minute of active play)
+let lastNoteTime = Date.now();
+const NOTE_INTERVAL = 60000; // 1 minute in milliseconds
+
+function startNoteEarning() {
+    lastNoteTime = Date.now();
+    setInterval(() => {
+        const now = Date.now();
+        const elapsed = now - lastNoteTime;
+        if (elapsed >= NOTE_INTERVAL) {
+            const notesEarned = Math.floor(elapsed / NOTE_INTERVAL);
+            notes += notesEarned;
+            lastNoteTime = now - (elapsed % NOTE_INTERVAL);
+            updateNotesDisplay();
+            saveToLocalStorage();
+        }
+    }, 10000); // Check every 10 seconds
+}
+
+function updateNotesDisplay() {
+    const notesEl = document.getElementById('notesCount');
+    if (notesEl) {
+        notesEl.textContent = formatNumber(notes);
+    }
+}
 
 // Current mine state
 let currentMineId = 'mine22';
@@ -1172,6 +1200,7 @@ function getNewShaftCost() {
 
 function updateStats() {
     moneyCountEl.textContent = formatNumber(money);
+    updateNotesDisplay();
     updateBuyShaftButton();
     updateElevatorCapacityDisplay();
     elevatorLevelDisplay.textContent = elevatorLevel;
@@ -2068,6 +2097,7 @@ function closeAllPanels() {
     document.getElementById('achievementsPanel').classList.remove('show');
     document.getElementById('updatesPanel').classList.remove('show');
     document.getElementById('mapPanel').classList.remove('show');
+    document.getElementById('shopPanel').classList.remove('show');
     document.getElementById('settingsPanel').classList.remove('show');
     document.getElementById('devPanel').classList.remove('show');
 }
@@ -2109,6 +2139,20 @@ function toggleMapPanel() {
     if (!wasOpen) {
         panel.classList.add('show');
         renderMapPanel();
+    }
+}
+
+function toggleShopPanel() {
+    const panel = document.getElementById('shopPanel');
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
+        panel.classList.add('show');
+        // Update notes display in shop
+        const shopNotesEl = document.getElementById('shopNotesCount');
+        if (shopNotesEl) {
+            shopNotesEl.textContent = formatNumber(notes);
+        }
     }
 }
 
@@ -2426,6 +2470,10 @@ function initGame() {
 
     // Initialize level display
     updateLevelDisplay();
+
+    // Start note earning system
+    startNoteEarning();
+    updateNotesDisplay();
 }
 
 initGame();
@@ -2612,6 +2660,7 @@ function saveToLocalStorage() {
         totalCopperMined,
         totalMoneyEarned,
         money,
+        notes,
         elevatorLevel,
         hasElevatorManager,
         elevatorManagerAbility: elevatorManagerAbility ? {
@@ -2655,6 +2704,7 @@ function loadFromLocalStorage() {
         totalCopperMined = data.totalCopperMined || 0;
         totalMoneyEarned = data.totalMoneyEarned || 0;
         money = data.money || 0;
+        notes = data.notes || 0;
         elevatorLevel = data.elevatorLevel || 1;
 
         if (data.currentMineId) currentMineId = data.currentMineId;
@@ -2938,6 +2988,7 @@ async function saveGameToCloud() {
         totalCopperMined,
         totalMoneyEarned,
         money,
+        notes,
         elevatorLevel,
         hasElevatorManager,
         elevatorManagerAbility: elevatorManagerAbility ? {
@@ -2984,6 +3035,7 @@ async function loadGameFromCloud() {
             totalCopperMined = data.totalCopperMined || 0;
             totalMoneyEarned = data.totalMoneyEarned || 0;
             money = data.money || 0;
+            notes = data.notes || 0;
             elevatorLevel = data.elevatorLevel || 1;
 
             // Restore mine system state
@@ -3330,6 +3382,7 @@ function devResetGame() {
 
             // Reset all in-memory game state
             money = 0;
+            notes = 0;
             totalCoalMined = 0;
             totalCopperMined = 0;
             totalCoalSold = 0;
