@@ -97,7 +97,7 @@ function fadeOutIntroMusic(duration = 500, callback = null) {
 function playForemanMusic() {
     if (!foremanMusic) return;
     ensureOnlyAudioPlaying('foreman');
-    foremanMusic.volume = 0.75;
+    foremanMusic.volume = 0.56; // 25% quieter than standard 0.75
     foremanMusic.currentTime = 0;
     foremanMusic.play().catch(e => console.log('Foreman music autoplay blocked:', e));
 }
@@ -1183,9 +1183,22 @@ function updateElevatorCapacityDisplay() {
 }
 
 function updateBuyShaftButton() {
+    // Check if max shafts reached for Mine 22
+    if (!canBuyNewShaft()) {
+        buyShaftBtn.textContent = `Shaft 21 is SEALED`;
+        buyShaftBtn.disabled = true;
+        buyShaftBtn.style.background = 'linear-gradient(to bottom, #8b0000, #4a0000)';
+        buyShaftBtn.style.borderColor = '#ff0000';
+        return;
+    }
+
+    // Reset button style if not at max
+    buyShaftBtn.style.background = '';
+    buyShaftBtn.style.borderColor = '';
+
     const cost = getNewShaftCost();
     const nextShaftNum = mineshafts.length + 1;
-    buyShaftBtn.textContent = `Buy Shaft ${nextShaftNum} - $${cost}`;
+    buyShaftBtn.textContent = `Buy Shaft ${nextShaftNum} - $${formatNumber(cost)}`;
     buyShaftBtn.disabled = money < cost;
 }
 
@@ -1603,7 +1616,20 @@ async function autoElevator() {
 // ============================================
 // BUY NEW SHAFT
 // ============================================
+const MAX_SHAFTS_MINE22 = 20; // Shaft 21 is forbidden!
+
+function canBuyNewShaft() {
+    // Mine 22 is limited to 20 shafts (Shaft 21 is sealed)
+    if (currentMineId === 'mine22' && mineshafts.length >= MAX_SHAFTS_MINE22) {
+        return false;
+    }
+    return true;
+}
+
 function buyNewShaft() {
+    // Check shaft limit for Mine 22
+    if (!canBuyNewShaft()) return;
+
     const cost = getNewShaftCost();
     if (money < cost) return;
 
