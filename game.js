@@ -7,6 +7,7 @@
 // ============================================
 const introMusic = document.getElementById('introMusic');
 const foremanMusic = document.getElementById('foremanMusic');
+const bgMusic = document.getElementById('bgMusic');
 let introMusicFading = false;
 let foremanMusicFading = false;
 
@@ -601,11 +602,11 @@ function renderMapPanel() {
     const minesList = Object.values(MINES).sort((a, b) => a.order - b.order);
 
     // Define mine positions on the visual map (percentage-based)
+    // Linear layout: upper-left to lower-right, room for 4 mines
     const minePositions = {
         mine22: { left: 15, top: 20 },  // Coal mine - upper left (starting mine)
         mine37: { left: 40, top: 35 },  // Copper mine - second position
-        mine3:  { left: 65, top: 50 },  // Future mine - third position
-        mine4:  { left: 85, top: 65 }   // Future mine - fourth position
+        future: { left: 65, top: 50 }   // Future mine placeholder - third position
     };
 
     let minesHtml = '';
@@ -2481,7 +2482,7 @@ initGame();
 // ============================================
 // AUDIO CONTROLS (Settings Panel)
 // ============================================
-const bgMusic = document.getElementById('bgMusic');
+// bgMusic is defined at top with other audio elements
 const volumeSlider = document.getElementById('volumeSlider');
 const volumeIcon = document.getElementById('volumeIcon');
 const volumeValue = document.getElementById('volumeValue');
