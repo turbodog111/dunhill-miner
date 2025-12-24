@@ -13,6 +13,20 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 
 const UPDATE_LOG = [
     {
+        version: "1.3.1",
+        date: "2025-12-24",
+        changes: [
+            { type: "feature", text: "Foreman Harris scene with Shaft 21 lore and warnings" },
+            { type: "feature", text: "Admin/Developer mode with password protection" },
+            { type: "feature", text: "Title Screen button to return to main menu" },
+            { type: "feature", text: "Set Cash input with K/M/B/T suffix support" },
+            { type: "ui", text: "New intro letter artwork with improved music" },
+            { type: "ui", text: "Number formatting shows K/M/B/T for large values" },
+            { type: "fix", text: "Auto mining/elevator loops restart after title screen" },
+            { type: "fix", text: "Reset All now fully clears all game data" }
+        ]
+    },
+    {
         version: "1.3.0",
         date: "2025-12-23",
         changes: [

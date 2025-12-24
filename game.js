@@ -55,6 +55,174 @@ function startBackgroundMusic() {
     }).catch(e => console.log('Background music autoplay blocked:', e));
 }
 
+// Restart all auto mining and elevator loops (called when returning to game)
+function restartAutoLoops() {
+    // Restart auto mining for all shafts with managers
+    mineshafts.forEach((shaft, index) => {
+        if (shaft && shaft.hasManager) {
+            autoMine(index);
+        }
+    });
+
+    // Restart auto elevator if it has a manager
+    if (hasElevatorManager) {
+        autoElevator();
+    }
+}
+
+// ============================================
+// FOREMAN SCENE
+// ============================================
+const FOREMAN_DIALOGUE = [
+    {
+        speaker: "Foreman Harris",
+        text: "Well, well... so you're the new supervisor. Name's Harris. Been foreman here at Mine 22 for going on thirty-two years now."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "The company sent you to <span class='emphasis'>'revitalize operations,'</span> I take it? That's what they told the last three supervisors too."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "Don't get me wrong — this mine's got plenty of coal left in her. More than plenty. It's just... well, some of the deeper shafts have their <span class='whisper'>quirks</span>."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "Listen, I'm going to give you the same advice I gave the others. Whether you take it is up to you."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "<span class='highlight'>Stay away from Shaft 21.</span> Don't dig there. Don't send workers there. Don't even think about reopening it."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "Back in '87, we broke through into something... <span class='emphasis'>different</span>. A cavern system that wasn't on any geological survey. The company got excited — thought we'd hit a new vein."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "We sent a crew of eight down to investigate. <span class='highlight'>Only three came back up.</span> And they... they weren't right after that. Wouldn't talk about what they saw."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "Corporate sealed it off, buried the reports. Officially, it was a <span class='emphasis'>'structural collapse.'</span> But I was there. There was no collapse."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "The ones who came back — they'd wake up screaming about <span class='whisper'>lights in the dark. Lights that moved. Lights that watched.</span>"
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "Two of them quit within the month. The third... well, that was your predecessor. <span class='emphasis'>Martinez</span>. Good man. Kept asking questions he shouldn't have."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "One day he just... didn't show up. Company said he <span class='emphasis'>'moved on.'</span> His car was still in the parking lot for a week before someone came to tow it."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "So here's the deal, boss. You focus on Shafts 1 through 20, you'll do fine. Good coal, good workers, good production. Corporate stays happy, <span class='highlight'>you stay healthy</span>."
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "But if you start getting curious about Shaft 21... well, I've said my piece. Just remember — <span class='whisper'>some things in this mine are older than the coal itself.</span>"
+    },
+    {
+        speaker: "Foreman Harris",
+        text: "Now then — let's get you set up. Your first shaft's waiting. <span class='emphasis'>Welcome to Mine 22, Supervisor.</span>"
+    }
+];
+
+let foremanDialogueIndex = 0;
+let foremanSceneActive = false;
+
+function beginForemanScene() {
+    const foremanScreen = document.getElementById('foremanSceneScreen');
+    const fadeOverlay = document.getElementById('fadeOverlay');
+
+    foremanDialogueIndex = 0;
+    foremanSceneActive = true;
+
+    // Fade to black
+    fadeOverlay.classList.add('active');
+
+    setTimeout(() => {
+        // Show foreman scene
+        foremanScreen.classList.add('active');
+
+        // Display first dialogue
+        displayForemanDialogue();
+
+        // Add click handler
+        foremanScreen.addEventListener('click', advanceForemanDialogue);
+        document.addEventListener('keydown', handleForemanKey);
+
+        // Fade in
+        setTimeout(() => {
+            fadeOverlay.classList.remove('active');
+        }, 300);
+    }, 500);
+}
+
+function displayForemanDialogue() {
+    const textEl = document.getElementById('foremanText');
+    const speakerEl = document.getElementById('foremanSpeaker');
+    const dialogue = FOREMAN_DIALOGUE[foremanDialogueIndex];
+
+    if (dialogue) {
+        speakerEl.textContent = dialogue.speaker;
+        textEl.innerHTML = dialogue.text;
+    }
+}
+
+function advanceForemanDialogue() {
+    if (!foremanSceneActive) return;
+
+    foremanDialogueIndex++;
+
+    if (foremanDialogueIndex >= FOREMAN_DIALOGUE.length) {
+        endForemanScene();
+    } else {
+        displayForemanDialogue();
+    }
+}
+
+function handleForemanKey(e) {
+    if (!foremanSceneActive) return;
+    if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        advanceForemanDialogue();
+    }
+}
+
+function endForemanScene() {
+    const foremanScreen = document.getElementById('foremanSceneScreen');
+    const fadeOverlay = document.getElementById('fadeOverlay');
+
+    foremanSceneActive = false;
+
+    // Remove event listeners
+    foremanScreen.removeEventListener('click', advanceForemanDialogue);
+    document.removeEventListener('keydown', handleForemanKey);
+
+    // Mark foreman scene as seen
+    storyProgress.hasSeenForemanIntro = true;
+    saveStoryProgress();
+
+    // Fade to black
+    fadeOverlay.classList.add('active');
+
+    setTimeout(() => {
+        // Hide foreman scene
+        foremanScreen.classList.remove('active');
+
+        // Start the game
+        setTimeout(() => {
+            fadeOverlay.classList.remove('active');
+            startBackgroundMusic();
+        }, 300);
+    }, 500);
+}
+
 // ============================================
 // TITLE SCREEN CONTROLS
 // ============================================
@@ -79,10 +247,11 @@ function startGame() {
                 fadeOverlay.classList.remove('active');
             }, 300);
         } else {
-            // Skip to game if already seen - start background music
+            // Skip to game if already seen - start background music and restart loops
             setTimeout(() => {
                 fadeOverlay.classList.remove('active');
                 startBackgroundMusic();
+                restartAutoLoops();
             }, 300);
         }
     }, 500);
@@ -106,11 +275,20 @@ function beginGameFromLetter() {
         // Hide the intro letter
         introLetterScreen.classList.remove('active');
 
-        // Fade back in to reveal the game and start background music
-        setTimeout(() => {
+        // Check if player has seen the foreman intro
+        if (!storyProgress.hasSeenForemanIntro) {
+            // Show foreman scene
             fadeOverlay.classList.remove('active');
-            startBackgroundMusic();
-        }, 300);
+            setTimeout(() => {
+                beginForemanScene();
+            }, 100);
+        } else {
+            // Skip to game if already seen
+            setTimeout(() => {
+                fadeOverlay.classList.remove('active');
+                startBackgroundMusic();
+            }, 300);
+        }
     }, 500);
 }
 
@@ -2733,6 +2911,12 @@ function devTriggerScene(sceneId) {
         return;
     }
 
+    // Special handling for foreman_intro - show the scene version
+    if (sceneId === 'foreman_intro') {
+        devTriggerForemanScene();
+        return;
+    }
+
     if (!STORY_SCENES[sceneId]) {
         devLog(`Scene "${sceneId}" not found`, 'error');
         return;
@@ -2743,6 +2927,16 @@ function devTriggerScene(sceneId) {
     });
 
     devLog(`Triggering scene: ${sceneId}`);
+}
+
+function devTriggerForemanScene() {
+    // Pause background music while showing scene
+    if (bgMusic && !bgMusic.paused) {
+        bgMusic.pause();
+    }
+
+    beginForemanScene();
+    devLog('Foreman scene triggered', 'success');
 }
 
 function devTriggerIntroLetter() {
@@ -2843,9 +3037,10 @@ function devAddShafts(count) {
 }
 
 function devResetStoryProgress() {
-    if (confirm('Reset all story progress? This will reset the intro letter and all scene flags.')) {
+    if (confirm('Reset all story progress? This will reset the intro letter, foreman scene, and all scene flags.')) {
         storyProgress = {
             hasSeenIntro: false,
+            hasSeenForemanIntro: false,
             hasSeenMine22Intro: false,
             hasSeenMine37Intro: false,
             completedScenes: []
@@ -2893,6 +3088,7 @@ function devResetGame() {
             // Reset story progress
             storyProgress = {
                 hasSeenIntro: false,
+                hasSeenForemanIntro: false,
                 hasSeenMine22Intro: false,
                 hasSeenMine37Intro: false,
                 completedScenes: []

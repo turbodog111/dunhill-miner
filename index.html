@@ -137,7 +137,7 @@
 
                 <div class="credits-footer">
                     <p>Thank you for playing!</p>
-                    <p class="version-info">Version 1.3.0</p>
+                    <p class="version-info">Version 1.3.1</p>
                 </div>
             </div>
         </div>
@@ -149,6 +149,16 @@
         <button class="intro-begin-btn" id="introBeginBtn" onclick="beginGameFromLetter()">
             BEGIN
         </button>
+    </div>
+
+    <!-- Foreman Scene Screen -->
+    <div class="scene-screen" id="foremanSceneScreen">
+        <img src="assets/Foreman 1.png" alt="Foreman Harris" class="scene-image">
+        <div class="scene-dialogue-box">
+            <div class="scene-speaker" id="foremanSpeaker">Foreman Harris</div>
+            <div class="scene-text" id="foremanText"></div>
+            <div class="scene-continue-hint">Click or press Space to continue</div>
+        </div>
     </div>
 
     <!-- Fade Overlay for Transitions -->
@@ -611,6 +621,10 @@
                         <button class="dev-action-btn" onclick="devTriggerScene('intro_letter')">
                             <span class="dev-btn-icon">📜</span>
                             <span class="dev-btn-label">Intro Letter</span>
+                        </button>
+                        <button class="dev-action-btn" onclick="devTriggerScene('foreman_intro')">
+                            <span class="dev-btn-icon">👷</span>
+                            <span class="dev-btn-label">Foreman Harris</span>
                         </button>
                         <button class="dev-action-btn" onclick="devTriggerScene('mine22_arrival')">
                             <span class="dev-btn-icon">⛏️</span>
