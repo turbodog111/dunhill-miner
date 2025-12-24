@@ -3858,3 +3858,245 @@ body::before {
 .intro-begin-btn:active {
     transform: scale(0.98);
 }
+
+/* ============================================ */
+/* ADMIN MODE & DEVELOPER TOOLS                */
+/* ============================================ */
+
+/* Admin Mode Section in Settings */
+.admin-section {
+    border-top: 1px solid rgba(255, 100, 100, 0.3);
+    margin-top: 15px;
+    padding-top: 15px;
+}
+
+.admin-section .settings-row {
+    gap: 10px;
+}
+
+.admin-password-input {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    color: #fff;
+    min-width: 0;
+}
+
+.admin-password-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-activate-btn {
+    padding: 8px 16px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    background: linear-gradient(to bottom, #ff6b6b, #c0392b);
+    border: 2px solid #e74c3c;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.admin-activate-btn:hover {
+    background: linear-gradient(to bottom, #ff8585, #e74c3c);
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}
+
+.admin-error {
+    color: #ff6b6b;
+    font-size: 12px;
+    margin-top: 5px;
+    text-align: center;
+}
+
+.admin-status-active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(50, 205, 50, 0.2);
+    border: 1px solid rgba(50, 205, 50, 0.5);
+    border-radius: 5px;
+    color: #32CD32;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.admin-check {
+    font-size: 18px;
+}
+
+.admin-deactivate-btn {
+    width: 100%;
+    padding: 8px 16px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(100, 100, 100, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-deactivate-btn:hover {
+    background: rgba(100, 100, 100, 0.6);
+    color: #fff;
+}
+
+/* Dev Tools Menu Button */
+.menu-btn.dev-btn {
+    background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+    border-color: #9b59b6;
+}
+
+.menu-btn.dev-btn:hover {
+    background: linear-gradient(to bottom, #a66bbe, #9b59b6);
+    box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);
+}
+
+/* Developer Panel Modal */
+.dev-modal-content {
+    background: linear-gradient(to bottom, #1a1a2e, #16213e);
+    border: 2px solid #9b59b6;
+}
+
+.dev-header {
+    background: linear-gradient(to right, rgba(155, 89, 182, 0.3), transparent);
+    border-bottom: 1px solid rgba(155, 89, 182, 0.5);
+}
+
+.dev-header h2 {
+    color: #bb86fc;
+}
+
+.dev-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.dev-section {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.dev-section-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #bb86fc;
+    margin: 0 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(155, 89, 182, 0.3);
+}
+
+.dev-section-danger {
+    border-color: rgba(255, 100, 100, 0.3);
+    background: rgba(100, 0, 0, 0.2);
+}
+
+.dev-section-danger .dev-section-title {
+    color: #ff6b6b;
+    border-bottom-color: rgba(255, 100, 100, 0.3);
+}
+
+.dev-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.dev-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 15px 10px;
+    font-family: 'Chakra Petch', sans-serif;
+    background: rgba(155, 89, 182, 0.2);
+    border: 1px solid rgba(155, 89, 182, 0.5);
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dev-action-btn:hover {
+    background: rgba(155, 89, 182, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+}
+
+.dev-action-btn:active {
+    transform: translateY(0);
+}
+
+.dev-btn-icon {
+    font-size: 24px;
+}
+
+.dev-btn-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.dev-danger-btn {
+    background: rgba(255, 100, 100, 0.2);
+    border-color: rgba(255, 100, 100, 0.5);
+}
+
+.dev-danger-btn:hover {
+    background: rgba(255, 100, 100, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 100, 100, 0.3);
+}
+
+/* Dev Console */
+.dev-console {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 5px;
+    padding: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.dev-console-line {
+    color: #0f0;
+    margin: 2px 0;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dev-console-line:last-child {
+    border-bottom: none;
+}
+
+.dev-console-line.error {
+    color: #ff6b6b;
+}
+
+.dev-console-line.warning {
+    color: #ffd700;
+}
+
+.dev-console-line.success {
+    color: #32CD32;
+}
