@@ -2608,8 +2608,8 @@ body::before {
 
 .level-ribbon {
     position: fixed;
-    top: 12px;
-    left: 12px;
+    top: 75px;
+    left: 15px;
     display: flex;
     align-items: center;
     z-index: 1000;
@@ -3113,8 +3113,9 @@ body::before {
 .achievements-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    gap: 25px;
     padding: 25px !important;
+    align-items: start;
 }
 
 /* Large Achievement Cards */
@@ -3129,12 +3130,16 @@ body::before {
     gap: 15px;
     transition: all 0.3s;
     min-height: 220px;
+    position: relative;
+    z-index: 1;
+    overflow: visible;
 }
 
 .achievement-item.unlocked {
     border-color: #ffd700;
     background: linear-gradient(145deg, rgba(60, 45, 10, 0.9), rgba(80, 60, 20, 0.8));
     animation: achievementGlow 2s infinite;
+    z-index: 2;
 }
 
 .achievement-item.claimed {
@@ -3232,12 +3237,17 @@ body::before {
     animation: claimPulse 1s infinite;
     font-family: 'Chakra Petch', sans-serif;
     transition: all 0.3s;
+    position: relative;
+    z-index: 10;
+    margin-top: auto;
+    flex-shrink: 0;
 }
 
 .claim-btn:hover {
     background: linear-gradient(to bottom, #3de03d, #2da02d);
     transform: scale(1.05);
     box-shadow: 0 0 20px rgba(50, 205, 50, 0.5);
+    z-index: 20;
 }
 
 /* ============================================
