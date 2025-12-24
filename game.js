@@ -767,11 +767,53 @@ function switchToMine(targetMineId) {
     // Calculate idle rewards for target mine
     pendingIdleRewards = calculateIdleRewards(targetMineId);
 
-    // Fade transition
-    const fadeOverlay = document.getElementById('fadeOverlay');
-    fadeOverlay.classList.add('active');
+    // Get target mine name
+    const targetMine = MINES[targetMineId];
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingText = document.getElementById('loadingText');
+    const loadingProgress = document.getElementById('loadingProgressFill');
 
+    // Show loading screen
+    loadingText.textContent = `Traveling to ${targetMine.name}...`;
+    loadingProgress.style.width = '0%';
+    loadingScreen.classList.add('active');
+
+    // Close map panel
+    closeAllPanels();
+
+    // Progress animation
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += 5;
+        loadingProgress.style.width = Math.min(progress, 90) + '%';
+        if (progress >= 90) {
+            clearInterval(progressInterval);
+        }
+    }, 50);
+
+    // Allow time for state to properly reset
     setTimeout(() => {
+        // Stop all loops and reset elevator state
+        elevatorLoopId++;
+        miningLoopId++;
+
+        // Reset elevator to default position before switching
+        const elevator = document.getElementById('elevator');
+        const elevatorOperator = document.getElementById('elevatorOperator');
+        if (elevator) {
+            elevator.style.transition = 'none';
+            elevator.style.top = '35px';
+        }
+        if (elevatorOperator) {
+            elevatorOperator.style.transition = 'none';
+            elevatorOperator.style.top = '55px';
+            elevatorOperator.style.left = '175px';
+        }
+
+        // Reset elevator carrying
+        elevatorCarrying = 0;
+        operatorState = 'idle';
+
         // Switch mine
         currentMineId = targetMineId;
         loadMineState(targetMineId);
@@ -779,24 +821,36 @@ function switchToMine(targetMineId) {
         // Update UI theme
         updateMineTheme();
 
-        // Rebuild the game view
+        // Rebuild the game view (this will properly initialize new mine state)
         rebuildGameView();
 
         // Update map to show new current mine
         renderMapPanel();
 
-        // Close map panel
-        closeAllPanels();
+        // Complete progress
+        clearInterval(progressInterval);
+        loadingProgress.style.width = '100%';
 
         setTimeout(() => {
-            fadeOverlay.classList.remove('active');
+            // Hide loading screen
+            loadingScreen.classList.remove('active');
+
+            // Re-enable elevator transitions
+            if (elevator) {
+                elevator.style.transition = '';
+            }
+            if (elevatorOperator) {
+                elevatorOperator.style.transition = '';
+            }
 
             // Show idle rewards if any
             if (pendingIdleRewards) {
-                showIdleRewardsModal(pendingIdleRewards);
+                setTimeout(() => {
+                    showIdleRewardsModal(pendingIdleRewards);
+                }, 200);
             }
-        }, 300);
-    }, 500);
+        }, 400);
+    }, 800);
 }
 
 function loadMineState(mineId) {
@@ -999,6 +1053,214 @@ function updateNotesDisplay() {
     if (notesEl) {
         notesEl.textContent = formatNumber(notes);
     }
+    // Also update shop display if open
+    const shopNotesEl = document.getElementById('shopNotesCount');
+    if (shopNotesEl) {
+        shopNotesEl.textContent = formatNumber(notes);
+    }
+}
+
+// ============================================
+// SHOP BOOST SYSTEM
+// ============================================
+const BOOST_COST_PER_NOTE = 5000; // $5,000 per note for exchange
+
+const BOOSTS = {
+    elevator_speed: {
+        name: 'Elevator Rush',
+        cost: 5,
+        duration: 60000, // 1 minute
+        elevatorCollectionBoost: 2.0, // +100%
+        elevatorSpeedBoost: 1.5 // +50%
+    },
+    elevator_capacity: {
+        name: 'Heavy Load',
+        cost: 5,
+        duration: 120000, // 2 minutes
+        elevatorCapacityBoost: 1.5 // +50%
+    },
+    miner_speed: {
+        name: 'Quick Feet',
+        cost: 5,
+        duration: 60000, // 1 minute
+        minerSpeedBoost: 2.0 // +100%
+    },
+    miner_gather: {
+        name: 'Rich Veins',
+        cost: 5,
+        duration: 60000, // 1 minute
+        minerGatherBoost: 1.5 // +50%
+    },
+    elevator_mega: {
+        name: 'Elevator Overdrive',
+        cost: 10,
+        duration: 120000, // 2 minutes
+        elevatorCollectionBoost: 2.0, // +100%
+        elevatorSpeedBoost: 2.0, // +100%
+        elevatorCapacityBoost: 2.0 // +100%
+    },
+    miner_mega: {
+        name: 'Mining Frenzy',
+        cost: 10,
+        duration: 60000, // 1 minute
+        minerSpeedBoost: 2.0, // +100%
+        minerGatherBoost: 2.0 // +100%
+    }
+};
+
+// Active boosts state: { boostId: expiresAt }
+let activeBoosts = {};
+
+function purchaseBoost(boostId) {
+    const boost = BOOSTS[boostId];
+    if (!boost) return;
+
+    if (notes < boost.cost) {
+        showBoostMessage(`Not enough Notes! Need ${boost.cost} 📜`, 'error');
+        return;
+    }
+
+    // Deduct notes
+    notes -= boost.cost;
+    updateNotesDisplay();
+    saveToLocalStorage();
+
+    // Activate boost
+    activateBoost(boostId);
+    showBoostMessage(`${boost.name} activated!`, 'success');
+}
+
+function activateBoost(boostId) {
+    const boost = BOOSTS[boostId];
+    if (!boost) return;
+
+    // If boost already active, extend duration
+    const now = Date.now();
+    if (activeBoosts[boostId] && activeBoosts[boostId] > now) {
+        activeBoosts[boostId] += boost.duration;
+    } else {
+        activeBoosts[boostId] = now + boost.duration;
+    }
+
+    updateActiveBoostsDisplay();
+    saveToLocalStorage();
+}
+
+function isBoostActive(boostId) {
+    return activeBoosts[boostId] && activeBoosts[boostId] > Date.now();
+}
+
+function getBoostMultiplier(type) {
+    let multiplier = 1;
+    const now = Date.now();
+
+    for (const [boostId, expiresAt] of Object.entries(activeBoosts)) {
+        if (expiresAt > now) {
+            const boost = BOOSTS[boostId];
+            if (boost && boost[type]) {
+                multiplier = Math.max(multiplier, boost[type]);
+            }
+        }
+    }
+
+    return multiplier;
+}
+
+function updateActiveBoostsDisplay() {
+    const section = document.getElementById('activeBoostsSection');
+    const list = document.getElementById('activeBoostsList');
+    if (!section || !list) return;
+
+    const now = Date.now();
+    const activeList = [];
+
+    for (const [boostId, expiresAt] of Object.entries(activeBoosts)) {
+        if (expiresAt > now) {
+            const boost = BOOSTS[boostId];
+            const remaining = expiresAt - now;
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            activeList.push({
+                name: boost.name,
+                timer: `${minutes}:${seconds.toString().padStart(2, '0')}`
+            });
+        }
+    }
+
+    if (activeList.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    list.innerHTML = activeList.map(b => `
+        <div class="active-boost-tag">
+            <span>⚡ ${b.name}</span>
+            <span class="boost-timer">${b.timer}</span>
+        </div>
+    `).join('');
+}
+
+function showBoostMessage(message, type) {
+    // Create a temporary toast message
+    const toast = document.createElement('div');
+    toast.className = `boost-toast ${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 15px 30px;
+        background: ${type === 'success' ? 'rgba(50, 200, 100, 0.9)' : 'rgba(200, 50, 50, 0.9)'};
+        color: white;
+        border-radius: 10px;
+        font-family: 'Chakra Petch', sans-serif;
+        font-weight: 600;
+        z-index: 10001;
+        animation: toastFade 2s forwards;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+// Start boost timer update loop
+function startBoostTimerLoop() {
+    setInterval(() => {
+        updateActiveBoostsDisplay();
+        // Clean up expired boosts
+        const now = Date.now();
+        for (const boostId of Object.keys(activeBoosts)) {
+            if (activeBoosts[boostId] <= now) {
+                delete activeBoosts[boostId];
+            }
+        }
+    }, 1000);
+}
+
+// Cash to Notes exchange
+function exchangeCashForNotes(amount) {
+    const totalCost = BOOST_COST_PER_NOTE * amount;
+    if (money < totalCost) {
+        showBoostMessage(`Not enough cash! Need $${formatNumber(totalCost)}`, 'error');
+        return;
+    }
+
+    money -= totalCost;
+    notes += amount;
+    updateStats();
+    updateNotesDisplay();
+    saveToLocalStorage();
+    showBoostMessage(`Exchanged $${formatNumber(totalCost)} for ${amount} 📜 Notes!`, 'success');
+}
+
+function exchangeCashForNotesMax() {
+    const maxNotes = Math.floor(money / BOOST_COST_PER_NOTE);
+    if (maxNotes <= 0) {
+        showBoostMessage(`Not enough cash! Need at least $${formatNumber(BOOST_COST_PER_NOTE)}`, 'error');
+        return;
+    }
+    exchangeCashForNotes(maxNotes);
 }
 
 // Current mine state
@@ -1141,6 +1403,11 @@ function getElevatorCapacity() {
     if (elevatorManagerAbility && elevatorManagerAbility.type === 'capacity' && isAbilityActive(elevatorManagerAbility)) {
         capacity = Math.floor(capacity * 1.4);
     }
+    // Apply shop boost
+    const boostMult = getBoostMultiplier('elevatorCapacityBoost');
+    if (boostMult > 1) {
+        capacity = Math.floor(capacity * boostMult);
+    }
     return capacity;
 }
 
@@ -1154,10 +1421,16 @@ function getElevatorUpgradeCost() {
 }
 
 function getElevatorSpeedMultiplier() {
+    let mult = 1;
     if (elevatorManagerAbility && elevatorManagerAbility.type === 'speed' && isAbilityActive(elevatorManagerAbility)) {
-        return 0.6; // 40% faster = 60% of normal time
+        mult = 0.6; // 40% faster = 60% of normal time
     }
-    return 1;
+    // Apply shop boost (lower is faster)
+    const boostMult = getBoostMultiplier('elevatorSpeedBoost');
+    if (boostMult > 1) {
+        mult = mult / boostMult; // e.g., 1.5x boost = 0.67 mult (50% faster)
+    }
+    return mult;
 }
 
 function getShaftBaseCoal(shaftIndex) {
@@ -1172,6 +1445,11 @@ function getShaftCoalPerTrip(shaftIndex) {
     // Apply coal ability if active
     if (shaft.managerAbility && shaft.managerAbility.type === 'coal' && isAbilityActive(shaft.managerAbility)) {
         coal = coal * 1.2;
+    }
+    // Apply shop boost
+    const boostMult = getBoostMultiplier('minerGatherBoost');
+    if (boostMult > 1) {
+        coal = coal * boostMult;
     }
     return coal;
 }
@@ -1189,10 +1467,16 @@ function getShaftUpgradeCost(shaftIndex) {
 
 function getShaftSpeedMultiplier(shaftIndex) {
     const shaft = mineshafts[shaftIndex];
+    let mult = 1;
     if (shaft.managerAbility && shaft.managerAbility.type === 'speed' && isAbilityActive(shaft.managerAbility)) {
-        return 0.6; // 40% faster = 60% of normal time
+        mult = 0.6; // 40% faster = 60% of normal time
     }
-    return 1;
+    // Apply shop boost (lower is faster)
+    const boostMult = getBoostMultiplier('minerSpeedBoost');
+    if (boostMult > 1) {
+        mult = mult / boostMult; // e.g., 2x boost = 0.5 mult (100% faster)
+    }
+    return mult;
 }
 
 function getNewShaftCost() {
@@ -2475,6 +2759,10 @@ function initGame() {
     // Start note earning system
     startNoteEarning();
     updateNotesDisplay();
+
+    // Start boost timer loop
+    startBoostTimerLoop();
+    updateActiveBoostsDisplay();
 }
 
 initGame();
@@ -2678,6 +2966,7 @@ function saveToLocalStorage() {
         minesUnlocked,
         mineStates,
         playerXP,
+        activeBoosts,
         savedAt: Date.now()
     };
 
@@ -2756,6 +3045,17 @@ function loadFromLocalStorage() {
                 elevatorManagerAbility = data.elevatorManagerAbility;
             }
             autoElevator();
+        }
+
+        // Restore active boosts (filter out expired ones)
+        if (data.activeBoosts) {
+            const now = Date.now();
+            activeBoosts = {};
+            for (const [boostId, expiresAt] of Object.entries(data.activeBoosts)) {
+                if (expiresAt > now) {
+                    activeBoosts[boostId] = expiresAt;
+                }
+            }
         }
 
         updateStats();
