@@ -164,6 +164,15 @@
     <!-- Fade Overlay for Transitions -->
     <div class="fade-overlay" id="fadeOverlay"></div>
 
+    <!-- Loading Screen for Mine Switching -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-icon">⛏️</div>
+        <div class="loading-text" id="loadingText">Traveling to Mine...</div>
+        <div class="loading-progress-bar">
+            <div class="loading-progress-fill" id="loadingProgressFill"></div>
+        </div>
+    </div>
+
     <!-- Background Music -->
     <audio id="bgMusic" loop>
         <source src="assets/audio/Background1.mp3" type="audio/mpeg">
@@ -545,8 +554,81 @@
                     <span class="shop-notes-count" id="shopNotesCount">0</span>
                     <span class="shop-notes-label">Notes</span>
                 </div>
+
+                <!-- Active Boosts Display -->
+                <div class="active-boosts-section" id="activeBoostsSection" style="display: none;">
+                    <h3 class="shop-section-title">⚡ Active Boosts</h3>
+                    <div class="active-boosts-list" id="activeBoostsList"></div>
+                </div>
+
+                <!-- Cash to Notes Exchange -->
+                <div class="shop-section exchange-section">
+                    <h3 class="shop-section-title">💱 Exchange</h3>
+                    <div class="exchange-box">
+                        <div class="exchange-info">
+                            <span class="exchange-rate">$5,000 → 📜 1 Note</span>
+                        </div>
+                        <div class="exchange-controls">
+                            <button class="exchange-btn" onclick="exchangeCashForNotes(1)">Buy 1</button>
+                            <button class="exchange-btn" onclick="exchangeCashForNotes(10)">Buy 10</button>
+                            <button class="exchange-btn exchange-max" onclick="exchangeCashForNotesMax()">Max</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 Notes Boosts -->
                 <div class="shop-section">
-                    <h3 class="shop-section-title">Miner Skins</h3>
+                    <h3 class="shop-section-title">📜 5 Note Boosts</h3>
+                    <div class="shop-grid boosts-grid">
+                        <div class="shop-item boost-item" onclick="purchaseBoost('elevator_speed')">
+                            <div class="shop-item-preview">🛗⚡</div>
+                            <div class="shop-item-name">Elevator Rush</div>
+                            <div class="shop-item-desc">+100% collection speed, +50% movement (1 min)</div>
+                            <div class="shop-item-cost">📜 5</div>
+                        </div>
+                        <div class="shop-item boost-item" onclick="purchaseBoost('elevator_capacity')">
+                            <div class="shop-item-preview">🛗📦</div>
+                            <div class="shop-item-name">Heavy Load</div>
+                            <div class="shop-item-desc">+50% elevator capacity (2 min)</div>
+                            <div class="shop-item-cost">📜 5</div>
+                        </div>
+                        <div class="shop-item boost-item" onclick="purchaseBoost('miner_speed')">
+                            <div class="shop-item-preview">👷⚡</div>
+                            <div class="shop-item-name">Quick Feet</div>
+                            <div class="shop-item-desc">+100% miner walk speed (1 min)</div>
+                            <div class="shop-item-cost">📜 5</div>
+                        </div>
+                        <div class="shop-item boost-item" onclick="purchaseBoost('miner_gather')">
+                            <div class="shop-item-preview">⛏️💎</div>
+                            <div class="shop-item-name">Rich Veins</div>
+                            <div class="shop-item-desc">+50% coal/copper gather (1 min)</div>
+                            <div class="shop-item-cost">📜 5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 10 Notes Boosts -->
+                <div class="shop-section">
+                    <h3 class="shop-section-title">📜 10 Note Boosts</h3>
+                    <div class="shop-grid boosts-grid">
+                        <div class="shop-item boost-item premium" onclick="purchaseBoost('elevator_mega')">
+                            <div class="shop-item-preview">🛗🔥</div>
+                            <div class="shop-item-name">Elevator Overdrive</div>
+                            <div class="shop-item-desc">+100% all elevator stats (2 min)</div>
+                            <div class="shop-item-cost">📜 10</div>
+                        </div>
+                        <div class="shop-item boost-item premium" onclick="purchaseBoost('miner_mega')">
+                            <div class="shop-item-preview">👷🔥</div>
+                            <div class="shop-item-name">Mining Frenzy</div>
+                            <div class="shop-item-desc">+100% walk speed & gather (1 min)</div>
+                            <div class="shop-item-cost">📜 10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skins (Coming Soon) -->
+                <div class="shop-section">
+                    <h3 class="shop-section-title">🎨 Miner Skins</h3>
                     <div class="shop-grid" id="shopSkinsGrid">
                         <div class="shop-item coming-soon">
                             <div class="shop-item-preview">🎨</div>
@@ -555,8 +637,9 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="shop-info">
-                    <p>📜 Notes are earned by actively playing the game (1 Note per minute).</p>
+                    <p>📜 Notes are earned by actively playing (1 per minute) or exchanged for cash.</p>
                     <p>Notes are NOT earned while offline.</p>
                 </div>
             </div>

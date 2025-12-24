@@ -93,12 +93,16 @@ body::before {
     z-index: 90;
 }
 
+/* ============================================
+   UNIFIED MENU BUTTON STYLING
+   Color Palette: Earth tones with gold accents
+   ============================================ */
 .menu-btn {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    border: 2px solid #ffd700;
+    border: 2px solid #c9a227;
     border-radius: 8px;
     cursor: pointer;
     font-family: 'Chakra Petch', sans-serif;
@@ -106,50 +110,49 @@ body::before {
     font-size: 14px;
     transition: all 0.3s ease;
     position: relative;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
+.menu-btn:hover {
+    transform: translateX(-5px);
+    border-color: #ffd700;
+}
+
+/* Stats - Deep Blue */
 .stats-btn {
-    background: linear-gradient(to bottom, #2a5298, #1e3c72);
-    color: white;
+    background: linear-gradient(to bottom, #3a5f8a, #2a4a6a);
 }
-
 .stats-btn:hover {
-    background: linear-gradient(to bottom, #3a62a8, #2e4c82);
-    box-shadow: 0 0 15px rgba(42, 82, 152, 0.7);
-    transform: translateX(-5px);
+    background: linear-gradient(to bottom, #4a6f9a, #3a5a7a);
+    box-shadow: 0 0 12px rgba(58, 95, 138, 0.6);
 }
 
+/* Achievements - Royal Purple */
 .achievements-menu-btn {
-    background: linear-gradient(to bottom, #9932CC, #6a1b9a);
-    color: white;
+    background: linear-gradient(to bottom, #7b4a8e, #5a3570);
 }
-
 .achievements-menu-btn:hover {
-    background: linear-gradient(to bottom, #a940d6, #7a2ba8);
-    box-shadow: 0 0 15px rgba(153, 50, 204, 0.7);
-    transform: translateX(-5px);
+    background: linear-gradient(to bottom, #8b5a9e, #6a4580);
+    box-shadow: 0 0 12px rgba(123, 74, 142, 0.6);
 }
 
-.updates-btn {
-    background: linear-gradient(to bottom, #2e8b57, #1e5f3a);
-    color: white;
-}
-
-.updates-btn:hover {
-    background: linear-gradient(to bottom, #3e9b67, #2e6f4a);
-    box-shadow: 0 0 15px rgba(46, 139, 87, 0.7);
-    transform: translateX(-5px);
-}
-
+/* Map - Earthy Brown */
 .map-btn {
-    background: linear-gradient(to bottom, #cd853f, #8b5a2b);
-    color: white;
+    background: linear-gradient(to bottom, #8b6b4a, #6a5038);
+}
+.map-btn:hover {
+    background: linear-gradient(to bottom, #9b7b5a, #7a6048);
+    box-shadow: 0 0 12px rgba(139, 107, 74, 0.6);
 }
 
-.map-btn:hover {
-    background: linear-gradient(to bottom, #daa06d, #9b6a3b);
-    box-shadow: 0 0 15px rgba(205, 133, 63, 0.7);
-    transform: translateX(-5px);
+/* Updates - Forest Green */
+.updates-btn {
+    background: linear-gradient(to bottom, #4a7a5a, #386048);
+}
+.updates-btn:hover {
+    background: linear-gradient(to bottom, #5a8a6a, #487058);
+    box-shadow: 0 0 12px rgba(74, 122, 90, 0.6);
 }
 
 /* Mine Indicator */
@@ -2768,13 +2771,13 @@ body::before {
 /* SETTINGS PANEL                              */
 /* ============================================ */
 
+/* Settings - Slate Gray */
 .settings-btn {
-    background: linear-gradient(to bottom, #555, #333);
+    background: linear-gradient(to bottom, #5a5a6a, #404050);
 }
-
 .settings-btn:hover {
-    background: linear-gradient(to bottom, #666, #444);
-    box-shadow: 0 0 15px rgba(150, 150, 150, 0.5);
+    background: linear-gradient(to bottom, #6a6a7a, #505060);
+    box-shadow: 0 0 12px rgba(90, 90, 106, 0.6);
 }
 
 .settings-panel .side-panel-header {
@@ -3380,6 +3383,179 @@ body::before {
     color: #aaa;
     font-size: 14px;
     margin: 5px 0;
+}
+
+/* Boost Items */
+.shop-item.boost-item {
+    cursor: pointer;
+    border-color: rgba(232, 180, 100, 0.4);
+}
+.shop-item.boost-item:hover {
+    border-color: rgba(232, 180, 100, 0.8);
+    box-shadow: 0 0 20px rgba(232, 180, 100, 0.4);
+    transform: translateY(-3px);
+}
+.shop-item.boost-item.premium {
+    border-color: rgba(255, 215, 0, 0.5);
+    background: linear-gradient(135deg, rgba(60, 40, 20, 0.6), rgba(40, 25, 10, 0.8));
+}
+.shop-item.boost-item.premium:hover {
+    border-color: rgba(255, 215, 0, 0.9);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+}
+.shop-item-cost {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: rgba(232, 180, 100, 0.2);
+    border: 1px solid rgba(232, 180, 100, 0.4);
+    border-radius: 20px;
+    color: #e8d5b7;
+    font-weight: 700;
+    font-size: 14px;
+    display: inline-block;
+}
+
+/* Exchange Section */
+.exchange-section {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+}
+.exchange-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.exchange-rate {
+    color: #e8d5b7;
+    font-size: 18px;
+    font-weight: 600;
+}
+.exchange-controls {
+    display: flex;
+    gap: 10px;
+}
+.exchange-btn {
+    padding: 10px 20px;
+    background: linear-gradient(to bottom, #4a7a5a, #386048);
+    border: 2px solid #5a8a6a;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.exchange-btn:hover {
+    background: linear-gradient(to bottom, #5a8a6a, #487058);
+    box-shadow: 0 0 10px rgba(90, 138, 106, 0.5);
+}
+.exchange-btn.exchange-max {
+    background: linear-gradient(to bottom, #c9a227, #a08020);
+    border-color: #d4b030;
+}
+.exchange-btn.exchange-max:hover {
+    background: linear-gradient(to bottom, #d9b237, #b09030);
+    box-shadow: 0 0 10px rgba(201, 162, 39, 0.5);
+}
+
+/* Active Boosts Section */
+.active-boosts-section {
+    background: rgba(50, 180, 100, 0.15);
+    border: 2px solid rgba(50, 180, 100, 0.4);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+.active-boosts-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.active-boost-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    background: rgba(50, 180, 100, 0.2);
+    border: 1px solid rgba(50, 180, 100, 0.5);
+    border-radius: 20px;
+    color: #7aff7a;
+    font-size: 13px;
+    font-weight: 600;
+}
+.active-boost-tag .boost-timer {
+    color: #aaffaa;
+    font-size: 12px;
+}
+
+/* ============================================
+   LOADING SCREEN (Mine Switching)
+   ============================================ */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+.loading-screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+.loading-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+    animation: loadingSpin 2s linear infinite;
+}
+@keyframes loadingSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.loading-text {
+    color: #c9a227;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 30px;
+}
+.loading-progress-bar {
+    width: 300px;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.loading-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #c9a227, #ffd700, #c9a227);
+    background-size: 200% 100%;
+    animation: loadingProgress 1.5s ease-in-out infinite;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+@keyframes loadingProgress {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Toast Message Animation */
+@keyframes toastFade {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
 }
 
 /* ============================================
@@ -4127,15 +4303,13 @@ body::before {
     color: #fff;
 }
 
-/* Dev Tools Menu Button */
+/* Dev Tools - Amber/Orange */
 .menu-btn.dev-btn {
-    background: linear-gradient(to bottom, #9b59b6, #8e44ad);
-    border-color: #9b59b6;
+    background: linear-gradient(to bottom, #a07030, #805820);
 }
-
 .menu-btn.dev-btn:hover {
-    background: linear-gradient(to bottom, #a66bbe, #9b59b6);
-    box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);
+    background: linear-gradient(to bottom, #b08040, #906830);
+    box-shadow: 0 0 12px rgba(160, 112, 48, 0.6);
 }
 
 /* Developer Panel Modal */
@@ -4275,32 +4449,22 @@ body::before {
     color: #32CD32;
 }
 
-/* Title Screen Button */
+/* Title Screen - Teal */
 .menu-btn.title-screen-btn {
-    background: linear-gradient(to bottom, #4a90a4, #2c5d6e);
-    border-color: #4a90a4;
+    background: linear-gradient(to bottom, #4a7a8a, #386068);
 }
-
 .menu-btn.title-screen-btn:hover {
-    background: linear-gradient(to bottom, #5aa0b4, #3c6d7e);
-    box-shadow: 0 0 15px rgba(74, 144, 164, 0.5);
+    background: linear-gradient(to bottom, #5a8a9a, #487078);
+    box-shadow: 0 0 12px rgba(74, 122, 138, 0.6);
 }
 
-/* Shop Button */
+/* Shop - Copper/Bronze */
 .menu-btn.shop-btn {
-    background: linear-gradient(to bottom, #9b59b6, #6c3483);
-    border-color: #9b59b6;
+    background: linear-gradient(to bottom, #9a6a4a, #7a5038);
 }
-
 .menu-btn.shop-btn:hover {
-    background: linear-gradient(to bottom, #ab69c6, #7c4493);
-    box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);
-}
-
-/* White labels for Settings and Title */
-.menu-label.settings-label,
-.menu-label.title-label {
-    color: #ffffff;
+    background: linear-gradient(to bottom, #aa7a5a, #8a6048);
+    box-shadow: 0 0 12px rgba(154, 106, 74, 0.6);
 }
 
 /* Dev Panel Set Cash Row */

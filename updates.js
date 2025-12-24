@@ -16,12 +16,14 @@ const UPDATE_LOG = [
         version: "1.3.2",
         date: "2025-12-24",
         changes: [
-            { type: "feature", text: "Notes currency - earned by actively playing (1 per minute)" },
-            { type: "feature", text: "Shop panel for purchasing cosmetic skins (coming soon)" },
-            { type: "feature", text: "Mine 22 limited to 20 shafts (for story reasons)" },
-            { type: "ui", text: "Full-screen world map with improved layout" },
-            { type: "ui", text: "Redesigned compass with proper needle styling" },
-            { type: "ui", text: "Linear mine layout with room for 4 total mines" }
+            { type: "feature", text: "Shop boosts - spend Notes on temporary power-ups" },
+            { type: "feature", text: "Cash to Notes exchange ($5,000 per Note)" },
+            { type: "feature", text: "6 different boosts: elevator speed/capacity, miner speed/gather" },
+            { type: "feature", text: "Notes currency earned by actively playing (1 per minute)" },
+            { type: "ui", text: "Loading screen with progress bar when switching mines" },
+            { type: "ui", text: "Unified menu button color scheme with earth tones" },
+            { type: "ui", text: "Active boosts display in shop panel" },
+            { type: "fix", text: "Elevator no longer freaks out when switching mines" }
         ]
     },
     {
