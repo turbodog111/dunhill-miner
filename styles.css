@@ -4200,15 +4200,19 @@ body::before {
 
 .scene-dialogue-box {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to bottom, rgba(10, 5, 3, 0.95), rgba(20, 10, 5, 0.98));
-    border-top: 3px solid #8b6914;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 800px;
+    background: linear-gradient(to bottom, rgba(10, 5, 3, 0.97), rgba(20, 10, 5, 0.99));
+    border: 3px solid #8b6914;
+    border-radius: 12px;
     padding: 25px 40px 30px;
-    min-height: 180px;
+    min-height: 160px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(139, 105, 20, 0.3);
 }
 
 .scene-speaker {
@@ -4220,6 +4224,11 @@ body::before {
     text-transform: uppercase;
     letter-spacing: 2px;
     text-shadow: 0 0 10px rgba(255, 140, 66, 0.5);
+}
+
+.scene-speaker.player {
+    color: #87CEEB;
+    text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
 }
 
 .scene-text {
@@ -4248,10 +4257,10 @@ body::before {
 
 .scene-continue-hint {
     font-family: 'Chakra Petch', sans-serif;
-    font-size: 12px;
-    color: rgba(255, 215, 0, 0.6);
-    text-align: right;
-    margin-top: 15px;
+    font-size: 16px;
+    color: rgba(255, 215, 0, 0.7);
+    text-align: center;
+    margin-top: 20px;
     animation: pulse-hint 2s ease-in-out infinite;
 }
 

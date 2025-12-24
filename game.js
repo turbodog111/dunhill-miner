@@ -79,12 +79,24 @@ const FOREMAN_DIALOGUE = [
         text: "Well, well... so you're the new supervisor. Name's Harris. Been foreman here at Mine 22 for going on thirty-two years now."
     },
     {
+        speaker: "You",
+        text: "Thirty-two years? That's... quite the tenure. I'm looking forward to learning from your experience."
+    },
+    {
         speaker: "Foreman Harris",
-        text: "The company sent you to <span class='emphasis'>'revitalize operations,'</span> I take it? That's what they told the last three supervisors too."
+        text: "Heh. <span class='emphasis'>Flattery.</span> That's new. The company sent you to <span class='emphasis'>'revitalize operations,'</span> I take it? That's what they told the last three supervisors too."
+    },
+    {
+        speaker: "You",
+        text: "The last three...? What happened to them?"
     },
     {
         speaker: "Foreman Harris",
         text: "Don't get me wrong — this mine's got plenty of coal left in her. More than plenty. It's just... well, some of the deeper shafts have their <span class='whisper'>quirks</span>."
+    },
+    {
+        speaker: "You",
+        text: "Quirks? What do you mean by that?"
     },
     {
         speaker: "Foreman Harris",
@@ -95,12 +107,20 @@ const FOREMAN_DIALOGUE = [
         text: "<span class='highlight'>Stay away from Shaft 21.</span> Don't dig there. Don't send workers there. Don't even think about reopening it."
     },
     {
+        speaker: "You",
+        text: "Shaft 21? Why? What's down there?"
+    },
+    {
         speaker: "Foreman Harris",
         text: "Back in '87, we broke through into something... <span class='emphasis'>different</span>. A cavern system that wasn't on any geological survey. The company got excited — thought we'd hit a new vein."
     },
     {
         speaker: "Foreman Harris",
         text: "We sent a crew of eight down to investigate. <span class='highlight'>Only three came back up.</span> And they... they weren't right after that. Wouldn't talk about what they saw."
+    },
+    {
+        speaker: "You",
+        text: "Five workers... lost? That's terrible. Was there a rescue operation?"
     },
     {
         speaker: "Foreman Harris",
@@ -111,12 +131,24 @@ const FOREMAN_DIALOGUE = [
         text: "The ones who came back — they'd wake up screaming about <span class='whisper'>lights in the dark. Lights that moved. Lights that watched.</span>"
     },
     {
+        speaker: "You",
+        text: "Lights that... watched? That doesn't make any sense."
+    },
+    {
         speaker: "Foreman Harris",
         text: "Two of them quit within the month. The third... well, that was your predecessor. <span class='emphasis'>Martinez</span>. Good man. Kept asking questions he shouldn't have."
     },
     {
+        speaker: "You",
+        text: "Wait — Martinez was one of the survivors? And he became supervisor?"
+    },
+    {
         speaker: "Foreman Harris",
         text: "One day he just... didn't show up. Company said he <span class='emphasis'>'moved on.'</span> His car was still in the parking lot for a week before someone came to tow it."
+    },
+    {
+        speaker: "You",
+        text: "..."
     },
     {
         speaker: "Foreman Harris",
@@ -127,6 +159,10 @@ const FOREMAN_DIALOGUE = [
         text: "But if you start getting curious about Shaft 21... well, I've said my piece. Just remember — <span class='whisper'>some things in this mine are older than the coal itself.</span>"
     },
     {
+        speaker: "You",
+        text: "I... I understand. Thank you for the warning, Harris."
+    },
+    {
         speaker: "Foreman Harris",
         text: "Now then — let's get you set up. Your first shaft's waiting. <span class='emphasis'>Welcome to Mine 22, Supervisor.</span>"
     }
@@ -134,6 +170,9 @@ const FOREMAN_DIALOGUE = [
 
 let foremanDialogueIndex = 0;
 let foremanSceneActive = false;
+let foremanTextRevealing = false;
+let foremanTextInterval = null;
+let foremanFullText = '';
 
 function beginForemanScene() {
     const foremanScreen = document.getElementById('foremanSceneScreen');
@@ -141,6 +180,7 @@ function beginForemanScene() {
 
     foremanDialogueIndex = 0;
     foremanSceneActive = true;
+    foremanTextRevealing = false;
 
     // Fade to black
     fadeOverlay.classList.add('active');
@@ -169,13 +209,116 @@ function displayForemanDialogue() {
     const dialogue = FOREMAN_DIALOGUE[foremanDialogueIndex];
 
     if (dialogue) {
+        // Set speaker and styling
         speakerEl.textContent = dialogue.speaker;
-        textEl.innerHTML = dialogue.text;
+
+        // Add player class if it's the player speaking
+        if (dialogue.speaker === "You") {
+            speakerEl.classList.add('player');
+        } else {
+            speakerEl.classList.remove('player');
+        }
+
+        // Use typewriter effect
+        revealForemanText(textEl, dialogue.text);
     }
+}
+
+function revealForemanText(element, htmlText) {
+    // Clear any existing interval
+    if (foremanTextInterval) {
+        clearInterval(foremanTextInterval);
+    }
+
+    foremanFullText = htmlText;
+    foremanTextRevealing = true;
+    element.innerHTML = '';
+
+    // Parse HTML and reveal character by character while preserving tags
+    let plainText = '';
+    let tagMap = []; // Maps plain text index to HTML structure
+    let inTag = false;
+    let currentTag = '';
+    let htmlIndex = 0;
+
+    // Build plain text and track where tags are
+    for (let i = 0; i < htmlText.length; i++) {
+        if (htmlText[i] === '<') {
+            inTag = true;
+            currentTag = '<';
+        } else if (htmlText[i] === '>') {
+            currentTag += '>';
+            inTag = false;
+            // Store tag at current plain text position
+            if (!tagMap[plainText.length]) tagMap[plainText.length] = [];
+            tagMap[plainText.length].push(currentTag);
+            currentTag = '';
+        } else if (inTag) {
+            currentTag += htmlText[i];
+        } else {
+            plainText += htmlText[i];
+        }
+    }
+
+    let charIndex = 0;
+    const revealSpeed = 25; // ms per character
+
+    foremanTextInterval = setInterval(() => {
+        if (charIndex <= plainText.length) {
+            // Rebuild HTML up to current character
+            let result = '';
+            let plainIndex = 0;
+            let openTags = [];
+
+            for (let i = 0; i <= charIndex; i++) {
+                // Add any tags at this position
+                if (tagMap[i]) {
+                    for (let tag of tagMap[i]) {
+                        result += tag;
+                        // Track open/close tags
+                        if (tag.startsWith('</')) {
+                            openTags.pop();
+                        } else if (!tag.endsWith('/>')) {
+                            openTags.push(tag);
+                        }
+                    }
+                }
+                // Add character if not at end
+                if (i < charIndex && i < plainText.length) {
+                    result += plainText[i];
+                }
+            }
+
+            // Close any open tags for valid HTML
+            for (let i = openTags.length - 1; i >= 0; i--) {
+                const tagName = openTags[i].match(/<(\w+)/)?.[1];
+                if (tagName) result += `</${tagName}>`;
+            }
+
+            element.innerHTML = result;
+            charIndex++;
+        } else {
+            clearInterval(foremanTextInterval);
+            foremanTextInterval = null;
+            foremanTextRevealing = false;
+            element.innerHTML = htmlText; // Ensure final HTML is complete
+        }
+    }, revealSpeed);
 }
 
 function advanceForemanDialogue() {
     if (!foremanSceneActive) return;
+
+    // If text is still revealing, show it all immediately
+    if (foremanTextRevealing) {
+        if (foremanTextInterval) {
+            clearInterval(foremanTextInterval);
+            foremanTextInterval = null;
+        }
+        document.getElementById('foremanText').innerHTML = foremanFullText;
+        foremanTextRevealing = false;
+        return;
+    }
 
     foremanDialogueIndex++;
 
