@@ -263,6 +263,10 @@
             <span class="menu-icon">⚙️</span>
             <span class="menu-label">Settings</span>
         </button>
+        <button class="menu-btn title-screen-btn" id="titleScreenBtn" onclick="goToTitleScreen()">
+            <span class="menu-icon">🏠</span>
+            <span class="menu-label">Title</span>
+        </button>
         <button class="menu-btn dev-btn" id="devBtn" onclick="toggleDevPanel()" style="display: none;">
             <span class="menu-icon">🛠️</span>
             <span class="menu-label">Dev Tools</span>
@@ -622,6 +626,11 @@
                 <!-- Resource Cheats Section -->
                 <div class="dev-section">
                     <h3 class="dev-section-title">Resources</h3>
+                    <div class="dev-set-cash-row">
+                        <span class="dev-set-cash-label">Set Cash:</span>
+                        <input type="text" class="dev-cash-input" id="devCashInput" placeholder="e.g. 10K, 1M, 5B">
+                        <button class="dev-set-cash-btn" onclick="devSetMoney()">Set</button>
+                    </div>
                     <div class="dev-grid">
                         <button class="dev-action-btn" onclick="devAddMoney(1000)">
                             <span class="dev-btn-icon">💵</span>
