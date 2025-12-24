@@ -130,6 +130,39 @@ function closeCreditsPanel() {
     document.getElementById('creditsPanelOverlay').classList.remove('show');
 }
 
+function goToTitleScreen() {
+    const fadeOverlay = document.getElementById('fadeOverlay');
+    const titleScreen = document.getElementById('titleScreen');
+
+    // Save current game state before leaving
+    saveToLocalStorage();
+
+    // Stop any running loops
+    elevatorLoopId++;
+    miningLoopId++;
+
+    // Pause background music
+    if (bgMusic && !bgMusic.paused) {
+        bgMusic.pause();
+    }
+
+    // Close any open panels
+    closeAllPanels();
+
+    // Fade to black
+    fadeOverlay.classList.add('active');
+
+    setTimeout(() => {
+        // Show title screen
+        titleScreen.classList.remove('hidden');
+
+        // Fade back in
+        setTimeout(() => {
+            fadeOverlay.classList.remove('active');
+        }, 300);
+    }, 500);
+}
+
 // ============================================
 // MINE SWITCHING SYSTEM
 // ============================================
@@ -340,8 +373,9 @@ function switchToMine(targetMineId) {
 }
 
 function loadMineState(mineId) {
-    // Stop any running elevator loops before switching
+    // Stop any running elevator and mining loops before switching
     elevatorLoopId++;
+    miningLoopId++;
 
     const state = mineStates[mineId];
     if (state && state.mineshafts && state.mineshafts.length > 0) {
@@ -549,6 +583,9 @@ let achievementsState = {};
 // Elevator loop tracking - prevents multiple autoElevator loops
 let elevatorLoopId = 0;
 
+// Mining loop tracking - prevents multiple autoMine loops when switching mines
+let miningLoopId = 0;
+
 // Array of mineshafts
 let mineshafts = [];
 
@@ -580,12 +617,40 @@ const elevatorLevelDisplay = document.getElementById('elevatorLevelDisplay');
 // ============================================
 function formatNumber(num) {
     const floored = Math.floor(num);
-    if (floored >= 1000000) {
+    if (floored >= 1000000000000) {
+        return (floored / 1000000000000).toFixed(2) + 'T';
+    } else if (floored >= 1000000000) {
+        return (floored / 1000000000).toFixed(2) + 'B';
+    } else if (floored >= 1000000) {
         return (floored / 1000000).toFixed(2) + 'M';
     } else if (floored >= 1000) {
         return (floored / 1000).toFixed(1) + 'K';
     }
     return floored.toString();
+}
+
+// Parse number with K/M/B/T suffix (e.g., "10K" -> 10000, "1.5M" -> 1500000)
+function parseNumberWithSuffix(str) {
+    if (!str || typeof str !== 'string') return NaN;
+    str = str.trim().toUpperCase();
+
+    const multipliers = {
+        'K': 1000,
+        'M': 1000000,
+        'B': 1000000000,
+        'T': 1000000000000
+    };
+
+    // Check if string ends with a suffix
+    const lastChar = str.charAt(str.length - 1);
+    if (multipliers[lastChar]) {
+        const numPart = parseFloat(str.slice(0, -1));
+        if (isNaN(numPart)) return NaN;
+        return numPart * multipliers[lastChar];
+    }
+
+    // No suffix, parse as regular number
+    return parseFloat(str);
 }
 
 function formatTime(ms) {
@@ -701,8 +766,10 @@ function updateBuyShaftButton() {
 
 function updateShaftBucket(shaftIndex) {
     const shaft = mineshafts[shaftIndex];
+    if (!shaft || !shaft.elements) return; // Guard against undefined shaft
     const bucketCountEl = shaft.elements.bucketCount;
     const bucketFill = shaft.elements.bucketFill;
+    if (!bucketCountEl || !bucketFill) return; // Guard against missing elements
     bucketCountEl.textContent = formatNumber(shaft.bucketCoal);
     const fillPercent = Math.min((shaft.bucketCoal / 20) * 100, 100);
     bucketFill.style.height = fillPercent + '%';
@@ -839,6 +906,7 @@ function updateElevatorShaftHeight() {
 // ============================================
 async function doMining(shaftIndex) {
     const shaft = mineshafts[shaftIndex];
+    if (!shaft || !shaft.elements) return; // Guard against undefined shaft
     if (shaft.minerState !== 'idle') return;
 
     shaft.minerState = 'busy';
@@ -917,14 +985,21 @@ async function doMining(shaftIndex) {
 
 function handleMinerClick(shaftIndex) {
     const shaft = mineshafts[shaftIndex];
+    if (!shaft) return; // Guard against undefined shaft
     if (shaft.hasManager) return;
     if (shaft.minerState !== 'idle') return;
     doMining(shaftIndex);
 }
 
 async function autoMine(shaftIndex) {
-    const shaft = mineshafts[shaftIndex];
-    while (shaft.hasManager) {
+    // Capture current loop ID to detect mine switches
+    const myLoopId = miningLoopId;
+
+    while (myLoopId === miningLoopId) {
+        const shaft = mineshafts[shaftIndex];
+        // Check if shaft still exists and still has manager
+        if (!shaft || !shaft.hasManager) break;
+
         if (shaft.minerState === 'idle') {
             await doMining(shaftIndex);
         }
@@ -2702,6 +2777,28 @@ function devAddMoney(amount) {
     devLog(`Added $${formatNumber(amount)} (Total: $${formatNumber(money)})`, 'success');
 }
 
+function devSetMoney() {
+    const input = document.getElementById('devCashInput');
+    const value = input.value.trim();
+
+    if (!value) {
+        devLog('Please enter a value', 'error');
+        return;
+    }
+
+    const amount = parseNumberWithSuffix(value);
+
+    if (isNaN(amount) || amount < 0) {
+        devLog(`Invalid value: "${value}"`, 'error');
+        return;
+    }
+
+    money = Math.floor(amount);
+    updateStats();
+    input.value = '';
+    devLog(`Cash set to $${formatNumber(money)}`, 'success');
+}
+
 function devAddXP(amount) {
     playerXP += amount;
     checkLevelUp();
@@ -2761,16 +2858,56 @@ function devResetStoryProgress() {
 function devResetGame() {
     if (confirm('RESET ALL GAME DATA? This cannot be undone!')) {
         if (confirm('Are you REALLY sure? All progress will be lost!')) {
-            // Clear local storage
+            devLog('Resetting game data...', 'error');
+
+            // Clear ALL dunhill-related localStorage items
             localStorage.removeItem('dunhillMinerSave');
             localStorage.removeItem('dunhillMinerStory');
 
-            devLog('Game reset - reloading...', 'error');
+            // Reset all in-memory game state
+            money = 0;
+            totalCoalMined = 0;
+            totalCopperMined = 0;
+            totalCoalSold = 0;
+            totalMoneyEarned = 0;
+            playerXP = 0;
+            playerLevel = 1;
+            elevatorLevel = 1;
+            elevatorCarrying = 0;
+            hasElevatorManager = false;
+            elevatorManagerAbility = null;
+            currentMineId = 'mine22';
+
+            // Reset mines unlocked
+            minesUnlocked = { mine22: true, mine37: false };
+
+            // Reset mine states
+            mineStates = {
+                mine22: { lastActiveTime: Date.now() },
+                mine37: { lastActiveTime: Date.now() }
+            };
+
+            // Reset achievements
+            achievementsState = {};
+
+            // Reset story progress
+            storyProgress = {
+                hasSeenIntro: false,
+                hasSeenMine22Intro: false,
+                hasSeenMine37Intro: false,
+                completedScenes: []
+            };
+
+            // Stop any running loops
+            elevatorLoopId++;
+            miningLoopId++;
+
+            devLog('Game reset complete - reloading...', 'error');
 
             // Reload the page
             setTimeout(() => {
                 location.reload();
-            }, 1000);
+            }, 500);
         }
     }
 }

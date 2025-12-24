@@ -4100,3 +4100,69 @@ body::before {
 .dev-console-line.success {
     color: #32CD32;
 }
+
+/* Title Screen Button */
+.menu-btn.title-screen-btn {
+    background: linear-gradient(to bottom, #4a90a4, #2c5d6e);
+    border-color: #4a90a4;
+}
+
+.menu-btn.title-screen-btn:hover {
+    background: linear-gradient(to bottom, #5aa0b4, #3c6d7e);
+    box-shadow: 0 0 15px rgba(74, 144, 164, 0.5);
+}
+
+/* Dev Panel Set Cash Row */
+.dev-set-cash-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.dev-set-cash-label {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #bb86fc;
+    white-space: nowrap;
+}
+
+.dev-cash-input {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(155, 89, 182, 0.5);
+    border-radius: 5px;
+    color: #fff;
+    min-width: 100px;
+}
+
+.dev-cash-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+}
+
+.dev-set-cash-btn {
+    padding: 8px 20px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    background: linear-gradient(to bottom, #32CD32, #228B22);
+    border: 2px solid #2ecc71;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.dev-set-cash-btn:hover {
+    background: linear-gradient(to bottom, #44dd44, #339933);
+    box-shadow: 0 0 10px rgba(50, 205, 50, 0.5);
+}
