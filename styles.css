@@ -2878,17 +2878,20 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-    padding: 10px 15px;
+    padding: 10px 8px;
     border-radius: 8px;
     border: 2px solid;
     cursor: pointer;
     font-family: 'Chakra Petch', sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     transition: all 0.2s;
     margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .settings-account-btn:last-child {
@@ -2965,14 +2968,22 @@ body::before {
 }
 
 .settings-save-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 8px;
     margin-bottom: 8px;
 }
 
 .settings-save-row .settings-account-btn {
     margin-bottom: 0;
+    flex: 1;
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 11px;
+}
+
+.settings-save-row .settings-account-btn .btn-icon {
+    font-size: 14px;
+    flex-shrink: 0;
 }
 
 .settings-status {

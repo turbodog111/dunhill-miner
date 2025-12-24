@@ -120,16 +120,20 @@ function renderMapPanel() {
         </div>
     `;
 
-    // Draw paths between mines (SVG lines)
+    // Draw paths between mines (SVG lines) - use viewBox coordinates (0-100)
+    // Add viewBox attribute to SVG for percentage-like positioning
+    mapPaths.setAttribute('viewBox', '0 0 100 100');
+    mapPaths.setAttribute('preserveAspectRatio', 'none');
+
     for (let i = 0; i < positions.length - 1; i++) {
         const from = positions[i];
         const to = positions[i + 1];
-        pathsHtml += `<path d="M ${from.left}% ${from.top}% L ${to.left}% ${to.top}%" />`;
+        pathsHtml += `<path d="M ${from.left} ${from.top} L ${to.left} ${to.top}" />`;
     }
     // Path to future mine
     if (positions.length > 0) {
         const lastMine = positions[positions.length - 1];
-        pathsHtml += `<path d="M ${lastMine.left}% ${lastMine.top}% L ${futurePos.left}% ${futurePos.top}%" style="opacity: 0.4;" />`;
+        pathsHtml += `<path d="M ${lastMine.left} ${lastMine.top} L ${futurePos.left} ${futurePos.top}" style="opacity: 0.4;" />`;
     }
 
     mapMines.innerHTML = minesHtml;
@@ -1822,14 +1826,16 @@ const bgMusic = document.getElementById('bgMusic');
 const volumeSlider = document.getElementById('volumeSlider');
 const volumeIcon = document.getElementById('volumeIcon');
 const volumeValue = document.getElementById('volumeValue');
-let currentVolume = 0;
+let currentVolume = 30;
 let audioInitialized = false;
 
 // Initialize volume slider
 function initVolumeControls() {
     volumeSlider.addEventListener('input', handleVolumeChange);
     volumeIcon.addEventListener('click', toggleMute);
-    updateVolumeDisplay(0);
+    // Set default volume to 30%
+    volumeSlider.value = 30;
+    setVolume(30);
 }
 
 function handleVolumeChange(e) {

@@ -24,7 +24,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.2.4",
+        version: "1.2.5",
         date: "2025-12-23",
         changes: [
             { type: "feature", text: "Full-screen achievements panel with large icons and grid layout" },
@@ -35,7 +35,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.2.3",
+        version: "1.2.4",
         date: "2025-12-23",
         changes: [
             { type: "feature", text: "New blue ribbon level display with badge design" },
@@ -46,7 +46,7 @@ const UPDATE_LOG = [
         ]
     },
     {
-        version: "1.2.2a",
+        version: "1.2.3",
         date: "2025-12-23",
         changes: [
             { type: "balance", text: "XP per resource reduced from 0.5 to 0.1" },
