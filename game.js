@@ -55,6 +55,21 @@ function startBackgroundMusic() {
     }).catch(e => console.log('Background music autoplay blocked:', e));
 }
 
+// Restart all auto mining and elevator loops (called when returning to game)
+function restartAutoLoops() {
+    // Restart auto mining for all shafts with managers
+    mineshafts.forEach((shaft, index) => {
+        if (shaft && shaft.hasManager) {
+            autoMine(index);
+        }
+    });
+
+    // Restart auto elevator if it has a manager
+    if (hasElevatorManager) {
+        autoElevator();
+    }
+}
+
 // ============================================
 // TITLE SCREEN CONTROLS
 // ============================================
@@ -79,10 +94,11 @@ function startGame() {
                 fadeOverlay.classList.remove('active');
             }, 300);
         } else {
-            // Skip to game if already seen - start background music
+            // Skip to game if already seen - start background music and restart loops
             setTimeout(() => {
                 fadeOverlay.classList.remove('active');
                 startBackgroundMusic();
+                restartAutoLoops();
             }, 300);
         }
     }, 500);
