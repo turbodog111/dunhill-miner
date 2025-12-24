@@ -3,6 +3,59 @@
 // ============================================
 
 // ============================================
+// INTRO MUSIC CONTROLS
+// ============================================
+const introMusic = document.getElementById('introMusic');
+let introMusicFading = false;
+
+function playIntroMusic() {
+    if (!introMusic) return;
+    introMusic.volume = 0.5;
+    introMusic.currentTime = 0;
+    introMusic.play().catch(e => console.log('Intro music autoplay blocked:', e));
+}
+
+function fadeOutIntroMusic(duration = 500, callback = null) {
+    if (!introMusic || introMusicFading) {
+        if (callback) callback();
+        return;
+    }
+
+    introMusicFading = true;
+    const startVolume = introMusic.volume;
+    const steps = 20;
+    const stepDuration = duration / steps;
+    const volumeStep = startVolume / steps;
+
+    let currentStep = 0;
+    const fadeInterval = setInterval(() => {
+        currentStep++;
+        introMusic.volume = Math.max(0, startVolume - (volumeStep * currentStep));
+
+        if (currentStep >= steps) {
+            clearInterval(fadeInterval);
+            introMusic.pause();
+            introMusic.currentTime = 0;
+            introMusic.volume = 0.5;
+            introMusicFading = false;
+            if (callback) callback();
+        }
+    }, stepDuration);
+}
+
+function startBackgroundMusic() {
+    if (!bgMusic || dialogueActive) return;
+
+    // Use saved volume or default to 30%
+    const volume = currentVolume || 30;
+    bgMusic.volume = volume / 100;
+
+    bgMusic.play().then(() => {
+        audioInitialized = true;
+    }).catch(e => console.log('Background music autoplay blocked:', e));
+}
+
+// ============================================
 // TITLE SCREEN CONTROLS
 // ============================================
 function startGame() {
@@ -19,15 +72,17 @@ function startGame() {
 
         // Check if player has seen intro before
         if (!storyProgress.hasSeenIntro) {
-            // Show the intro letter screen
+            // Show the intro letter screen and play intro music
             introLetterScreen.classList.add('active');
+            playIntroMusic();
             setTimeout(() => {
                 fadeOverlay.classList.remove('active');
             }, 300);
         } else {
-            // Skip to game if already seen
+            // Skip to game if already seen - start background music
             setTimeout(() => {
                 fadeOverlay.classList.remove('active');
+                startBackgroundMusic();
             }, 300);
         }
     }, 500);
@@ -41,6 +96,9 @@ function beginGameFromLetter() {
     storyProgress.hasSeenIntro = true;
     saveStoryProgress();
 
+    // Fade out intro music over 0.5s
+    fadeOutIntroMusic(500);
+
     // Fade to black
     fadeOverlay.classList.add('active');
 
@@ -48,9 +106,10 @@ function beginGameFromLetter() {
         // Hide the intro letter
         introLetterScreen.classList.remove('active');
 
-        // Fade back in to reveal the game
+        // Fade back in to reveal the game and start background music
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
+            startBackgroundMusic();
         }, 300);
     }, 500);
 }
@@ -2590,19 +2649,51 @@ function devLog(message, type = 'info') {
 // ============================================
 
 function devTriggerScene(sceneId) {
+    // Close dev panel first
+    document.getElementById('devPanel').classList.remove('show');
+
+    // Special handling for intro_letter - show the image version
+    if (sceneId === 'intro_letter') {
+        devTriggerIntroLetter();
+        return;
+    }
+
     if (!STORY_SCENES[sceneId]) {
         devLog(`Scene "${sceneId}" not found`, 'error');
         return;
     }
-
-    // Close dev panel first
-    document.getElementById('devPanel').classList.remove('show');
 
     showDialogue(sceneId, () => {
         devLog(`Scene "${sceneId}" completed`, 'success');
     });
 
     devLog(`Triggering scene: ${sceneId}`);
+}
+
+function devTriggerIntroLetter() {
+    const introLetterScreen = document.getElementById('introLetterScreen');
+    const fadeOverlay = document.getElementById('fadeOverlay');
+
+    // Pause background music while showing intro
+    if (bgMusic && !bgMusic.paused) {
+        bgMusic.pause();
+    }
+
+    // Fade to black
+    fadeOverlay.classList.add('active');
+
+    setTimeout(() => {
+        // Show the intro letter screen and play intro music
+        introLetterScreen.classList.add('active');
+        playIntroMusic();
+
+        // Fade back in
+        setTimeout(() => {
+            fadeOverlay.classList.remove('active');
+        }, 300);
+
+        devLog('Intro letter triggered (image version)', 'success');
+    }, 500);
 }
 
 function devAddMoney(amount) {
