@@ -1061,89 +1061,181 @@ function updateNotesDisplay() {
 }
 
 // ============================================
-// SHOP BOOST SYSTEM
+// SHOP SYSTEM - Ranks, Boosts, and Exchange
 // ============================================
 const BOOST_COST_PER_NOTE = 5000; // $5,000 per note for exchange
+const DAILY_EXCHANGE_LIMIT = 10; // Max 10 exchanges per day
 
+// Shop Rank Tiers - based on total Notes spent
+const SHOP_RANKS = [
+    { id: 'bronze', name: 'Bronze', icon: '🥉', notesRequired: 0, color: '#cd7f32',
+      bonuses: { production: 0, walkSpeed: 0, capacity: 0 } },
+    { id: 'silver', name: 'Silver', icon: '🥈', notesRequired: 25, color: '#c0c0c0',
+      bonuses: { production: 0.05, walkSpeed: 0, capacity: 0 } },
+    { id: 'gold', name: 'Gold', icon: '🥇', notesRequired: 75, color: '#ffd700',
+      bonuses: { production: 0.10, walkSpeed: 0.05, capacity: 0 } },
+    { id: 'platinum', name: 'Platinum', icon: '💎', notesRequired: 150, color: '#e5e4e2',
+      bonuses: { production: 0.15, walkSpeed: 0.10, capacity: 0 } },
+    { id: 'diamond', name: 'Diamond', icon: '💠', notesRequired: 300, color: '#b9f2ff',
+      bonuses: { production: 0.20, walkSpeed: 0.15, capacity: 0.05 } },
+    { id: 'obsidian', name: 'Obsidian', icon: '🖤', notesRequired: 500, color: '#3d3d3d',
+      bonuses: { production: 0.25, walkSpeed: 0.20, capacity: 0.10 } }
+];
+
+// Balanced Boosts - can't stack, can't extend while active
 const BOOSTS = {
-    elevator_speed: {
-        name: 'Elevator Rush',
-        cost: 5,
-        duration: 60000, // 1 minute
-        elevatorCollectionBoost: 2.0, // +100%
-        elevatorSpeedBoost: 1.5 // +50%
-    },
-    elevator_capacity: {
-        name: 'Heavy Load',
-        cost: 5,
+    // 3 Notes - Small boosts (2 min)
+    steady_hands: {
+        name: 'Steady Hands',
+        desc: '+15% gather rate',
+        cost: 3,
         duration: 120000, // 2 minutes
-        elevatorCapacityBoost: 1.5 // +50%
+        minerGatherBoost: 1.15
     },
-    miner_speed: {
-        name: 'Quick Feet',
+    light_steps: {
+        name: 'Light Steps',
+        desc: '+20% walk speed',
+        cost: 3,
+        duration: 120000,
+        minerSpeedBoost: 1.20
+    },
+    // 5 Notes - Medium boosts (3 min)
+    efficient_mining: {
+        name: 'Efficient Mining',
+        desc: '+25% gather rate',
         cost: 5,
-        duration: 60000, // 1 minute
-        minerSpeedBoost: 2.0 // +100%
+        duration: 180000, // 3 minutes
+        minerGatherBoost: 1.25
     },
-    miner_gather: {
-        name: 'Rich Veins',
+    swift_feet: {
+        name: 'Swift Feet',
+        desc: '+30% walk speed',
         cost: 5,
-        duration: 60000, // 1 minute
-        minerGatherBoost: 1.5 // +50%
+        duration: 180000,
+        minerSpeedBoost: 1.30
     },
-    elevator_mega: {
-        name: 'Elevator Overdrive',
-        cost: 10,
-        duration: 120000, // 2 minutes
-        elevatorCollectionBoost: 2.0, // +100%
-        elevatorSpeedBoost: 2.0, // +100%
-        elevatorCapacityBoost: 2.0 // +100%
+    sturdy_cart: {
+        name: 'Sturdy Cart',
+        desc: '+20% elevator capacity',
+        cost: 5,
+        duration: 180000,
+        elevatorCapacityBoost: 1.20
     },
-    miner_mega: {
-        name: 'Mining Frenzy',
-        cost: 10,
-        duration: 60000, // 1 minute
-        minerSpeedBoost: 2.0, // +100%
-        minerGatherBoost: 2.0 // +100%
+    // 8 Notes - Premium combo boosts (3 min)
+    master_miner: {
+        name: 'Master Miner',
+        desc: '+20% gather & walk speed',
+        cost: 8,
+        duration: 180000,
+        minerGatherBoost: 1.20,
+        minerSpeedBoost: 1.20
+    },
+    express_elevator: {
+        name: 'Express Elevator',
+        desc: '+25% elevator speed & +15% capacity',
+        cost: 8,
+        duration: 180000,
+        elevatorSpeedBoost: 1.25,
+        elevatorCapacityBoost: 1.15
     }
 };
 
-// Active boosts state: { boostId: expiresAt }
+// Shop state
+let totalNotesSpent = 0;
 let activeBoosts = {};
+let dailyExchangeCount = 0;
+let lastExchangeDate = null; // Stored as 'YYYY-MM-DD' in EST
+
+function getESTDateString() {
+    // Get current date in EST timezone
+    const now = new Date();
+    const estOffset = -5 * 60; // EST is UTC-5
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const est = new Date(utc + (estOffset * 60000));
+    return est.toISOString().split('T')[0];
+}
+
+function checkDailyReset() {
+    const today = getESTDateString();
+    if (lastExchangeDate !== today) {
+        dailyExchangeCount = 0;
+        lastExchangeDate = today;
+        saveToLocalStorage();
+    }
+}
+
+function getRemainingExchanges() {
+    checkDailyReset();
+    return DAILY_EXCHANGE_LIMIT - dailyExchangeCount;
+}
+
+function getCurrentShopRank() {
+    let currentRank = SHOP_RANKS[0];
+    for (const rank of SHOP_RANKS) {
+        if (totalNotesSpent >= rank.notesRequired) {
+            currentRank = rank;
+        }
+    }
+    return currentRank;
+}
+
+function getNextShopRank() {
+    const currentRank = getCurrentShopRank();
+    const currentIndex = SHOP_RANKS.findIndex(r => r.id === currentRank.id);
+    if (currentIndex < SHOP_RANKS.length - 1) {
+        return SHOP_RANKS[currentIndex + 1];
+    }
+    return null; // Max rank reached
+}
+
+function getShopRankBonus(type) {
+    const rank = getCurrentShopRank();
+    return rank.bonuses[type] || 0;
+}
 
 function purchaseBoost(boostId) {
     const boost = BOOSTS[boostId];
     if (!boost) return;
+
+    // Check if boost is already active (can't stack or extend)
+    if (isBoostActive(boostId)) {
+        showBoostMessage(`${boost.name} is already active!`, 'error');
+        return;
+    }
+
+    // Check if a conflicting boost is active (same stat type)
+    for (const [activeId, expiresAt] of Object.entries(activeBoosts)) {
+        if (expiresAt > Date.now() && activeId !== boostId) {
+            const activeBoost = BOOSTS[activeId];
+            // Check for overlapping stats
+            const boostStats = Object.keys(boost).filter(k => k.includes('Boost'));
+            const activeStats = Object.keys(activeBoost).filter(k => k.includes('Boost'));
+            const overlap = boostStats.some(s => activeStats.includes(s));
+            if (overlap) {
+                showBoostMessage(`Wait for ${activeBoost.name} to expire first!`, 'error');
+                return;
+            }
+        }
+    }
 
     if (notes < boost.cost) {
         showBoostMessage(`Not enough Notes! Need ${boost.cost} 📜`, 'error');
         return;
     }
 
-    // Deduct notes
+    // Deduct notes and track spending
     notes -= boost.cost;
+    totalNotesSpent += boost.cost;
     updateNotesDisplay();
+    updateShopRankDisplay();
     saveToLocalStorage();
 
-    // Activate boost
-    activateBoost(boostId);
-    showBoostMessage(`${boost.name} activated!`, 'success');
-}
-
-function activateBoost(boostId) {
-    const boost = BOOSTS[boostId];
-    if (!boost) return;
-
-    // If boost already active, extend duration
-    const now = Date.now();
-    if (activeBoosts[boostId] && activeBoosts[boostId] > now) {
-        activeBoosts[boostId] += boost.duration;
-    } else {
-        activeBoosts[boostId] = now + boost.duration;
-    }
-
+    // Activate boost (no extension - fresh duration)
+    activeBoosts[boostId] = Date.now() + boost.duration;
     updateActiveBoostsDisplay();
     saveToLocalStorage();
+
+    showBoostMessage(`${boost.name} activated!`, 'success');
 }
 
 function isBoostActive(boostId) {
@@ -1158,10 +1250,22 @@ function getBoostMultiplier(type) {
         if (expiresAt > now) {
             const boost = BOOSTS[boostId];
             if (boost && boost[type]) {
+                // Take the highest boost, don't stack
                 multiplier = Math.max(multiplier, boost[type]);
             }
         }
     }
+
+    // Add permanent rank bonus
+    const rankBonusType = type.replace('Boost', '').replace('miner', '').replace('elevator', '');
+    let rankBonus = 0;
+    if (type === 'minerGatherBoost') rankBonus = getShopRankBonus('production');
+    else if (type === 'minerSpeedBoost') rankBonus = getShopRankBonus('walkSpeed');
+    else if (type === 'elevatorSpeedBoost') rankBonus = getShopRankBonus('walkSpeed');
+    else if (type === 'elevatorCapacityBoost') rankBonus = getShopRankBonus('capacity');
+
+    // Apply rank bonus additively on top of boost
+    multiplier += rankBonus;
 
     return multiplier;
 }
@@ -1177,6 +1281,7 @@ function updateActiveBoostsDisplay() {
     for (const [boostId, expiresAt] of Object.entries(activeBoosts)) {
         if (expiresAt > now) {
             const boost = BOOSTS[boostId];
+            if (!boost) continue;
             const remaining = expiresAt - now;
             const minutes = Math.floor(remaining / 60000);
             const seconds = Math.floor((remaining % 60000) / 1000);
@@ -1201,8 +1306,59 @@ function updateActiveBoostsDisplay() {
     `).join('');
 }
 
+function updateShopRankDisplay() {
+    const rankDisplay = document.getElementById('shopRankDisplay');
+    const progressBar = document.getElementById('shopRankProgress');
+    const progressText = document.getElementById('shopRankProgressText');
+    const bonusList = document.getElementById('shopRankBonuses');
+
+    if (!rankDisplay) return;
+
+    const currentRank = getCurrentShopRank();
+    const nextRank = getNextShopRank();
+
+    rankDisplay.innerHTML = `${currentRank.icon} ${currentRank.name}`;
+    rankDisplay.style.color = currentRank.color;
+
+    if (progressBar && nextRank) {
+        const currentIndex = SHOP_RANKS.findIndex(r => r.id === currentRank.id);
+        const prevRequired = currentRank.notesRequired;
+        const nextRequired = nextRank.notesRequired;
+        const progress = ((totalNotesSpent - prevRequired) / (nextRequired - prevRequired)) * 100;
+        progressBar.style.width = Math.min(progress, 100) + '%';
+        progressBar.style.background = `linear-gradient(90deg, ${currentRank.color}, ${nextRank.color})`;
+
+        if (progressText) {
+            progressText.textContent = `${totalNotesSpent}/${nextRequired} to ${nextRank.name}`;
+        }
+    } else if (progressBar) {
+        progressBar.style.width = '100%';
+        progressBar.style.background = currentRank.color;
+        if (progressText) {
+            progressText.textContent = 'Max Rank Achieved!';
+        }
+    }
+
+    if (bonusList) {
+        const bonuses = currentRank.bonuses;
+        let bonusText = [];
+        if (bonuses.production > 0) bonusText.push(`+${Math.round(bonuses.production * 100)}% Production`);
+        if (bonuses.walkSpeed > 0) bonusText.push(`+${Math.round(bonuses.walkSpeed * 100)}% Speed`);
+        if (bonuses.capacity > 0) bonusText.push(`+${Math.round(bonuses.capacity * 100)}% Capacity`);
+        bonusList.innerHTML = bonusText.length > 0 ? bonusText.join(' • ') : 'No bonuses yet';
+    }
+}
+
+function updateExchangeDisplay() {
+    const remaining = getRemainingExchanges();
+    const exchangeInfo = document.getElementById('exchangeRemaining');
+    if (exchangeInfo) {
+        exchangeInfo.textContent = `${remaining}/${DAILY_EXCHANGE_LIMIT} remaining today`;
+        exchangeInfo.style.color = remaining > 0 ? '#7aff7a' : '#ff7a7a';
+    }
+}
+
 function showBoostMessage(message, type) {
-    // Create a temporary toast message
     const toast = document.createElement('div');
     toast.className = `boost-toast ${type}`;
     toast.textContent = message;
@@ -1224,7 +1380,6 @@ function showBoostMessage(message, type) {
     setTimeout(() => toast.remove(), 2000);
 }
 
-// Start boost timer update loop
 function startBoostTimerLoop() {
     setInterval(() => {
         updateActiveBoostsDisplay();
@@ -1238,24 +1393,48 @@ function startBoostTimerLoop() {
     }, 1000);
 }
 
-// Cash to Notes exchange
+// Cash to Notes exchange with daily limit
 function exchangeCashForNotes(amount) {
-    const totalCost = BOOST_COST_PER_NOTE * amount;
+    checkDailyReset();
+
+    const remaining = getRemainingExchanges();
+    if (remaining <= 0) {
+        showBoostMessage('Daily exchange limit reached! Resets at midnight EST.', 'error');
+        return;
+    }
+
+    // Limit to remaining exchanges
+    const actualAmount = Math.min(amount, remaining);
+    const totalCost = BOOST_COST_PER_NOTE * actualAmount;
+
     if (money < totalCost) {
         showBoostMessage(`Not enough cash! Need $${formatNumber(totalCost)}`, 'error');
         return;
     }
 
     money -= totalCost;
-    notes += amount;
+    notes += actualAmount;
+    dailyExchangeCount += actualAmount;
+
     updateStats();
     updateNotesDisplay();
+    updateExchangeDisplay();
     saveToLocalStorage();
-    showBoostMessage(`Exchanged $${formatNumber(totalCost)} for ${amount} 📜 Notes!`, 'success');
+
+    showBoostMessage(`Exchanged $${formatNumber(totalCost)} for ${actualAmount} 📜 Notes!`, 'success');
 }
 
 function exchangeCashForNotesMax() {
-    const maxNotes = Math.floor(money / BOOST_COST_PER_NOTE);
+    checkDailyReset();
+    const remaining = getRemainingExchanges();
+    if (remaining <= 0) {
+        showBoostMessage('Daily exchange limit reached! Resets at midnight EST.', 'error');
+        return;
+    }
+
+    const maxAffordable = Math.floor(money / BOOST_COST_PER_NOTE);
+    const maxNotes = Math.min(maxAffordable, remaining);
+
     if (maxNotes <= 0) {
         showBoostMessage(`Not enough cash! Need at least $${formatNumber(BOOST_COST_PER_NOTE)}`, 'error');
         return;
@@ -2433,11 +2612,11 @@ function toggleShopPanel() {
     closeAllPanels();
     if (!wasOpen) {
         panel.classList.add('show');
-        // Update notes display in shop
-        const shopNotesEl = document.getElementById('shopNotesCount');
-        if (shopNotesEl) {
-            shopNotesEl.textContent = formatNumber(notes);
-        }
+        // Update all shop displays
+        updateNotesDisplay();
+        updateShopRankDisplay();
+        updateExchangeDisplay();
+        updateActiveBoostsDisplay();
     }
 }
 
@@ -2763,6 +2942,10 @@ function initGame() {
     // Start boost timer loop
     startBoostTimerLoop();
     updateActiveBoostsDisplay();
+
+    // Initialize shop displays
+    updateShopRankDisplay();
+    updateExchangeDisplay();
 }
 
 initGame();
@@ -2967,6 +3150,9 @@ function saveToLocalStorage() {
         mineStates,
         playerXP,
         activeBoosts,
+        totalNotesSpent,
+        dailyExchangeCount,
+        lastExchangeDate,
         savedAt: Date.now()
     };
 
@@ -3052,11 +3238,16 @@ function loadFromLocalStorage() {
             const now = Date.now();
             activeBoosts = {};
             for (const [boostId, expiresAt] of Object.entries(data.activeBoosts)) {
-                if (expiresAt > now) {
+                if (expiresAt > now && BOOSTS[boostId]) {
                     activeBoosts[boostId] = expiresAt;
                 }
             }
         }
+
+        // Restore shop rank progress
+        if (data.totalNotesSpent !== undefined) totalNotesSpent = data.totalNotesSpent;
+        if (data.dailyExchangeCount !== undefined) dailyExchangeCount = data.dailyExchangeCount;
+        if (data.lastExchangeDate) lastExchangeDate = data.lastExchangeDate;
 
         updateStats();
         updatePlayerStats();
