@@ -555,6 +555,29 @@
                     <span class="shop-notes-label">Notes</span>
                 </div>
 
+                <!-- Shop Rank Display -->
+                <div class="shop-section shop-rank-section">
+                    <h3 class="shop-section-title">🏅 Shop Rank</h3>
+                    <div class="shop-rank-box">
+                        <div class="shop-rank-current" id="shopRankDisplay">🥉 Bronze</div>
+                        <div class="shop-rank-progress-container">
+                            <div class="shop-rank-progress-bar">
+                                <div class="shop-rank-progress-fill" id="shopRankProgress"></div>
+                            </div>
+                            <div class="shop-rank-progress-text" id="shopRankProgressText">0/25 to Silver</div>
+                        </div>
+                        <div class="shop-rank-bonuses" id="shopRankBonuses">No bonuses yet</div>
+                    </div>
+                    <div class="shop-rank-tiers">
+                        <span class="rank-tier" title="0 Notes">🥉</span>
+                        <span class="rank-tier" title="25 Notes">🥈</span>
+                        <span class="rank-tier" title="75 Notes">🥇</span>
+                        <span class="rank-tier" title="150 Notes">💎</span>
+                        <span class="rank-tier" title="300 Notes">💠</span>
+                        <span class="rank-tier" title="500 Notes">🖤</span>
+                    </div>
+                </div>
+
                 <!-- Active Boosts Display -->
                 <div class="active-boosts-section" id="activeBoostsSection" style="display: none;">
                     <h3 class="shop-section-title">⚡ Active Boosts</h3>
@@ -567,61 +590,75 @@
                     <div class="exchange-box">
                         <div class="exchange-info">
                             <span class="exchange-rate">$5,000 → 📜 1 Note</span>
+                            <span class="exchange-limit" id="exchangeRemaining">10/10 remaining today</span>
                         </div>
                         <div class="exchange-controls">
                             <button class="exchange-btn" onclick="exchangeCashForNotes(1)">Buy 1</button>
-                            <button class="exchange-btn" onclick="exchangeCashForNotes(10)">Buy 10</button>
+                            <button class="exchange-btn" onclick="exchangeCashForNotes(5)">Buy 5</button>
                             <button class="exchange-btn exchange-max" onclick="exchangeCashForNotesMax()">Max</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 5 Notes Boosts -->
+                <!-- 3 Notes Boosts (Small) -->
                 <div class="shop-section">
-                    <h3 class="shop-section-title">📜 5 Note Boosts</h3>
+                    <h3 class="shop-section-title">📜 3 Note Boosts <span class="boost-duration-hint">(2 min)</span></h3>
                     <div class="shop-grid boosts-grid">
-                        <div class="shop-item boost-item" onclick="purchaseBoost('elevator_speed')">
-                            <div class="shop-item-preview">🛗⚡</div>
-                            <div class="shop-item-name">Elevator Rush</div>
-                            <div class="shop-item-desc">+100% collection speed, +50% movement (1 min)</div>
+                        <div class="shop-item boost-item" onclick="purchaseBoost('steady_hands')">
+                            <div class="shop-item-preview">🤲</div>
+                            <div class="shop-item-name">Steady Hands</div>
+                            <div class="shop-item-desc">+15% gather rate</div>
+                            <div class="shop-item-cost">📜 3</div>
+                        </div>
+                        <div class="shop-item boost-item" onclick="purchaseBoost('light_steps')">
+                            <div class="shop-item-preview">👟</div>
+                            <div class="shop-item-name">Light Steps</div>
+                            <div class="shop-item-desc">+20% walk speed</div>
+                            <div class="shop-item-cost">📜 3</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 Notes Boosts (Medium) -->
+                <div class="shop-section">
+                    <h3 class="shop-section-title">📜 5 Note Boosts <span class="boost-duration-hint">(3 min)</span></h3>
+                    <div class="shop-grid boosts-grid">
+                        <div class="shop-item boost-item" onclick="purchaseBoost('efficient_mining')">
+                            <div class="shop-item-preview">⛏️</div>
+                            <div class="shop-item-name">Efficient Mining</div>
+                            <div class="shop-item-desc">+25% gather rate</div>
                             <div class="shop-item-cost">📜 5</div>
                         </div>
-                        <div class="shop-item boost-item" onclick="purchaseBoost('elevator_capacity')">
-                            <div class="shop-item-preview">🛗📦</div>
-                            <div class="shop-item-name">Heavy Load</div>
-                            <div class="shop-item-desc">+50% elevator capacity (2 min)</div>
+                        <div class="shop-item boost-item" onclick="purchaseBoost('swift_feet')">
+                            <div class="shop-item-preview">💨</div>
+                            <div class="shop-item-name">Swift Feet</div>
+                            <div class="shop-item-desc">+30% walk speed</div>
                             <div class="shop-item-cost">📜 5</div>
                         </div>
-                        <div class="shop-item boost-item" onclick="purchaseBoost('miner_speed')">
-                            <div class="shop-item-preview">👷⚡</div>
-                            <div class="shop-item-name">Quick Feet</div>
-                            <div class="shop-item-desc">+100% miner walk speed (1 min)</div>
-                            <div class="shop-item-cost">📜 5</div>
-                        </div>
-                        <div class="shop-item boost-item" onclick="purchaseBoost('miner_gather')">
-                            <div class="shop-item-preview">⛏️💎</div>
-                            <div class="shop-item-name">Rich Veins</div>
-                            <div class="shop-item-desc">+50% coal/copper gather (1 min)</div>
+                        <div class="shop-item boost-item" onclick="purchaseBoost('sturdy_cart')">
+                            <div class="shop-item-preview">🛗</div>
+                            <div class="shop-item-name">Sturdy Cart</div>
+                            <div class="shop-item-desc">+20% elevator capacity</div>
                             <div class="shop-item-cost">📜 5</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 10 Notes Boosts -->
+                <!-- 8 Notes Boosts (Premium) -->
                 <div class="shop-section">
-                    <h3 class="shop-section-title">📜 10 Note Boosts</h3>
+                    <h3 class="shop-section-title">📜 8 Note Boosts <span class="boost-duration-hint">(3 min)</span></h3>
                     <div class="shop-grid boosts-grid">
-                        <div class="shop-item boost-item premium" onclick="purchaseBoost('elevator_mega')">
-                            <div class="shop-item-preview">🛗🔥</div>
-                            <div class="shop-item-name">Elevator Overdrive</div>
-                            <div class="shop-item-desc">+100% all elevator stats (2 min)</div>
-                            <div class="shop-item-cost">📜 10</div>
+                        <div class="shop-item boost-item premium" onclick="purchaseBoost('master_miner')">
+                            <div class="shop-item-preview">⚒️</div>
+                            <div class="shop-item-name">Master Miner</div>
+                            <div class="shop-item-desc">+20% gather & walk speed</div>
+                            <div class="shop-item-cost">📜 8</div>
                         </div>
-                        <div class="shop-item boost-item premium" onclick="purchaseBoost('miner_mega')">
-                            <div class="shop-item-preview">👷🔥</div>
-                            <div class="shop-item-name">Mining Frenzy</div>
-                            <div class="shop-item-desc">+100% walk speed & gather (1 min)</div>
-                            <div class="shop-item-cost">📜 10</div>
+                        <div class="shop-item boost-item premium" onclick="purchaseBoost('express_elevator')">
+                            <div class="shop-item-preview">🚀</div>
+                            <div class="shop-item-name">Express Elevator</div>
+                            <div class="shop-item-desc">+25% speed & +15% capacity</div>
+                            <div class="shop-item-cost">📜 8</div>
                         </div>
                     </div>
                 </div>
@@ -640,7 +677,8 @@
 
                 <div class="shop-info">
                     <p>📜 Notes are earned by actively playing (1 per minute) or exchanged for cash.</p>
-                    <p>Notes are NOT earned while offline.</p>
+                    <p>🏅 Spend Notes to increase your Shop Rank for permanent bonuses!</p>
+                    <p>⚠️ Boosts cannot be stacked - wait for one to expire before activating another of the same type.</p>
                 </div>
             </div>
         </div>

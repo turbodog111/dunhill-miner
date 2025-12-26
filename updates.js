@@ -14,15 +14,17 @@ const TYPE_ORDER = ['feature', 'balance', 'ui', 'fix'];
 const UPDATE_LOG = [
     {
         version: "1.3.2",
-        date: "2025-12-24",
+        date: "2025-12-26",
         changes: [
-            { type: "feature", text: "Shop boosts - spend Notes on temporary power-ups" },
-            { type: "feature", text: "Cash to Notes exchange ($5,000 per Note)" },
-            { type: "feature", text: "6 different boosts: elevator speed/capacity, miner speed/gather" },
+            { type: "feature", text: "Shop Rank system - spend Notes to unlock permanent bonuses" },
+            { type: "feature", text: "6 rank tiers: Bronze → Silver → Gold → Platinum → Diamond → Obsidian" },
+            { type: "feature", text: "7 balanced boosts with 3/5/8 Note price tiers" },
+            { type: "feature", text: "Cash to Notes exchange ($5,000 per Note, 10/day limit)" },
             { type: "feature", text: "Notes currency earned by actively playing (1 per minute)" },
+            { type: "balance", text: "Boosts are non-stackable and cannot be extended while active" },
             { type: "ui", text: "Loading screen with progress bar when switching mines" },
             { type: "ui", text: "Unified menu button color scheme with earth tones" },
-            { type: "ui", text: "Active boosts display in shop panel" },
+            { type: "ui", text: "Shop rank progress bar with tier visualization" },
             { type: "fix", text: "Elevator no longer freaks out when switching mines" }
         ]
     },
