@@ -1160,7 +1160,7 @@ function checkDailyReset() {
     if (lastExchangeDate !== today) {
         dailyExchangeCount = 0;
         lastExchangeDate = today;
-        saveToLocalStorage();
+        // Don't save here - save will happen naturally when exchanges occur
     }
 }
 
