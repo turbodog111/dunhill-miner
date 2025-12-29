@@ -3756,6 +3756,42 @@ setInterval(() => {
     }
 }, 1000);
 
+// Passive manager XP gain (every minute)
+let lastManagerXPTime = Date.now();
+setInterval(() => {
+    const now = Date.now();
+    const elapsed = now - lastManagerXPTime;
+
+    // Check if a minute has passed
+    if (elapsed >= 60000) {
+        const minutesElapsed = Math.floor(elapsed / 60000);
+        lastManagerXPTime = now;
+
+        // Grant XP to all working managers
+        let xpGranted = false;
+
+        for (let i = 0; i < mineshafts.length; i++) {
+            const shaft = mineshafts[i];
+            if (shaft && shaft.hasManager && shaft.managerAbility) {
+                const xpToAdd = MANAGER_EXPERIENCE_CONFIG.XP_PER_MINUTE * minutesElapsed;
+                addManagerExperience('shaft', i, xpToAdd);
+                xpGranted = true;
+            }
+        }
+
+        if (hasElevatorManager && elevatorManagerAbility) {
+            const xpToAdd = MANAGER_EXPERIENCE_CONFIG.XP_PER_MINUTE * minutesElapsed;
+            addManagerExperience('elevator', null, xpToAdd);
+            xpGranted = true;
+        }
+
+        // Update display if popup is open
+        if (xpGranted && managerInfoPopup.classList.contains('show')) {
+            updateManagerInfoDisplay();
+        }
+    }
+}, 10000); // Check every 10 seconds
+
 // Activate button click
 managerActivateBtn.onclick = () => {
     if (!currentInfoTarget) return;
@@ -5163,6 +5199,52 @@ function stopCloudAutosave() {
     }
 }
 
+// Unified save function - works for both local and cloud saves
+function saveGame() {
+    if (currentUser) {
+        // Cloud save for logged in users
+        saveGameToCloud();
+    } else {
+        // Local save for non-logged in users
+        saveToLocalStorage();
+    }
+}
+
+// Show save notification in bottom right
+function showSaveNotification(message, isError = false) {
+    // Create or get the save notification element
+    let notification = document.getElementById('saveNotification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'saveNotification';
+        notification.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 12px;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        `;
+        document.body.appendChild(notification);
+    }
+
+    notification.textContent = message;
+    notification.style.background = isError ? 'rgba(220, 53, 69, 0.9)' : 'rgba(50, 205, 50, 0.9)';
+    notification.style.color = 'white';
+    notification.style.border = isError ? '2px solid #dc3545' : '2px solid #228B22';
+    notification.style.opacity = '1';
+
+    // Fade out after 2 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+    }, 2000);
+}
+
 // Save to localStorage (for non-logged in users)
 function saveToLocalStorage() {
     saveCurrentMineState();
@@ -5171,13 +5253,19 @@ function saveToLocalStorage() {
         level: s.level,
         bucketCoal: s.bucketCoal,
         hasManager: s.hasManager,
+        isMegaManager: s.isMegaManager || false,
         managerAbility: s.managerAbility ? {
             type: s.managerAbility.type,
             name: s.managerAbility.name,
             desc: s.managerAbility.desc,
             icon: s.managerAbility.icon,
+            effect: s.managerAbility.effect,
+            isMega: s.managerAbility.isMega || false,
+            special: s.managerAbility.special || null,
             activeUntil: s.managerAbility.activeUntil,
-            cooldownUntil: s.managerAbility.cooldownUntil
+            cooldownUntil: s.managerAbility.cooldownUntil,
+            experience: s.managerAbility.experience || 0,
+            rerollCount: s.managerAbility.rerollCount || 0
         } : null
     }));
 
@@ -5191,13 +5279,19 @@ function saveToLocalStorage() {
         notes,
         elevatorLevel,
         hasElevatorManager,
+        isElevatorMegaManager: typeof isElevatorMegaManager !== 'undefined' ? isElevatorMegaManager : false,
         elevatorManagerAbility: elevatorManagerAbility ? {
             type: elevatorManagerAbility.type,
             name: elevatorManagerAbility.name,
             desc: elevatorManagerAbility.desc,
             icon: elevatorManagerAbility.icon,
+            effect: elevatorManagerAbility.effect,
+            isMega: elevatorManagerAbility.isMega || false,
+            special: elevatorManagerAbility.special || null,
             activeUntil: elevatorManagerAbility.activeUntil,
-            cooldownUntil: elevatorManagerAbility.cooldownUntil
+            cooldownUntil: elevatorManagerAbility.cooldownUntil,
+            experience: elevatorManagerAbility.experience || 0,
+            rerollCount: elevatorManagerAbility.rerollCount || 0
         } : null,
         achievementsState,
         shafts: shaftsData,
@@ -5209,16 +5303,17 @@ function saveToLocalStorage() {
         totalNotesSpent,
         dailyExchangeCount,
         lastExchangeDate,
+        currentVolume: typeof currentVolume !== 'undefined' ? currentVolume : 30,
         // Prestige data
-        bonds,
-        totalBondsEarned,
-        prestigeCount,
-        prestigeUpgradesPurchased,
-        lastPlayTime,
+        bonds: typeof bonds !== 'undefined' ? bonds : 0,
+        totalBondsEarned: typeof totalBondsEarned !== 'undefined' ? totalBondsEarned : 0,
+        prestigeCount: typeof prestigeCount !== 'undefined' ? prestigeCount : 0,
+        prestigeUpgradesPurchased: typeof prestigeUpgradesPurchased !== 'undefined' ? prestigeUpgradesPurchased : {},
+        lastPlayTime: Date.now(),
         // Research data
-        researchPoints,
-        totalResearchPointsEarned,
-        researchCompleted,
+        researchPoints: typeof researchPoints !== 'undefined' ? researchPoints : 0,
+        totalResearchPointsEarned: typeof totalResearchPointsEarned !== 'undefined' ? totalResearchPointsEarned : 0,
+        researchCompleted: typeof researchCompleted !== 'undefined' ? researchCompleted : {},
         savedAt: Date.now()
     };
 
@@ -5226,9 +5321,11 @@ function saveToLocalStorage() {
         localStorage.setItem('dunhillMinerSave', JSON.stringify(gameData));
         lastSaveTime = new Date();
         updateAutoSaveStatusDisplay();
+        showSaveNotification('Game saved!');
         return true;
     } catch (error) {
         console.error('localStorage save failed:', error);
+        showSaveNotification('Save failed!', true);
         return false;
     }
 }
@@ -5300,21 +5397,27 @@ function loadFromLocalStorage() {
 
                 // Restore manager if had one
                 if (shaftData.hasManager && !mineshafts[i].hasManager) {
+                    const isMega = shaftData.isMegaManager || (shaftData.managerAbility && shaftData.managerAbility.isMega);
                     mineshafts[i].hasManager = true;
+                    mineshafts[i].isMegaManager = isMega;
                     mineshafts[i].elements.managerSlot.classList.add('hired');
+                    if (isMega) {
+                        mineshafts[i].elements.managerSlot.classList.add('mega-manager');
+                    }
                     mineshafts[i].elements.managerSlot.innerHTML = `
-                        <div class="worker manager" style="position: relative;">
+                        <div class="worker manager ${isMega ? 'mega' : ''}" style="position: relative;">
                             <div class="worker-body">
                                 <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
                                 <div class="worker-head"></div>
                                 <div class="worker-torso"></div>
                                 <div class="worker-legs"></div>
                             </div>
+                            ${isMega ? '<div class="mega-star">*</div>' : ''}
                         </div>
                     `;
                     mineshafts[i].elements.minerStatus.textContent = 'Auto';
 
-                    // Restore ability data
+                    // Restore ability data (with new properties)
                     if (shaftData.managerAbility) {
                         mineshafts[i].managerAbility = shaftData.managerAbility;
                     }
@@ -5328,21 +5431,27 @@ function loadFromLocalStorage() {
 
         // Restore elevator manager
         if (data.hasElevatorManager && !hasElevatorManager) {
+            const isMega = data.isElevatorMegaManager || (data.elevatorManagerAbility && data.elevatorManagerAbility.isMega);
             hasElevatorManager = true;
+            isElevatorMegaManager = isMega;
             elevatorManagerSlot.classList.add('hired');
+            if (isMega) {
+                elevatorManagerSlot.classList.add('mega-manager');
+            }
             elevatorManagerSlot.innerHTML = `
-                <div class="worker manager" style="position: relative;">
+                <div class="worker manager ${isMega ? 'mega' : ''}" style="position: relative;">
                     <div class="worker-body">
                         <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
                         <div class="worker-head"></div>
                         <div class="worker-torso"></div>
                         <div class="worker-legs"></div>
                     </div>
+                    ${isMega ? '<div class="mega-star">*</div>' : ''}
                 </div>
             `;
             operatorStatus.textContent = 'Auto';
 
-            // Restore elevator ability data
+            // Restore elevator ability data (with new properties)
             if (data.elevatorManagerAbility) {
                 elevatorManagerAbility = data.elevatorManagerAbility;
             }
@@ -5390,6 +5499,8 @@ function loadFromLocalStorage() {
         updateNotesDisplay();
         updateShopRankDisplay();
         updateActiveBoostsDisplay();
+        if (typeof updatePrestigePanel === 'function') updatePrestigePanel();
+        if (typeof updateResearchPanel === 'function') updateResearchPanel();
 
         // Check for offline progress
         setTimeout(checkOfflineProgress, 500);
@@ -5593,22 +5704,28 @@ async function saveGameToCloud() {
     if (!currentUser) return;
     saveStatusEl.textContent = 'Saving...';
 
+    // Save current mine state before saving
+    saveCurrentMineState();
+
     const shaftsData = mineshafts.map(s => ({
         level: s.level,
         bucketCoal: s.bucketCoal,
         hasManager: s.hasManager,
+        isMegaManager: s.isMegaManager || false,
         managerAbility: s.managerAbility ? {
             type: s.managerAbility.type,
             name: s.managerAbility.name,
             desc: s.managerAbility.desc,
             icon: s.managerAbility.icon,
+            effect: s.managerAbility.effect,
+            isMega: s.managerAbility.isMega || false,
+            special: s.managerAbility.special || null,
             activeUntil: s.managerAbility.activeUntil,
-            cooldownUntil: s.managerAbility.cooldownUntil
+            cooldownUntil: s.managerAbility.cooldownUntil,
+            experience: s.managerAbility.experience || 0,
+            rerollCount: s.managerAbility.rerollCount || 0
         } : null
     }));
-
-    // Save current mine state before saving
-    saveCurrentMineState();
 
     const gameData = {
         version: SAVE_VERSION,
@@ -5620,13 +5737,19 @@ async function saveGameToCloud() {
         notes,
         elevatorLevel,
         hasElevatorManager,
+        isElevatorMegaManager: typeof isElevatorMegaManager !== 'undefined' ? isElevatorMegaManager : false,
         elevatorManagerAbility: elevatorManagerAbility ? {
             type: elevatorManagerAbility.type,
             name: elevatorManagerAbility.name,
             desc: elevatorManagerAbility.desc,
             icon: elevatorManagerAbility.icon,
+            effect: elevatorManagerAbility.effect,
+            isMega: elevatorManagerAbility.isMega || false,
+            special: elevatorManagerAbility.special || null,
             activeUntil: elevatorManagerAbility.activeUntil,
-            cooldownUntil: elevatorManagerAbility.cooldownUntil
+            cooldownUntil: elevatorManagerAbility.cooldownUntil,
+            experience: elevatorManagerAbility.experience || 0,
+            rerollCount: elevatorManagerAbility.rerollCount || 0
         } : null,
         achievementsState,
         shafts: shaftsData,
@@ -5640,17 +5763,32 @@ async function saveGameToCloud() {
         totalNotesSpent,
         dailyExchangeCount,
         lastExchangeDate,
+        currentVolume: typeof currentVolume !== 'undefined' ? currentVolume : 30,
+        // Prestige data
+        bonds: typeof bonds !== 'undefined' ? bonds : 0,
+        totalBondsEarned: typeof totalBondsEarned !== 'undefined' ? totalBondsEarned : 0,
+        prestigeCount: typeof prestigeCount !== 'undefined' ? prestigeCount : 0,
+        prestigeUpgradesPurchased: typeof prestigeUpgradesPurchased !== 'undefined' ? prestigeUpgradesPurchased : {},
+        lastPlayTime: Date.now(),
+        // Research data
+        researchPoints: typeof researchPoints !== 'undefined' ? researchPoints : 0,
+        totalResearchPointsEarned: typeof totalResearchPointsEarned !== 'undefined' ? totalResearchPointsEarned : 0,
+        researchCompleted: typeof researchCompleted !== 'undefined' ? researchCompleted : {},
         savedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try {
         await db.collection('saves').doc(currentUser.uid).set(gameData);
+        lastSaveTime = new Date();
+        updateAutoSaveStatusDisplay();
         saveStatusEl.textContent = 'Saved successfully!';
         updateSettingsStatus('Saved successfully!', '#32CD32');
+        showSaveNotification('Game saved to cloud!');
         setTimeout(() => { saveStatusEl.textContent = ''; }, 3000);
     } catch (error) {
         saveStatusEl.textContent = 'Save failed: ' + error.message;
         updateSettingsStatus('Save failed!', '#dc3545');
+        showSaveNotification('Cloud save failed!', true);
     }
 }
 
@@ -5670,6 +5808,32 @@ async function loadGameFromCloud() {
             money = data.money || 0;
             notes = data.notes || 0;
             elevatorLevel = data.elevatorLevel || 1;
+
+            // Restore shop/mastery progress
+            if (data.totalNotesSpent !== undefined) totalNotesSpent = data.totalNotesSpent;
+            if (data.dailyExchangeCount !== undefined) dailyExchangeCount = data.dailyExchangeCount;
+            if (data.lastExchangeDate !== undefined) lastExchangeDate = data.lastExchangeDate;
+
+            // Restore prestige data
+            if (data.bonds !== undefined) bonds = data.bonds;
+            if (data.totalBondsEarned !== undefined) totalBondsEarned = data.totalBondsEarned;
+            if (data.prestigeCount !== undefined) prestigeCount = data.prestigeCount;
+            if (data.prestigeUpgradesPurchased) prestigeUpgradesPurchased = data.prestigeUpgradesPurchased;
+            if (data.lastPlayTime !== undefined) lastPlayTime = data.lastPlayTime;
+
+            // Restore research data
+            if (data.researchPoints !== undefined) researchPoints = data.researchPoints;
+            if (data.totalResearchPointsEarned !== undefined) totalResearchPointsEarned = data.totalResearchPointsEarned;
+            if (data.researchCompleted) researchCompleted = data.researchCompleted;
+
+            // Restore volume setting
+            if (data.currentVolume !== undefined) {
+                currentVolume = data.currentVolume;
+                if (typeof updateVolumeDisplay === 'function') updateVolumeDisplay();
+            }
+
+            // Restore active boosts
+            if (data.activeBoosts) activeBoosts = data.activeBoosts;
 
             // Restore mine system state
             if (data.currentMineId) {
@@ -5707,21 +5871,27 @@ async function loadGameFromCloud() {
                     updateShaftBucket(i);
 
                     if (shaftData.hasManager && !mineshafts[i].hasManager) {
+                        const isMega = shaftData.isMegaManager || (shaftData.managerAbility && shaftData.managerAbility.isMega);
                         mineshafts[i].hasManager = true;
+                        mineshafts[i].isMegaManager = isMega;
                         mineshafts[i].elements.managerSlot.classList.add('hired');
+                        if (isMega) {
+                            mineshafts[i].elements.managerSlot.classList.add('mega-manager');
+                        }
                         mineshafts[i].elements.managerSlot.innerHTML = `
-                            <div class="worker manager" style="position: relative;">
+                            <div class="worker manager ${isMega ? 'mega' : ''}" style="position: relative;">
                                 <div class="worker-body">
                                     <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
                                     <div class="worker-head"></div>
                                     <div class="worker-torso"></div>
                                     <div class="worker-legs"></div>
                                 </div>
+                                ${isMega ? '<div class="mega-star">*</div>' : ''}
                             </div>
                         `;
                         mineshafts[i].elements.minerStatus.textContent = 'Auto';
 
-                        // Restore ability data
+                        // Restore ability data with new properties
                         if (shaftData.managerAbility) {
                             mineshafts[i].managerAbility = shaftData.managerAbility;
                         }
@@ -5734,21 +5904,27 @@ async function loadGameFromCloud() {
             }
 
             if (data.hasElevatorManager && !hasElevatorManager) {
+                const isMega = data.isElevatorMegaManager || (data.elevatorManagerAbility && data.elevatorManagerAbility.isMega);
                 hasElevatorManager = true;
+                isElevatorMegaManager = isMega;
                 elevatorManagerSlot.classList.add('hired');
+                if (isMega) {
+                    elevatorManagerSlot.classList.add('mega-manager');
+                }
                 elevatorManagerSlot.innerHTML = `
-                    <div class="worker manager" style="position: relative;">
+                    <div class="worker manager ${isMega ? 'mega' : ''}" style="position: relative;">
                         <div class="worker-body">
                             <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
                             <div class="worker-head"></div>
                             <div class="worker-torso"></div>
                             <div class="worker-legs"></div>
                         </div>
+                        ${isMega ? '<div class="mega-star">*</div>' : ''}
                     </div>
                 `;
                 operatorStatus.textContent = 'Auto';
 
-                // Restore elevator ability data
+                // Restore elevator ability data with new properties
                 if (data.elevatorManagerAbility) {
                     elevatorManagerAbility = data.elevatorManagerAbility;
                 }
@@ -5764,6 +5940,10 @@ async function loadGameFromCloud() {
             updateMineIndicator();
             updateMineTheme();
             updateLevelDisplay();
+            if (typeof updateShopRankDisplay === 'function') updateShopRankDisplay();
+            if (typeof updatePrestigePanel === 'function') updatePrestigePanel();
+            if (typeof updateResearchPanel === 'function') updateResearchPanel();
+
             saveStatusEl.textContent = 'Loaded successfully!';
             updateSettingsStatus('Loaded successfully!', '#32CD32');
         } else {
