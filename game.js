@@ -1214,6 +1214,7 @@ let notes = 0;
 let playerXP = 0;
 let operatorState = 'idle';
 let hasElevatorManager = false;
+let isElevatorMegaManager = false;
 let elevatorLevel = 1;
 let elevatorCarrying = 0;
 
@@ -1334,13 +1335,19 @@ class SaveManager {
             level: s.level,
             bucketCoal: s.bucketCoal,
             hasManager: s.hasManager,
+            isMegaManager: s.isMegaManager || false,
             managerAbility: s.managerAbility ? {
                 type: s.managerAbility.type,
                 name: s.managerAbility.name,
                 desc: s.managerAbility.desc,
                 icon: s.managerAbility.icon,
+                effect: s.managerAbility.effect,
+                isMega: s.managerAbility.isMega || false,
+                special: s.managerAbility.special || null,
                 activeUntil: s.managerAbility.activeUntil,
-                cooldownUntil: s.managerAbility.cooldownUntil
+                cooldownUntil: s.managerAbility.cooldownUntil,
+                experience: s.managerAbility.experience || 0,
+                rerollCount: s.managerAbility.rerollCount || 0
             } : null
         }));
 
@@ -1354,13 +1361,19 @@ class SaveManager {
             notes,
             elevatorLevel,
             hasElevatorManager,
+            isElevatorMegaManager: typeof isElevatorMegaManager !== 'undefined' ? isElevatorMegaManager : false,
             elevatorManagerAbility: elevatorManagerAbility ? {
                 type: elevatorManagerAbility.type,
                 name: elevatorManagerAbility.name,
                 desc: elevatorManagerAbility.desc,
                 icon: elevatorManagerAbility.icon,
+                effect: elevatorManagerAbility.effect,
+                isMega: elevatorManagerAbility.isMega || false,
+                special: elevatorManagerAbility.special || null,
                 activeUntil: elevatorManagerAbility.activeUntil,
-                cooldownUntil: elevatorManagerAbility.cooldownUntil
+                cooldownUntil: elevatorManagerAbility.cooldownUntil,
+                experience: elevatorManagerAbility.experience || 0,
+                rerollCount: elevatorManagerAbility.rerollCount || 0
             } : null,
             achievementsState,
             shafts: shaftsData,
@@ -1619,16 +1632,22 @@ class SaveManager {
 
     // Restore a shaft manager from save data
     restoreShaftManager(index, shaftData) {
+        const isMega = shaftData.isMegaManager || (shaftData.managerAbility && shaftData.managerAbility.isMega);
         mineshafts[index].hasManager = true;
+        mineshafts[index].isMegaManager = isMega;
         mineshafts[index].elements.managerSlot.classList.add('hired');
+        if (isMega) {
+            mineshafts[index].elements.managerSlot.classList.add('mega-manager');
+        }
         mineshafts[index].elements.managerSlot.innerHTML = `
-            <div class="worker manager" style="position: relative;">
+            <div class="worker manager ${isMega ? 'mega' : ''}" style="position: relative;">
                 <div class="worker-body">
                     <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
                     <div class="worker-head"></div>
                     <div class="worker-torso"></div>
                     <div class="worker-legs"></div>
                 </div>
+                ${isMega ? '<div class="mega-star">*</div>' : ''}
             </div>
         `;
         mineshafts[index].elements.minerStatus.textContent = 'Auto';
@@ -1644,17 +1663,23 @@ class SaveManager {
 
     // Restore elevator manager from save data
     restoreElevatorManager(data) {
+        const isMega = data.isElevatorMegaManager || (data.elevatorManagerAbility && data.elevatorManagerAbility.isMega);
         hasElevatorManager = true;
+        isElevatorMegaManager = isMega;
         if (elevatorManagerSlot) {
             elevatorManagerSlot.classList.add('hired');
+            if (isMega) {
+                elevatorManagerSlot.classList.add('mega-manager');
+            }
             elevatorManagerSlot.innerHTML = `
-                <div class="worker manager" style="position: relative;">
+                <div class="worker manager ${isMega ? 'mega' : ''}" style="position: relative;">
                     <div class="worker-body">
                         <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
                         <div class="worker-head"></div>
                         <div class="worker-torso"></div>
                         <div class="worker-legs"></div>
                     </div>
+                    ${isMega ? '<div class="mega-star">*</div>' : ''}
                 </div>
             `;
         }
@@ -2605,9 +2630,16 @@ function canActivateAbility(abilityState) {
 
 function getElevatorCapacity() {
     let capacity = Math.floor(BASE_ELEVATOR_CAPACITY * Math.pow(ELEVATOR_CAPACITY_MULTIPLIER, elevatorLevel - 1));
-    // Apply capacity ability if active
-    if (elevatorManagerAbility && elevatorManagerAbility.type === 'capacity' && isAbilityActive(elevatorManagerAbility)) {
-        capacity = Math.floor(capacity * 1.4);
+    // Apply capacity ability if active (with manager effectiveness and experience bonuses)
+    if (elevatorManagerAbility && (elevatorManagerAbility.type === 'capacity' || elevatorManagerAbility.type === 'mega_capacity') && isAbilityActive(elevatorManagerAbility)) {
+        let capacityBonus = elevatorManagerAbility.effect || 0.4;
+        // Apply manager effectiveness from research (Motivation Program)
+        const effectivenessBonus = getManagerEffectivenessBonus();
+        capacityBonus *= (1 + effectivenessBonus);
+        // Apply experience bonus
+        const expBonus = getExperienceBonus(elevatorManagerAbility.experience || 0);
+        capacityBonus *= (1 + expBonus);
+        capacity = Math.floor(capacity * (1 + capacityBonus));
     }
     // Apply shop boost
     const boostMult = getBoostMultiplier('elevatorCapacityBoost');
@@ -2619,17 +2651,39 @@ function getElevatorCapacity() {
 
 function getElevatorUpgradeCost() {
     let cost = Math.floor(BASE_UPGRADE_COST * Math.pow(UPGRADE_COST_MULTIPLIER, elevatorLevel - 1));
-    // Apply discount ability if active
-    if (elevatorManagerAbility && elevatorManagerAbility.type === 'discount' && isAbilityActive(elevatorManagerAbility)) {
-        cost = Math.floor(cost * 0.7);
+    // Apply discount ability if active (with manager effectiveness and experience bonuses)
+    if (elevatorManagerAbility && (elevatorManagerAbility.type === 'discount' || elevatorManagerAbility.type === 'mega_discount') && isAbilityActive(elevatorManagerAbility)) {
+        let discountBonus = elevatorManagerAbility.effect || 0.3;
+        // Apply manager effectiveness from research (Motivation Program)
+        const effectivenessBonus = getManagerEffectivenessBonus();
+        discountBonus *= (1 + effectivenessBonus);
+        // Apply experience bonus
+        const expBonus = getExperienceBonus(elevatorManagerAbility.experience || 0);
+        discountBonus *= (1 + expBonus);
+        // Cap discount at 80% to avoid free upgrades
+        discountBonus = Math.min(discountBonus, 0.8);
+        cost = Math.floor(cost * (1 - discountBonus));
     }
     return cost;
 }
 
 function getElevatorSpeedMultiplier() {
     let mult = 1;
-    if (elevatorManagerAbility && elevatorManagerAbility.type === 'speed' && isAbilityActive(elevatorManagerAbility)) {
-        mult = 0.6; // 40% faster = 60% of normal time
+    // Check for express mode (instant trips)
+    if (elevatorManagerAbility && elevatorManagerAbility.type === 'express' && isAbilityActive(elevatorManagerAbility)) {
+        return 0.1; // Nearly instant
+    }
+    if (elevatorManagerAbility && (elevatorManagerAbility.type === 'speed' || elevatorManagerAbility.type === 'mega_speed') && isAbilityActive(elevatorManagerAbility)) {
+        let speedBonus = elevatorManagerAbility.effect || 0.4;
+        // Apply manager effectiveness from research (Motivation Program)
+        const effectivenessBonus = getManagerEffectivenessBonus();
+        speedBonus *= (1 + effectivenessBonus);
+        // Apply experience bonus
+        const expBonus = getExperienceBonus(elevatorManagerAbility.experience || 0);
+        speedBonus *= (1 + expBonus);
+        // Cap speed bonus at 90% to prevent instant trips
+        speedBonus = Math.min(speedBonus, 0.9);
+        mult = 1 - speedBonus;
     }
     // Apply shop boost (lower is faster)
     const boostMult = getBoostMultiplier('elevatorSpeedBoost');
@@ -2648,9 +2702,16 @@ function getShaftCoalPerTrip(shaftIndex) {
     const shaft = mineshafts[shaftIndex];
     const baseCoal = getShaftBaseCoal(shaftIndex);
     let coal = baseCoal * Math.pow(COAL_PER_LEVEL_MULTIPLIER, shaft.level - 1);
-    // Apply coal ability if active
-    if (shaft.managerAbility && shaft.managerAbility.type === 'coal' && isAbilityActive(shaft.managerAbility)) {
-        coal = coal * 1.2;
+    // Apply coal ability if active (with manager effectiveness and experience bonuses)
+    if (shaft.managerAbility && (shaft.managerAbility.type === 'coal' || shaft.managerAbility.type === 'mega_coal') && isAbilityActive(shaft.managerAbility)) {
+        let coalBonus = shaft.managerAbility.effect || 0.2;
+        // Apply manager effectiveness from research (Motivation Program)
+        const effectivenessBonus = getManagerEffectivenessBonus();
+        coalBonus *= (1 + effectivenessBonus);
+        // Apply experience bonus
+        const expBonus = getExperienceBonus(shaft.managerAbility.experience || 0);
+        coalBonus *= (1 + expBonus);
+        coal = coal * (1 + coalBonus);
     }
     // Apply shop boost
     const boostMult = getBoostMultiplier('minerGatherBoost');
@@ -2664,9 +2725,18 @@ function getShaftUpgradeCost(shaftIndex) {
     const shaft = mineshafts[shaftIndex];
     const baseCost = BASE_UPGRADE_COST * Math.pow(SHAFT_BASE_COAL_MULTIPLIER, shaftIndex);
     let cost = Math.floor(baseCost * Math.pow(UPGRADE_COST_MULTIPLIER, shaft.level - 1));
-    // Apply discount ability if active
-    if (shaft.managerAbility && shaft.managerAbility.type === 'discount' && isAbilityActive(shaft.managerAbility)) {
-        cost = Math.floor(cost * 0.7);
+    // Apply discount ability if active (with manager effectiveness and experience bonuses)
+    if (shaft.managerAbility && (shaft.managerAbility.type === 'discount' || shaft.managerAbility.type === 'mega_discount') && isAbilityActive(shaft.managerAbility)) {
+        let discountBonus = shaft.managerAbility.effect || 0.3;
+        // Apply manager effectiveness from research (Motivation Program)
+        const effectivenessBonus = getManagerEffectivenessBonus();
+        discountBonus *= (1 + effectivenessBonus);
+        // Apply experience bonus
+        const expBonus = getExperienceBonus(shaft.managerAbility.experience || 0);
+        discountBonus *= (1 + expBonus);
+        // Cap discount at 80% to avoid free upgrades
+        discountBonus = Math.min(discountBonus, 0.8);
+        cost = Math.floor(cost * (1 - discountBonus));
     }
     return cost;
 }
@@ -2674,8 +2744,17 @@ function getShaftUpgradeCost(shaftIndex) {
 function getShaftSpeedMultiplier(shaftIndex) {
     const shaft = mineshafts[shaftIndex];
     let mult = 1;
-    if (shaft.managerAbility && shaft.managerAbility.type === 'speed' && isAbilityActive(shaft.managerAbility)) {
-        mult = 0.6; // 40% faster = 60% of normal time
+    if (shaft.managerAbility && (shaft.managerAbility.type === 'speed' || shaft.managerAbility.type === 'mega_speed') && isAbilityActive(shaft.managerAbility)) {
+        let speedBonus = shaft.managerAbility.effect || 0.4;
+        // Apply manager effectiveness from research (Motivation Program)
+        const effectivenessBonus = getManagerEffectivenessBonus();
+        speedBonus *= (1 + effectivenessBonus);
+        // Apply experience bonus
+        const expBonus = getExperienceBonus(shaft.managerAbility.experience || 0);
+        speedBonus *= (1 + expBonus);
+        // Cap speed bonus at 90% to prevent instant mining
+        speedBonus = Math.min(speedBonus, 0.9);
+        mult = 1 - speedBonus;
     }
     // Apply shop boost (lower is faster)
     const boostMult = getBoostMultiplier('minerSpeedBoost');
@@ -3171,6 +3250,205 @@ function buyNewShaft() {
 }
 
 // ============================================
+// MANAGER IMPROVEMENT SYSTEM
+// ============================================
+
+// Calculate effective manager cost with all discounts
+function getEffectiveManagerCost() {
+    let cost = MANAGER_COST;
+
+    // Apply research discount (HR Efficiency: 15% off)
+    const researchDiscount = getResearchManagerDiscount();
+    cost *= (1 - researchDiscount);
+
+    // Apply prestige upgrade discount (HR Connections: 25% off)
+    if (prestigeUpgradesPurchased && prestigeUpgradesPurchased.manager_discount) {
+        cost *= (1 - PRESTIGE_UPGRADES.manager_discount.effect.value);
+    }
+
+    return Math.floor(cost);
+}
+
+// Get manager effectiveness multiplier (from research: Motivation Program)
+function getManagerEffectivenessBonus() {
+    return getResearchBonus('manager_effectiveness');
+}
+
+// Check if a newly hired manager should be a mega manager
+function rollForMegaManager() {
+    return Math.random() < MEGA_MANAGER_CONFIG.BASE_CHANCE;
+}
+
+// Get a random ability for a manager
+function getRandomManagerAbility(type, isMega = false) {
+    let abilityPool;
+
+    if (isMega) {
+        abilityPool = type === 'shaft' ? MEGA_SHAFT_ABILITIES : MEGA_ELEVATOR_ABILITIES;
+    } else {
+        abilityPool = type === 'shaft' ? SHAFT_ABILITIES : ELEVATOR_ABILITIES;
+    }
+
+    const selected = abilityPool[Math.floor(Math.random() * abilityPool.length)];
+
+    return {
+        type: selected.id,
+        name: selected.name,
+        desc: selected.desc,
+        icon: selected.icon,
+        effect: selected.effect,
+        isMega: isMega || selected.isMega || false,
+        special: selected.special || null,
+        activeUntil: 0,
+        cooldownUntil: 0,
+        experience: 0,
+        rerollCount: 0
+    };
+}
+
+// Get manager experience level
+function getManagerLevel(experience) {
+    const levels = MANAGER_EXPERIENCE_CONFIG.LEVELS;
+    for (let i = levels.length - 1; i >= 0; i--) {
+        if (experience >= levels[i].xpRequired) {
+            return levels[i];
+        }
+    }
+    return levels[0];
+}
+
+// Get experience bonus for ability effectiveness
+function getExperienceBonus(experience) {
+    const level = getManagerLevel(experience);
+    return level.bonus;
+}
+
+// Calculate reroll cost for a manager
+function getRerollCost(rerollCount) {
+    const baseCost = MANAGER_REROLL_CONFIG.BASE_COST;
+    const multiplier = Math.pow(MANAGER_REROLL_CONFIG.COST_MULTIPLIER, rerollCount);
+    return Math.min(Math.ceil(baseCost * multiplier), MANAGER_REROLL_CONFIG.MAX_COST);
+}
+
+// Reroll manager ability
+function rerollManagerAbility(type, shaftIndex = null) {
+    let ability;
+    let rerollCount;
+
+    if (type === 'shaft') {
+        ability = mineshafts[shaftIndex].managerAbility;
+        rerollCount = ability.rerollCount || 0;
+    } else {
+        ability = elevatorManagerAbility;
+        rerollCount = ability.rerollCount || 0;
+    }
+
+    const cost = getRerollCost(rerollCount);
+
+    if (notes < cost) {
+        showStatusMessage('Not enough Notes!');
+        return false;
+    }
+
+    notes -= cost;
+    updateStats();
+
+    // Determine if we get a mega ability on reroll
+    const isMega = ability.isMega && Math.random() < MANAGER_REROLL_CONFIG.MEGA_REROLL_CHANCE;
+
+    // Get new ability (preserving experience)
+    const newAbility = getRandomManagerAbility(type, isMega);
+    newAbility.experience = ability.experience;
+    newAbility.rerollCount = rerollCount + 1;
+
+    if (type === 'shaft') {
+        mineshafts[shaftIndex].managerAbility = newAbility;
+    } else {
+        elevatorManagerAbility = newAbility;
+    }
+
+    showStatusMessage(`Ability rerolled: ${newAbility.name}`);
+    updateManagerInfoDisplay();
+    saveGame();
+
+    return true;
+}
+
+// Add experience to a manager
+function addManagerExperience(type, shaftIndex, amount) {
+    if (type === 'shaft') {
+        if (!mineshafts[shaftIndex].managerAbility) return;
+        const oldLevel = getManagerLevel(mineshafts[shaftIndex].managerAbility.experience || 0);
+        mineshafts[shaftIndex].managerAbility.experience = (mineshafts[shaftIndex].managerAbility.experience || 0) + amount;
+        const newLevel = getManagerLevel(mineshafts[shaftIndex].managerAbility.experience);
+        if (newLevel.level > oldLevel.level) {
+            showStatusMessage(`Shaft ${shaftIndex + 1} Manager is now ${newLevel.title}!`);
+        }
+    } else {
+        if (!elevatorManagerAbility) return;
+        const oldLevel = getManagerLevel(elevatorManagerAbility.experience || 0);
+        elevatorManagerAbility.experience = (elevatorManagerAbility.experience || 0) + amount;
+        const newLevel = getManagerLevel(elevatorManagerAbility.experience);
+        if (newLevel.level > oldLevel.level) {
+            showStatusMessage(`Elevator Manager is now ${newLevel.title}!`);
+        }
+    }
+}
+
+// Update manager info display in popup
+function updateManagerInfoDisplay() {
+    if (!currentInfoTarget) return;
+
+    let ability;
+    if (currentInfoTarget.type === 'shaft') {
+        ability = mineshafts[currentInfoTarget.shaftIndex].managerAbility;
+    } else {
+        ability = elevatorManagerAbility;
+    }
+
+    if (!ability) return;
+
+    // Update basic info
+    const managerAbilityName = document.getElementById('managerAbilityName');
+    const managerAbilityDesc = document.getElementById('managerAbilityDesc');
+
+    if (managerAbilityName) managerAbilityName.textContent = ability.name;
+    if (managerAbilityDesc) managerAbilityDesc.textContent = ability.desc;
+
+    // Update experience display
+    const expDisplay = document.getElementById('managerExpDisplay');
+    if (expDisplay) {
+        const level = getManagerLevel(ability.experience || 0);
+        const nextLevel = MANAGER_EXPERIENCE_CONFIG.LEVELS[level.level] || level;
+        const currentXP = ability.experience || 0;
+        const xpForNext = nextLevel.xpRequired - currentXP;
+
+        expDisplay.innerHTML = `
+            <div class="manager-level">${level.title} (Lv.${level.level})</div>
+            <div class="manager-exp-bar">
+                <div class="manager-exp-fill" style="width: ${level.level >= MANAGER_EXPERIENCE_CONFIG.MAX_LEVEL ? 100 : ((currentXP - (MANAGER_EXPERIENCE_CONFIG.LEVELS[level.level - 1]?.xpRequired || 0)) / (nextLevel.xpRequired - (MANAGER_EXPERIENCE_CONFIG.LEVELS[level.level - 1]?.xpRequired || 0)) * 100)}%"></div>
+            </div>
+            <div class="manager-exp-text">${level.level >= MANAGER_EXPERIENCE_CONFIG.MAX_LEVEL ? 'MAX LEVEL' : `${currentXP}/${nextLevel.xpRequired} XP`}</div>
+            ${level.bonus > 0 ? `<div class="manager-bonus">+${Math.round(level.bonus * 100)}% ability power</div>` : ''}
+        `;
+    }
+
+    // Update reroll button
+    const rerollBtn = document.getElementById('managerRerollBtn');
+    if (rerollBtn) {
+        const cost = getRerollCost(ability.rerollCount || 0);
+        rerollBtn.textContent = `Reroll (${cost} Notes)`;
+        rerollBtn.disabled = notes < cost;
+    }
+
+    // Update mega indicator
+    const megaIndicator = document.getElementById('managerMegaIndicator');
+    if (megaIndicator) {
+        megaIndicator.style.display = ability.isMega ? 'block' : 'none';
+    }
+}
+
+// ============================================
 // MANAGER HIRING
 // ============================================
 let currentHireTarget = null;
@@ -3187,9 +3465,18 @@ function showMinerManagerPopup(event, shaftIndex) {
 
     currentHireTarget = { type: 'miner', shaftIndex };
 
-    const canAfford = money >= MANAGER_COST;
+    const effectiveCost = getEffectiveManagerCost();
+    const canAfford = money >= effectiveCost;
+    const hasDiscount = effectiveCost < MANAGER_COST;
+
     document.getElementById('hirePopupTitle').textContent = `Shaft ${shaftIndex + 1} Manager`;
-    document.getElementById('hirePopupCost').textContent = `Cost: $${MANAGER_COST}`;
+
+    if (hasDiscount) {
+        document.getElementById('hirePopupCost').innerHTML = `Cost: <span class="discounted-price">$${effectiveCost}</span> <span class="original-price">$${MANAGER_COST}</span>`;
+    } else {
+        document.getElementById('hirePopupCost').textContent = `Cost: $${effectiveCost}`;
+    }
+
     document.getElementById('hirePopupCost').className = 'cost ' + (canAfford ? 'affordable' : 'too-expensive');
     document.getElementById('hirePopupBtn').disabled = !canAfford;
     document.getElementById('hirePopupBtn').onclick = () => hireMinerManager(shaftIndex);
@@ -3212,9 +3499,18 @@ function showElevatorManagerPopup(event) {
 
     currentHireTarget = { type: 'elevator' };
 
-    const canAfford = money >= MANAGER_COST;
+    const effectiveCost = getEffectiveManagerCost();
+    const canAfford = money >= effectiveCost;
+    const hasDiscount = effectiveCost < MANAGER_COST;
+
     document.getElementById('hirePopupTitle').textContent = 'Elevator Manager';
-    document.getElementById('hirePopupCost').textContent = `Cost: $${MANAGER_COST}`;
+
+    if (hasDiscount) {
+        document.getElementById('hirePopupCost').innerHTML = `Cost: <span class="discounted-price">$${effectiveCost}</span> <span class="original-price">$${MANAGER_COST}</span>`;
+    } else {
+        document.getElementById('hirePopupCost').textContent = `Cost: $${effectiveCost}`;
+    }
+
     document.getElementById('hirePopupCost').className = 'cost ' + (canAfford ? 'affordable' : 'too-expensive');
     document.getElementById('hirePopupBtn').disabled = !canAfford;
     document.getElementById('hirePopupBtn').onclick = hireElevatorManager;
@@ -3226,75 +3522,85 @@ function showElevatorManagerPopup(event) {
 }
 
 function hireMinerManager(shaftIndex) {
-    if (money < MANAGER_COST) return;
+    const effectiveCost = getEffectiveManagerCost();
+    if (money < effectiveCost) return;
     const shaft = mineshafts[shaftIndex];
     if (shaft.hasManager) return;
 
-    money -= MANAGER_COST;
+    money -= effectiveCost;
     updateStats();
 
+    // Roll for mega manager
+    const isMega = rollForMegaManager();
+
     shaft.hasManager = true;
+    shaft.isMegaManager = isMega;
     hirePopup.classList.remove('show');
     shaft.elements.managerSlot.classList.add('hired');
+    if (isMega) {
+        shaft.elements.managerSlot.classList.add('mega-manager');
+    }
     shaft.elements.managerSlot.innerHTML = `
-        <div class="worker manager" style="position: relative;">
+        <div class="worker manager ${isMega ? 'mega' : ''}" style="position: relative;">
             <div class="worker-body">
                 <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
                 <div class="worker-head"></div>
                 <div class="worker-torso"></div>
                 <div class="worker-legs"></div>
             </div>
+            ${isMega ? '<div class="mega-star">*</div>' : ''}
         </div>
     `;
     shaft.elements.minerStatus.textContent = 'Auto';
 
-    // Assign random ability
-    const randomAbility = SHAFT_ABILITIES[Math.floor(Math.random() * SHAFT_ABILITIES.length)];
-    shaft.managerAbility = {
-        type: randomAbility.id,
-        name: randomAbility.name,
-        desc: randomAbility.desc,
-        icon: randomAbility.icon,
-        activeUntil: 0,
-        cooldownUntil: 0
-    };
+    // Assign ability using new system
+    shaft.managerAbility = getRandomManagerAbility('shaft', isMega);
+
+    if (isMega) {
+        showStatusMessage(`MEGA MANAGER hired! ${shaft.managerAbility.name}`);
+    }
 
     autoMine(shaftIndex);
     updatePlayerStats();
 }
 
 function hireElevatorManager() {
-    if (money < MANAGER_COST) return;
+    const effectiveCost = getEffectiveManagerCost();
+    if (money < effectiveCost) return;
     if (hasElevatorManager) return;
 
-    money -= MANAGER_COST;
+    money -= effectiveCost;
     updateStats();
 
+    // Roll for mega manager
+    const isMega = rollForMegaManager();
+
     hasElevatorManager = true;
+    isElevatorMegaManager = isMega;
     hirePopup.classList.remove('show');
     elevatorManagerSlot.classList.add('hired');
+    if (isMega) {
+        elevatorManagerSlot.classList.add('mega-manager');
+    }
     elevatorManagerSlot.innerHTML = `
-        <div class="worker manager" style="position: relative;">
+        <div class="worker manager ${isMega ? 'mega' : ''}" style="position: relative;">
             <div class="worker-body">
                 <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
                 <div class="worker-head"></div>
                 <div class="worker-torso"></div>
                 <div class="worker-legs"></div>
             </div>
+            ${isMega ? '<div class="mega-star">*</div>' : ''}
         </div>
     `;
     operatorStatus.textContent = 'Auto';
 
-    // Assign random ability
-    const randomAbility = ELEVATOR_ABILITIES[Math.floor(Math.random() * ELEVATOR_ABILITIES.length)];
-    elevatorManagerAbility = {
-        type: randomAbility.id,
-        name: randomAbility.name,
-        desc: randomAbility.desc,
-        icon: randomAbility.icon,
-        activeUntil: 0,
-        cooldownUntil: 0
-    };
+    // Assign ability using new system
+    elevatorManagerAbility = getRandomManagerAbility('elevator', isMega);
+
+    if (isMega) {
+        showStatusMessage(`MEGA MANAGER hired! ${elevatorManagerAbility.name}`);
+    }
 
     autoElevator();
     updatePlayerStats();
@@ -3322,6 +3628,7 @@ const managerAbilityStatus = document.getElementById('managerAbilityStatus');
 const managerActivateBtn = document.getElementById('managerActivateBtn');
 const managerFireBtn = document.getElementById('managerFireBtn');
 const managerCloseBtn = document.getElementById('managerCloseBtn');
+const managerRerollBtn = document.getElementById('managerRerollBtn');
 
 function showManagerInfoPopup(event, type, shaftIndex) {
     let ability;
@@ -3342,11 +3649,20 @@ function showManagerInfoPopup(event, type, shaftIndex) {
                 name: randomAbility.name,
                 desc: randomAbility.desc,
                 icon: randomAbility.icon,
+                effect: randomAbility.effect,
+                isMega: false,
+                special: null,
                 activeUntil: 0,
-                cooldownUntil: 0
+                cooldownUntil: 0,
+                experience: 0,
+                rerollCount: 0
             };
             ability = shaft.managerAbility;
         }
+        // Ensure legacy abilities have new properties
+        if (ability.experience === undefined) ability.experience = 0;
+        if (ability.rerollCount === undefined) ability.rerollCount = 0;
+        if (ability.effect === undefined) ability.effect = ABILITY_EFFECTS.DISCOUNT_PERCENT;
     } else {
         ability = elevatorManagerAbility;
         managerName = 'Elevator Manager';
@@ -3360,11 +3676,20 @@ function showManagerInfoPopup(event, type, shaftIndex) {
                 name: randomAbility.name,
                 desc: randomAbility.desc,
                 icon: randomAbility.icon,
+                effect: randomAbility.effect,
+                isMega: false,
+                special: null,
                 activeUntil: 0,
-                cooldownUntil: 0
+                cooldownUntil: 0,
+                experience: 0,
+                rerollCount: 0
             };
             ability = elevatorManagerAbility;
         }
+        // Ensure legacy abilities have new properties
+        if (ability.experience === undefined) ability.experience = 0;
+        if (ability.rerollCount === undefined) ability.rerollCount = 0;
+        if (ability.effect === undefined) ability.effect = ABILITY_EFFECTS.DISCOUNT_PERCENT;
     }
 
     currentInfoTarget = { type, shaftIndex };
@@ -3376,6 +3701,9 @@ function showManagerInfoPopup(event, type, shaftIndex) {
 
     // Update ability status
     updateManagerInfoPopupStatus();
+
+    // Update experience and reroll display
+    updateManagerInfoDisplay();
 
     // Position popup
     const rect = slotElement.getBoundingClientRect();
@@ -3457,6 +3785,17 @@ managerCloseBtn.onclick = () => {
     managerInfoPopup.classList.remove('show');
 };
 
+// Reroll button click
+managerRerollBtn.onclick = () => {
+    if (!currentInfoTarget) return;
+
+    if (currentInfoTarget.type === 'shaft') {
+        rerollManagerAbility('shaft', currentInfoTarget.shaftIndex);
+    } else {
+        rerollManagerAbility('elevator');
+    }
+};
+
 function fireShaftManager(shaftIndex) {
     const shaft = mineshafts[shaftIndex];
     if (!shaft.hasManager) return;
@@ -3489,10 +3828,21 @@ function activateShaftAbility(shaftIndex) {
     if (!canActivateAbility(shaft.managerAbility)) return;
 
     const now = Date.now();
-    shaft.managerAbility.activeUntil = now + ABILITY_DURATION;
-    shaft.managerAbility.cooldownUntil = now + ABILITY_DURATION + ABILITY_COOLDOWN;
+
+    // Calculate duration (Double Shift ability makes it 2x longer)
+    let duration = ABILITY_DURATION;
+    if (shaft.managerAbility.special === 'duration') {
+        duration *= shaft.managerAbility.effect || 2.0;
+    }
+
+    shaft.managerAbility.activeUntil = now + duration;
+    shaft.managerAbility.cooldownUntil = now + duration + ABILITY_COOLDOWN;
+
+    // Grant experience for activation
+    addManagerExperience('shaft', shaftIndex, MANAGER_EXPERIENCE_CONFIG.XP_PER_ACTIVATION);
 
     updateAbilityButtonState(shaftIndex);
+    updateManagerInfoDisplay();
 }
 
 function activateElevatorAbility() {
@@ -3500,11 +3850,22 @@ function activateElevatorAbility() {
     if (!canActivateAbility(elevatorManagerAbility)) return;
 
     const now = Date.now();
-    elevatorManagerAbility.activeUntil = now + ABILITY_DURATION;
-    elevatorManagerAbility.cooldownUntil = now + ABILITY_DURATION + ABILITY_COOLDOWN;
+
+    // Calculate duration (Double Shift ability makes it 2x longer)
+    let duration = ABILITY_DURATION;
+    if (elevatorManagerAbility.special === 'duration') {
+        duration *= elevatorManagerAbility.effect || 2.0;
+    }
+
+    elevatorManagerAbility.activeUntil = now + duration;
+    elevatorManagerAbility.cooldownUntil = now + duration + ABILITY_COOLDOWN;
+
+    // Grant experience for activation
+    addManagerExperience('elevator', null, MANAGER_EXPERIENCE_CONFIG.XP_PER_ACTIVATION);
 
     updateElevatorAbilityButtonState();
     updateElevatorCapacityDisplay(); // In case it's the capacity ability
+    updateManagerInfoDisplay();
 }
 
 // Legacy functions - buttons removed, now using info popup

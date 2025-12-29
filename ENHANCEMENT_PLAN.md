@@ -73,10 +73,19 @@ Changes are organized into phases based on impact, complexity, and dependencies.
 - Collapsible category panels with upgrade requirements
 - Bonuses: mining output, elevator speed/capacity, worker speed, automation, offline earnings
 
-### 2.4 Manager Improvements
-- [ ] Allow players to reroll manager abilities (cost: Notes)
-- [ ] Add "Mega Managers" - rare managers with stronger/unique abilities
-- [ ] Create manager experience system (abilities strengthen with use)
+### 2.4 Manager Improvements ✓
+- [x] Allow players to reroll manager abilities (cost: Notes)
+- [x] Add "Mega Managers" - rare managers with stronger/unique abilities
+- [x] Create manager experience system (abilities strengthen with use)
+
+**Implemented Features:**
+- **Mega Managers**: 5% chance on hire, exclusive powerful abilities (50% discount, 60% speed, etc.)
+- **Manager Experience**: 6 levels (Trainee → Master), XP from ability activations
+- **Experience Bonuses**: Up to +30% ability power at max level
+- **Ability Reroll**: Costs Notes (3 base, increases per reroll up to 20 max)
+- **Research Integration**: HR Efficiency (-15% hire cost) and Motivation Program (+20% effectiveness)
+- **Prestige Integration**: HR Connections (-25% hire cost) stacks with research
+- **Mega Abilities**: Double Shift (2x duration), Express Mode (instant elevator trips)
 
 ---
 

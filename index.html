@@ -402,15 +402,22 @@
     <!-- Manager Info Popup -->
     <div class="manager-info-popup" id="managerInfoPopup">
         <h4 id="managerInfoTitle">Manager 1</h4>
+        <div class="mega-indicator" id="managerMegaIndicator" style="display: none;">MEGA MANAGER</div>
         <div class="ability-info">
             <div class="ability-name" id="managerAbilityName">30% Discount</div>
             <div class="ability-desc" id="managerAbilityDesc">30% off upgrades</div>
             <div class="ability-status" id="managerAbilityStatus">Ready to activate</div>
         </div>
-        <div>
-            <button class="activate-btn" id="managerActivateBtn">Activate</button>
+        <div class="manager-exp-section" id="managerExpDisplay">
+            <div class="manager-level">Trainee (Lv.1)</div>
+            <div class="manager-exp-bar"><div class="manager-exp-fill" style="width: 0%"></div></div>
+            <div class="manager-exp-text">0/50 XP</div>
         </div>
-        <div>
+        <div class="manager-buttons">
+            <button class="activate-btn" id="managerActivateBtn">Activate</button>
+            <button class="reroll-btn" id="managerRerollBtn">Reroll (3 Notes)</button>
+        </div>
+        <div class="manager-buttons-secondary">
             <button class="fire-btn" id="managerFireBtn">Fire Manager</button>
             <button class="close-popup-btn" id="managerCloseBtn">Close</button>
         </div>
