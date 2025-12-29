@@ -4944,6 +4944,41 @@ body::before {
     margin: 5px 0;
 }
 
+/* Base modal styles (for prestige/welcome modals) */
+.modal,
+.prestige-confirm-modal,
+.welcome-back-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    display: none !important;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000 !important;
+}
+
+.modal.show,
+.prestige-confirm-modal.show,
+.welcome-back-modal.show {
+    display: flex !important;
+}
+
+.modal .modal-content,
+.prestige-confirm-modal .modal-content,
+.welcome-back-modal .modal-content {
+    background: linear-gradient(to bottom, #2a1a0a, #1a0a00);
+    border: 3px solid #ffd700;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 /* Prestige Confirmation Modal */
 .prestige-confirm-modal .modal-content {
     max-width: 400px;
@@ -5067,6 +5102,212 @@ body::before {
 
 .prestige-btn:hover {
     background: linear-gradient(135deg, #5aa0e9, #3d6a9a);
+}
+
+/* ============================================
+   RESEARCH SYSTEM STYLES
+   ============================================ */
+
+.research-modal .fullscreen-modal-content {
+    max-width: 750px;
+}
+
+.research-header {
+    background: linear-gradient(135deg, #1a2e1a, #0f3f0f);
+    border-bottom: 2px solid #4CAF50;
+}
+
+.research-header h2 {
+    color: #4CAF50;
+}
+
+.research-container {
+    padding: 20px;
+}
+
+.research-currency-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    background: linear-gradient(135deg, #1a2e1a, #0f3f1f);
+    border: 2px solid #4CAF50;
+    border-radius: 12px;
+    margin-bottom: 10px;
+}
+
+.research-points-icon {
+    font-size: 28px;
+}
+
+.research-points-count {
+    font-size: 32px;
+    font-weight: bold;
+    color: #4CAF50;
+    font-family: 'Orbitron', monospace;
+}
+
+.research-points-label {
+    font-size: 18px;
+    color: #888;
+}
+
+.research-earn-hint {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.research-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.research-category {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.research-category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: rgba(76, 175, 80, 0.1);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.research-category-header:hover {
+    background: rgba(76, 175, 80, 0.2);
+}
+
+.research-category-icon {
+    font-size: 24px;
+}
+
+.research-category-name {
+    flex: 1;
+    font-size: 16px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.research-category-arrow {
+    color: #666;
+    transition: transform 0.3s;
+}
+
+.research-category.collapsed .research-category-arrow {
+    transform: rotate(-90deg);
+}
+
+.research-category-content {
+    padding: 15px;
+    border-top: 1px solid #333;
+}
+
+.research-category.collapsed .research-category-content {
+    display: none;
+}
+
+.research-category-desc {
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.research-upgrades-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.research-upgrade-item {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.research-upgrade-item:hover:not(.locked):not(.owned) {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.research-upgrade-item.owned {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.15);
+}
+
+.research-upgrade-item.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.research-upgrade-item.affordable:not(.owned) {
+    border-color: #8BC34A;
+    animation: research-glow 2s ease-in-out infinite;
+}
+
+@keyframes research-glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(76, 175, 80, 0.5); }
+}
+
+.research-upgrade-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.research-upgrade-desc {
+    font-size: 10px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.research-upgrade-cost {
+    font-size: 11px;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.research-upgrade-owned {
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.research-info {
+    margin-top: 15px;
+    padding: 12px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 8px;
+    font-size: 12px;
+    color: #888;
+}
+
+.research-info p {
+    margin: 5px 0;
+}
+
+/* Research Button in Toolbar */
+.research-btn {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+}
+
+.research-btn:hover {
+    background: linear-gradient(135deg, #66BB6A, #388E3C);
 }
 
 /* Mobile adjustments */

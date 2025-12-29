@@ -295,6 +295,10 @@
             <span class="menu-icon">📈</span>
             <span class="menu-label">Prestige</span>
         </button>
+        <button class="menu-btn research-btn" id="researchBtn" onclick="toggleResearchPanel()">
+            <span class="menu-icon">🔬</span>
+            <span class="menu-label">Research</span>
+        </button>
         <button class="menu-btn settings-btn" id="settingsBtn" onclick="toggleSettingsPanel()">
             <span class="menu-icon">⚙️</span>
             <span class="menu-label settings-label">Settings</span>
@@ -816,6 +820,94 @@
                 </div>
             </div>
             <button class="welcome-back-btn" onclick="claimOfflineRewards()">Collect!</button>
+        </div>
+    </div>
+
+    <!-- Research Panel -->
+    <div class="fullscreen-modal research-modal" id="researchPanel">
+        <div class="fullscreen-modal-content research-modal-content">
+            <div class="fullscreen-modal-header research-header">
+                <h2>🔬 Research Lab</h2>
+                <button class="fullscreen-close" onclick="toggleResearchPanel()">×</button>
+            </div>
+            <div class="fullscreen-modal-body research-container">
+                <!-- Research Points Display -->
+                <div class="research-currency-display">
+                    <span class="research-points-icon">🧪</span>
+                    <span class="research-points-count" id="researchPointsCount">0</span>
+                    <span class="research-points-label">Research Points</span>
+                </div>
+
+                <p class="research-earn-hint">Earn 1 Research Point for every $1,000 of ore sold</p>
+
+                <!-- Research Categories -->
+                <div class="research-categories">
+                    <!-- Mining Category -->
+                    <div class="research-category" id="researchCategoryMining">
+                        <div class="research-category-header" onclick="toggleResearchCategory('mining')">
+                            <span class="research-category-icon">⛏️</span>
+                            <span class="research-category-name">Mining</span>
+                            <span class="research-category-arrow">▼</span>
+                        </div>
+                        <div class="research-category-content" id="researchMiningContent">
+                            <p class="research-category-desc">Improve ore extraction rates</p>
+                            <div class="research-upgrades-grid" id="researchMiningGrid">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transport Category -->
+                    <div class="research-category" id="researchCategoryTransport">
+                        <div class="research-category-header" onclick="toggleResearchCategory('transport')">
+                            <span class="research-category-icon">🛗</span>
+                            <span class="research-category-name">Transport</span>
+                            <span class="research-category-arrow">▼</span>
+                        </div>
+                        <div class="research-category-content" id="researchTransportContent">
+                            <p class="research-category-desc">Upgrade elevator and logistics</p>
+                            <div class="research-upgrades-grid" id="researchTransportGrid">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Management Category -->
+                    <div class="research-category" id="researchCategoryManagement">
+                        <div class="research-category-header" onclick="toggleResearchCategory('management')">
+                            <span class="research-category-icon">👔</span>
+                            <span class="research-category-name">Management</span>
+                            <span class="research-category-arrow">▼</span>
+                        </div>
+                        <div class="research-category-content" id="researchManagementContent">
+                            <p class="research-category-desc">Improve workforce efficiency</p>
+                            <div class="research-upgrades-grid" id="researchManagementGrid">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Automation Category -->
+                    <div class="research-category" id="researchCategoryAutomation">
+                        <div class="research-category-header" onclick="toggleResearchCategory('automation')">
+                            <span class="research-category-icon">🤖</span>
+                            <span class="research-category-name">Automation</span>
+                            <span class="research-category-arrow">▼</span>
+                        </div>
+                        <div class="research-category-content" id="researchAutomationContent">
+                            <p class="research-category-desc">Reduce manual work</p>
+                            <div class="research-upgrades-grid" id="researchAutomationGrid">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="research-info">
+                    <p>🧪 Research upgrades are permanent and persist through prestige.</p>
+                    <p>💡 Unlock new upgrades by researching their prerequisites first.</p>
+                </div>
+            </div>
         </div>
     </div>
 

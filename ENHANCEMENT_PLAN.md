@@ -61,11 +61,17 @@ Changes are organized into phases based on impact, complexity, and dependencies.
 - Welcome back modal showing time away and earnings
 - Prestige upgrades to boost offline earnings
 
-### 2.3 Research/Upgrade Tree
-- [ ] Design research categories (Mining, Transport, Management, Automation)
-- [ ] Create research point generation (from selling ore)
-- [ ] Build research UI panel
-- [ ] Implement permanent upgrade effects
+### 2.3 Research/Upgrade Tree ✓
+- [x] Design research categories (Mining, Transport, Management, Automation)
+- [x] Create research point generation (from selling ore)
+- [x] Build research UI panel
+- [x] Implement permanent upgrade effects
+
+**Implemented Features:**
+- 4 research categories with 17 total upgrades
+- Research points earned from ore sales (1 point per $1,000)
+- Collapsible category panels with upgrade requirements
+- Bonuses: mining output, elevator speed/capacity, worker speed, automation, offline earnings
 
 ### 2.4 Manager Improvements
 - [ ] Allow players to reroll manager abilities (cost: Notes)

@@ -1379,6 +1379,10 @@ class SaveManager {
             prestigeCount: typeof prestigeCount !== 'undefined' ? prestigeCount : 0,
             prestigeUpgradesPurchased: typeof prestigeUpgradesPurchased !== 'undefined' ? prestigeUpgradesPurchased : {},
             lastPlayTime: typeof lastPlayTime !== 'undefined' ? lastPlayTime : Date.now(),
+            // Research data
+            researchPoints: typeof researchPoints !== 'undefined' ? researchPoints : 0,
+            totalResearchPointsEarned: typeof totalResearchPointsEarned !== 'undefined' ? totalResearchPointsEarned : 0,
+            researchCompleted: typeof researchCompleted !== 'undefined' ? researchCompleted : {},
             savedAt: Date.now()
         };
     }
@@ -1593,6 +1597,11 @@ class SaveManager {
         if (data.prestigeCount !== undefined) prestigeCount = data.prestigeCount;
         if (data.prestigeUpgradesPurchased) prestigeUpgradesPurchased = data.prestigeUpgradesPurchased;
         if (data.lastPlayTime) lastPlayTime = data.lastPlayTime;
+
+        // Restore research state
+        if (data.researchPoints !== undefined) researchPoints = data.researchPoints;
+        if (data.totalResearchPointsEarned !== undefined) totalResearchPointsEarned = data.totalResearchPointsEarned;
+        if (data.researchCompleted) researchCompleted = data.researchCompleted;
 
         // Update displays
         this.refreshAllDisplays();
@@ -3086,6 +3095,12 @@ async function doElevatorRun() {
         const moneyEarned = elevatorCarrying * baseValue * mine.valueMultiplier;
         money += moneyEarned;
         totalMoneyEarned += moneyEarned;
+
+        // Award research points for ore sold
+        if (typeof awardResearchPoints === 'function') {
+            awardResearchPoints(moneyEarned);
+        }
+
         createSparkle(175, 80, '+$' + Math.floor(moneyEarned));
         elevatorCarrying = 0;
         updateStats();
@@ -3575,16 +3590,15 @@ function updatePlayerStats() {
 }
 
 function closeAllPanels() {
-    document.getElementById('statsPanel').classList.remove('show');
-    document.getElementById('achievementsPanel').classList.remove('show');
-    document.getElementById('updatesPanel').classList.remove('show');
-    document.getElementById('mapPanel').classList.remove('show');
-    document.getElementById('shopPanel').classList.remove('show');
-    document.getElementById('prestigePanel').classList.remove('show');
-    document.getElementById('settingsPanel').classList.remove('show');
-    document.getElementById('devPanel').classList.remove('show');
-    document.getElementById('prestigeConfirmModal').classList.remove('show');
-    document.getElementById('welcomeBackModal').classList.remove('show');
+    const panels = [
+        'statsPanel', 'achievementsPanel', 'updatesPanel', 'mapPanel',
+        'shopPanel', 'prestigePanel', 'researchPanel', 'settingsPanel', 'devPanel',
+        'prestigeConfirmModal', 'welcomeBackModal'
+    ];
+    panels.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('show');
+    });
 }
 
 function toggleStatsPanel() {
@@ -4135,6 +4149,171 @@ function updateLastPlayTime() {
 // Start tracking play time
 setInterval(updateLastPlayTime, 30000); // Update every 30 seconds
 
+// ============================================
+// RESEARCH SYSTEM
+// ============================================
+
+// Research state
+let researchPoints = 0;
+let totalResearchPointsEarned = 0;
+let researchCompleted = {};
+let expandedResearchCategories = { mining: true, transport: true, management: true, automation: true };
+
+function toggleResearchPanel() {
+    const panel = document.getElementById('researchPanel');
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
+        panel.classList.add('show');
+        updateResearchDisplay();
+        renderResearchTree();
+    }
+}
+
+// Toggle research category expansion
+function toggleResearchCategory(categoryId) {
+    expandedResearchCategories[categoryId] = !expandedResearchCategories[categoryId];
+    const categoryEl = document.getElementById(`researchCategory${categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}`);
+    if (categoryEl) {
+        categoryEl.classList.toggle('collapsed', !expandedResearchCategories[categoryId]);
+    }
+}
+
+// Award research points when selling ore
+function awardResearchPoints(moneyEarned) {
+    const pointsEarned = Math.floor(moneyEarned / 1000) * RESEARCH_CONFIG.POINTS_PER_1000_SOLD;
+    if (pointsEarned > 0) {
+        researchPoints += pointsEarned;
+        totalResearchPointsEarned += pointsEarned;
+    }
+}
+
+// Update research display
+function updateResearchDisplay() {
+    const pointsEl = document.getElementById('researchPointsCount');
+    if (pointsEl) {
+        pointsEl.textContent = formatNumber(researchPoints);
+    }
+}
+
+// Render research tree
+function renderResearchTree() {
+    for (const [categoryId, category] of Object.entries(RESEARCH_TREE)) {
+        const gridId = `research${categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}Grid`;
+        const grid = document.getElementById(gridId);
+        if (!grid) continue;
+
+        grid.innerHTML = Object.values(category.upgrades).map(upgrade => {
+            const owned = researchCompleted[upgrade.id];
+            const affordable = researchPoints >= upgrade.cost;
+            const locked = upgrade.requires && !researchCompleted[upgrade.requires];
+
+            let classes = 'research-upgrade-item';
+            if (owned) classes += ' owned';
+            else if (locked) classes += ' locked';
+            else if (affordable) classes += ' affordable';
+
+            return `
+                <div class="${classes}" onclick="purchaseResearch('${categoryId}', '${upgrade.id}')">
+                    <div class="research-upgrade-name">${upgrade.name}</div>
+                    <div class="research-upgrade-desc">${upgrade.desc}</div>
+                    ${owned
+                        ? '<div class="research-upgrade-owned">✓ Researched</div>'
+                        : `<div class="research-upgrade-cost">🧪 ${upgrade.cost}</div>`
+                    }
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+// Purchase a research upgrade
+function purchaseResearch(categoryId, upgradeId) {
+    const category = RESEARCH_TREE[categoryId];
+    if (!category) return;
+
+    const upgrade = category.upgrades[upgradeId];
+    if (!upgrade) return;
+
+    // Check if already owned
+    if (researchCompleted[upgradeId]) return;
+
+    // Check if locked
+    if (upgrade.requires && !researchCompleted[upgrade.requires]) {
+        showBoostMessage(`Requires: ${category.upgrades[upgrade.requires]?.name || upgrade.requires}`, 'error');
+        return;
+    }
+
+    // Check if can afford
+    if (researchPoints < upgrade.cost) {
+        showBoostMessage(`Need ${upgrade.cost} Research Points`, 'error');
+        return;
+    }
+
+    // Purchase
+    researchPoints -= upgrade.cost;
+    researchCompleted[upgradeId] = true;
+
+    showBoostMessage(`Researched: ${upgrade.name}`, 'success');
+
+    updateResearchDisplay();
+    renderResearchTree();
+    saveToLocalStorage();
+}
+
+// Get research bonus by effect type
+function getResearchBonus(effectType) {
+    let bonus = 0;
+    for (const category of Object.values(RESEARCH_TREE)) {
+        for (const upgrade of Object.values(category.upgrades)) {
+            if (researchCompleted[upgrade.id] && upgrade.effect.type === effectType) {
+                bonus += upgrade.effect.value;
+            }
+        }
+    }
+    return bonus;
+}
+
+// Get total mining output bonus from research
+function getResearchMiningBonus() {
+    return getResearchBonus('mining_output') + getResearchBonus('depth_bonus');
+}
+
+// Get total elevator speed bonus from research
+function getResearchElevatorSpeedBonus() {
+    return getResearchBonus('elevator_speed');
+}
+
+// Get total elevator capacity bonus from research
+function getResearchElevatorCapacityBonus() {
+    return getResearchBonus('elevator_capacity');
+}
+
+// Get total worker speed bonus from research
+function getResearchWorkerSpeedBonus() {
+    return getResearchBonus('worker_speed');
+}
+
+// Get auto efficiency bonus from research
+function getResearchAutoEfficiencyBonus() {
+    return getResearchBonus('auto_efficiency');
+}
+
+// Get global efficiency bonus from research
+function getResearchGlobalBonus() {
+    return getResearchBonus('global_efficiency');
+}
+
+// Get offline bonus from research
+function getResearchOfflineBonus() {
+    return getResearchBonus('offline_bonus');
+}
+
+// Get manager cost discount from research
+function getResearchManagerDiscount() {
+    return getResearchBonus('manager_cost');
+}
+
 function toggleSettingsPanel() {
     const panel = document.getElementById('settingsPanel');
     const wasOpen = panel.classList.contains('show');
@@ -4675,6 +4854,10 @@ function saveToLocalStorage() {
         prestigeCount,
         prestigeUpgradesPurchased,
         lastPlayTime,
+        // Research data
+        researchPoints,
+        totalResearchPointsEarned,
+        researchCompleted,
         savedAt: Date.now()
     };
 
@@ -4828,6 +5011,11 @@ function loadFromLocalStorage() {
         if (data.prestigeCount !== undefined) prestigeCount = data.prestigeCount;
         if (data.prestigeUpgradesPurchased) prestigeUpgradesPurchased = data.prestigeUpgradesPurchased;
         if (data.lastPlayTime) lastPlayTime = data.lastPlayTime;
+
+        // Restore research data
+        if (data.researchPoints !== undefined) researchPoints = data.researchPoints;
+        if (data.totalResearchPointsEarned !== undefined) totalResearchPointsEarned = data.totalResearchPointsEarned;
+        if (data.researchCompleted) researchCompleted = data.researchCompleted;
 
         // Update all displays
         updateStats();
