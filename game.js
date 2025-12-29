@@ -1015,14 +1015,202 @@ function collectIdleRewards() {
 }
 
 // ============================================
-// GAME STATE (Constants are now in config.js)
+// GAME STATE CLASS
+// Consolidates all game state for cleaner architecture
+// ============================================
+class GameState {
+    constructor() {
+        // Player resources
+        this.money = 0;
+        this.notes = 0;
+        this.playerXP = 0;
+
+        // Statistics
+        this.stats = {
+            totalCoalSold: 0,
+            totalCoalMined: 0,
+            totalCopperMined: 0,
+            totalMoneyEarned: 0
+        };
+
+        // Elevator state
+        this.elevator = {
+            level: 1,
+            carrying: 0,
+            hasManager: false,
+            managerAbility: null,
+            loopId: 0
+        };
+
+        // Operator state
+        this.operatorState = 'idle';
+
+        // Mine state
+        this.currentMineId = 'mine22';
+        this.minesUnlocked = { mine22: true, mine37: false };
+        this.mineshafts = [];
+        this.miningLoopId = 0;
+
+        // Mine-specific state storage (for idle rewards when switching mines)
+        this.mineStates = {
+            mine22: {
+                mineshafts: [],
+                elevatorLevel: 1,
+                hasElevatorManager: false,
+                elevatorManagerAbility: null,
+                totalOreMined: 0,
+                lastActiveTime: Date.now()
+            },
+            mine37: {
+                mineshafts: [],
+                elevatorLevel: 1,
+                hasElevatorManager: false,
+                elevatorManagerAbility: null,
+                totalOreMined: 0,
+                lastActiveTime: null
+            }
+        };
+
+        // Pending idle rewards
+        this.pendingIdleRewards = null;
+
+        // Shop state
+        this.shop = {
+            totalNotesSpent: 0,
+            activeBoosts: {},
+            dailyExchangeCount: 0,
+            lastExchangeDate: null
+        };
+
+        // Achievements
+        this.achievementsState = {};
+
+        // UI state
+        this.selectedShaftIndex = -1;
+        this.upgradeMode = 'shaft';
+
+        // Timing
+        this.lastNoteTime = Date.now();
+        this.lastSaveTime = null;
+
+        // Audio state
+        this.currentVolume = 30;
+        this.audioInitialized = false;
+    }
+
+    // Get current mine config
+    getCurrentMine() {
+        return MINES[this.currentMineId];
+    }
+
+    // Get ore type for current mine
+    getCurrentOreType() {
+        return this.getCurrentMine()?.ore || 'coal';
+    }
+
+    // Calculate player level from XP
+    getPlayerLevel() {
+        for (let i = LEVEL_XP_THRESHOLDS.length - 1; i >= 0; i--) {
+            if (this.playerXP >= LEVEL_XP_THRESHOLDS[i]) {
+                return i + 1;
+            }
+        }
+        return 1;
+    }
+
+    // Get elevator capacity with all bonuses
+    getElevatorCapacity() {
+        let capacity = BASE_ELEVATOR_CAPACITY * Math.pow(ELEVATOR_CAPACITY_MULTIPLIER, this.elevator.level - 1);
+
+        // Apply shop rank bonus
+        const rankBonus = 1 + (typeof getShopRankBonus === 'function' ? getShopRankBonus('capacity') : 0);
+        capacity *= rankBonus;
+
+        // Apply active boosts
+        if (typeof getActiveBoostMultiplier === 'function') {
+            capacity *= getActiveBoostMultiplier('elevatorCapacityBoost');
+        }
+
+        // Apply manager capacity ability
+        if (this.elevator.managerAbility?.type === 'capacity' &&
+            this.elevator.managerAbility.activeUntil > Date.now()) {
+            capacity *= (1 + ABILITY_EFFECTS.CAPACITY_BOOST_PERCENT);
+        }
+
+        return Math.floor(capacity);
+    }
+
+    // Export state for saving
+    toSaveData() {
+        return {
+            version: SAVE_VERSION,
+            money: this.money,
+            notes: this.notes,
+            playerXP: this.playerXP,
+            stats: { ...this.stats },
+            elevator: { ...this.elevator },
+            currentMineId: this.currentMineId,
+            minesUnlocked: { ...this.minesUnlocked },
+            mineStates: JSON.parse(JSON.stringify(this.mineStates)),
+            shop: { ...this.shop },
+            achievementsState: { ...this.achievementsState },
+            lastSaveTime: Date.now()
+        };
+    }
+
+    // Import state from save data
+    fromSaveData(data) {
+        if (!data) return;
+
+        this.money = data.money ?? 0;
+        this.notes = data.notes ?? 0;
+        this.playerXP = data.playerXP ?? 0;
+
+        if (data.stats) {
+            Object.assign(this.stats, data.stats);
+        }
+
+        if (data.elevator) {
+            Object.assign(this.elevator, data.elevator);
+        }
+
+        this.currentMineId = data.currentMineId ?? 'mine22';
+
+        if (data.minesUnlocked) {
+            Object.assign(this.minesUnlocked, data.minesUnlocked);
+        }
+
+        if (data.mineStates) {
+            this.mineStates = JSON.parse(JSON.stringify(data.mineStates));
+        }
+
+        if (data.shop) {
+            Object.assign(this.shop, data.shop);
+        }
+
+        if (data.achievementsState) {
+            this.achievementsState = { ...data.achievementsState };
+        }
+
+        this.lastSaveTime = data.lastSaveTime ?? null;
+    }
+}
+
+// Create global game state instance
+const gameState = new GameState();
+
+// ============================================
+// BACKWARD COMPATIBILITY LAYER
+// Legacy global variables for existing code
+// New code should use gameState.* properties
+// Run syncGlobalsToGameState() after loading saves
 // ============================================
 let totalCoalSold = 0;
 let totalCoalMined = 0;
 let totalCopperMined = 0;
 let totalMoneyEarned = 0;
 let money = 0;
-let notes = 0; // Premium currency earned by active play
+let notes = 0;
 let playerXP = 0;
 let operatorState = 'idle';
 let hasElevatorManager = false;
@@ -1031,6 +1219,38 @@ let elevatorCarrying = 0;
 
 // Notes earning system (1 note per minute of active play)
 let lastNoteTime = Date.now();
+
+// Sync legacy globals to GameState (call after loading saves)
+function syncGlobalsToGameState() {
+    gameState.money = money;
+    gameState.notes = notes;
+    gameState.playerXP = playerXP;
+    gameState.stats.totalCoalSold = totalCoalSold;
+    gameState.stats.totalCoalMined = totalCoalMined;
+    gameState.stats.totalCopperMined = totalCopperMined;
+    gameState.stats.totalMoneyEarned = totalMoneyEarned;
+    gameState.elevator.level = elevatorLevel;
+    gameState.elevator.carrying = elevatorCarrying;
+    gameState.elevator.hasManager = hasElevatorManager;
+    gameState.operatorState = operatorState;
+    gameState.lastNoteTime = lastNoteTime;
+}
+
+// Sync GameState back to legacy globals (for future use)
+function syncGameStateToGlobals() {
+    money = gameState.money;
+    notes = gameState.notes;
+    playerXP = gameState.playerXP;
+    totalCoalSold = gameState.stats.totalCoalSold;
+    totalCoalMined = gameState.stats.totalCoalMined;
+    totalCopperMined = gameState.stats.totalCopperMined;
+    totalMoneyEarned = gameState.stats.totalMoneyEarned;
+    elevatorLevel = gameState.elevator.level;
+    elevatorCarrying = gameState.elevator.carrying;
+    hasElevatorManager = gameState.elevator.hasManager;
+    operatorState = gameState.operatorState;
+    lastNoteTime = gameState.lastNoteTime;
+}
 
 function startNoteEarning() {
     lastNoteTime = Date.now();
@@ -3632,14 +3852,11 @@ authModal.addEventListener('click', (e) => {
 // ADMIN MODE & DEVELOPER TOOLS
 // ============================================
 
-// Admin password hash (SHA-256 of actual password)
-// This is NOT secure for production - just obscures from casual source viewing
-const ADMIN_PASSWORD_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // hash of 'admin'
+const ADMIN_PASSWORD_HASH = 'e651362559979ce46010b6e24428831a5c979fcc8e0d6b1f95d8f8a94bc8abc9';
 let adminModeActive = false;
 let adminAttempts = 0;
 const MAX_ADMIN_ATTEMPTS = 5;
 
-// Simple hash function for password comparison
 async function hashPassword(password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
