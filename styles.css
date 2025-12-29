@@ -1448,6 +1448,137 @@ body::before {
     color: #ff6666;
 }
 
+/* Mega Manager Indicator */
+.mega-indicator {
+    background: linear-gradient(to right, #ffd700, #ff8c00);
+    color: #000;
+    font-weight: bold;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+    animation: megaPulse 2s ease-in-out infinite;
+}
+
+@keyframes megaPulse {
+    0%, 100% { box-shadow: 0 0 5px #ffd700; }
+    50% { box-shadow: 0 0 15px #ffd700, 0 0 25px #ff8c00; }
+}
+
+/* Manager Experience Section */
+.manager-exp-section {
+    background: rgba(60, 60, 60, 0.5);
+    border: 1px solid #555;
+    border-radius: 5px;
+    padding: 8px;
+    margin: 8px 0;
+}
+
+.manager-level {
+    color: #87ceeb;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.manager-exp-bar {
+    background: #333;
+    border-radius: 3px;
+    height: 8px;
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+.manager-exp-fill {
+    background: linear-gradient(to right, #4a90d9, #87ceeb);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.manager-exp-text {
+    color: #aaa;
+    font-size: 10px;
+}
+
+.manager-bonus {
+    color: #32CD32;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+/* Manager Buttons */
+.manager-buttons,
+.manager-buttons-secondary {
+    margin-top: 8px;
+}
+
+/* Reroll Button */
+.reroll-btn {
+    background: linear-gradient(to bottom, #4a90d9, #2c5aa0);
+    border: 2px solid #87ceeb;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 11px;
+    margin: 5px 3px;
+    transition: all 0.2s;
+    font-family: 'Chakra Petch', sans-serif;
+}
+
+.reroll-btn:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #5aa0e9, #3c6ab0);
+    box-shadow: 0 0 10px #4a90d9;
+}
+
+.reroll-btn:disabled {
+    background: #666;
+    border-color: #444;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Mega Manager Visual */
+.manager-slot.mega-manager {
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.worker.manager.mega {
+    filter: drop-shadow(0 0 5px #ffd700);
+}
+
+.mega-star {
+    position: absolute;
+    top: -8px;
+    right: -5px;
+    color: #ffd700;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 5px #ff8c00;
+    animation: starGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes starGlow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.2); }
+}
+
+/* Discounted Price Styling */
+.discounted-price {
+    color: #32CD32;
+    font-weight: bold;
+}
+
+.original-price {
+    color: #888;
+    text-decoration: line-through;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
 .activate-btn {
     background: linear-gradient(to bottom, #9932CC, #6a1b9a);
     border: 2px solid #ffd700;

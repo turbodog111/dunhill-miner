@@ -108,6 +108,70 @@ const ELEVATOR_ABILITIES = [
 ];
 
 // ============================================
+// MEGA MANAGER SYSTEM
+// ============================================
+const MEGA_MANAGER_CONFIG = {
+    // Chance to get a mega manager when hiring (5%)
+    BASE_CHANCE: 0.05,
+    // Mega managers have 50% stronger abilities
+    ABILITY_MULTIPLIER: 1.5,
+    // Visual indicator
+    TITLE_PREFIX: 'Mega',
+    ICON_SUFFIX: '*'
+};
+
+// Mega manager exclusive abilities (shaft)
+const MEGA_SHAFT_ABILITIES = [
+    { id: 'mega_discount', name: '50% Discount', desc: '50% off all upgrades', icon: '$*', effect: 0.50, isMega: true },
+    { id: 'mega_speed', name: '60% Speed', desc: '60% faster mining', icon: 'S*', effect: 0.60, isMega: true },
+    { id: 'mega_coal', name: '+35% Coal', desc: '35% more coal yield', icon: 'C*', effect: 0.35, isMega: true },
+    { id: 'double_shift', name: 'Double Shift', desc: 'Ability lasts 2x longer', icon: 'D*', effect: 2.0, isMega: true, special: 'duration' }
+];
+
+// Mega manager exclusive abilities (elevator)
+const MEGA_ELEVATOR_ABILITIES = [
+    { id: 'mega_discount', name: '50% Discount', desc: '50% off all upgrades', icon: '$*', effect: 0.50, isMega: true },
+    { id: 'mega_speed', name: '60% Speed', desc: '60% faster elevator', icon: 'S*', effect: 0.60, isMega: true },
+    { id: 'mega_capacity', name: '+60% Capacity', desc: '60% more storage', icon: 'C*', effect: 0.60, isMega: true },
+    { id: 'express', name: 'Express Mode', desc: 'Instant elevator trips', icon: 'E*', effect: 0.1, isMega: true, special: 'instant' }
+];
+
+// ============================================
+// MANAGER EXPERIENCE SYSTEM
+// ============================================
+const MANAGER_EXPERIENCE_CONFIG = {
+    // XP gained per ability activation
+    XP_PER_ACTIVATION: 10,
+    // XP gained per minute of active work
+    XP_PER_MINUTE: 1,
+    // Experience levels and their bonuses
+    LEVELS: [
+        { level: 1, xpRequired: 0, title: 'Trainee', bonus: 0 },
+        { level: 2, xpRequired: 50, title: 'Junior', bonus: 0.05 },
+        { level: 3, xpRequired: 150, title: 'Skilled', bonus: 0.10 },
+        { level: 4, xpRequired: 400, title: 'Senior', bonus: 0.15 },
+        { level: 5, xpRequired: 800, title: 'Expert', bonus: 0.20 },
+        { level: 6, xpRequired: 1500, title: 'Master', bonus: 0.30 }
+    ],
+    // Max level
+    MAX_LEVEL: 6
+};
+
+// ============================================
+// MANAGER REROLL SYSTEM
+// ============================================
+const MANAGER_REROLL_CONFIG = {
+    // Base cost in Notes to reroll ability
+    BASE_COST: 3,
+    // Cost multiplier per reroll (increases each time)
+    COST_MULTIPLIER: 1.5,
+    // Max cost cap
+    MAX_COST: 20,
+    // Chance to get mega ability on reroll (if already mega manager)
+    MEGA_REROLL_CHANCE: 0.25
+};
+
+// ============================================
 // SHOP RANK TIERS
 // ============================================
 const SHOP_RANKS = [
