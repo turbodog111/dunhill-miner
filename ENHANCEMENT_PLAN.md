@@ -37,16 +37,29 @@ Changes are organized into phases based on impact, complexity, and dependencies.
 ## Phase 2: Core Gameplay Enhancements
 **Goal:** Deepen gameplay loop and add missing idle game staples.
 
-### 2.1 Prestige System ("Cave-In")
-- [ ] Design prestige currency ("Ancient Crystals" or "Dunhill Bonds")
-- [ ] Create prestige bonuses (production multipliers, starting cash, unlock speeds)
-- [ ] Add prestige UI panel
-- [ ] Implement reset logic that preserves prestige progress
+### 2.1 Prestige System ("Cave-In") ✓
+- [x] Design prestige currency (Bonds)
+- [x] Create prestige bonuses (production multipliers, starting cash, unlock speeds)
+- [x] Add prestige UI panel with upgrade tree
+- [x] Implement reset logic that preserves prestige progress
 
-### 2.2 Offline Progress
-- [ ] Calculate idle earnings when game loads (beyond just mine switching)
-- [ ] Show "Welcome Back" modal with offline earnings
-- [ ] Cap offline time (24 hours max)
+**Implemented Features:**
+- Bonds currency earned via prestige (sqrt formula based on total money)
+- 14 permanent upgrades across 4 categories (Production, Speed, Capacity, Economy)
+- +1% production bonus per Bond
+- Prestige confirmation modal
+- Full save/load integration
+
+### 2.2 Offline Progress ✓
+- [x] Calculate idle earnings when game loads (beyond just mine switching)
+- [x] Show "Welcome Back" modal with offline earnings
+- [x] Cap offline time (24 hours max)
+
+**Implemented Features:**
+- Earnings calculated from managed shafts and elevator
+- 50% base efficiency (upgradeable via prestige)
+- Welcome back modal showing time away and earnings
+- Prestige upgrades to boost offline earnings
 
 ### 2.3 Research/Upgrade Tree
 - [ ] Design research categories (Mining, Transport, Management, Automation)

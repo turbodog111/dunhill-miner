@@ -230,3 +230,142 @@ const ACHIEVEMENTS = [
     { id: 'shaft_4', name: 'Mineshaft IV', desc: 'Own 50 mineshafts', icon: '🏭', type: 'shafts', target: 50 },
     { id: 'shaft_5', name: 'Mineshaft V', desc: 'Own 100 mineshafts', icon: '🏭', type: 'shafts', target: 100 }
 ];
+
+// ============================================
+// PRESTIGE SYSTEM (Bonds)
+// ============================================
+const PRESTIGE_CONFIG = {
+    // Minimum total money earned to prestige
+    MIN_PRESTIGE_THRESHOLD: 100000,
+
+    // Formula: bonds = floor(sqrt(totalMoneyEarned / divisor))
+    BONDS_DIVISOR: 10000,
+
+    // Bonus per bond (1% per bond = 0.01)
+    PRODUCTION_BONUS_PER_BOND: 0.01,
+
+    // Starting cash after prestige (per bond)
+    STARTING_CASH_PER_BOND: 100,
+
+    // Max offline hours for calculation
+    MAX_OFFLINE_HOURS: 24,
+
+    // Offline efficiency (50% of active play rate)
+    OFFLINE_EFFICIENCY: 0.5
+};
+
+// Prestige upgrades purchasable with Bonds
+const PRESTIGE_UPGRADES = {
+    production_i: {
+        id: 'production_i',
+        name: 'Efficient Operations I',
+        desc: '+5% production rate',
+        cost: 5,
+        effect: { type: 'production', value: 0.05 },
+        requires: null
+    },
+    production_ii: {
+        id: 'production_ii',
+        name: 'Efficient Operations II',
+        desc: '+10% production rate',
+        cost: 15,
+        effect: { type: 'production', value: 0.10 },
+        requires: 'production_i'
+    },
+    production_iii: {
+        id: 'production_iii',
+        name: 'Efficient Operations III',
+        desc: '+15% production rate',
+        cost: 40,
+        effect: { type: 'production', value: 0.15 },
+        requires: 'production_ii'
+    },
+    speed_i: {
+        id: 'speed_i',
+        name: 'Swift Workers I',
+        desc: '+10% worker speed',
+        cost: 5,
+        effect: { type: 'speed', value: 0.10 },
+        requires: null
+    },
+    speed_ii: {
+        id: 'speed_ii',
+        name: 'Swift Workers II',
+        desc: '+15% worker speed',
+        cost: 15,
+        effect: { type: 'speed', value: 0.15 },
+        requires: 'speed_i'
+    },
+    speed_iii: {
+        id: 'speed_iii',
+        name: 'Swift Workers III',
+        desc: '+20% worker speed',
+        cost: 40,
+        effect: { type: 'speed', value: 0.20 },
+        requires: 'speed_ii'
+    },
+    capacity_i: {
+        id: 'capacity_i',
+        name: 'Reinforced Elevator I',
+        desc: '+15% elevator capacity',
+        cost: 5,
+        effect: { type: 'capacity', value: 0.15 },
+        requires: null
+    },
+    capacity_ii: {
+        id: 'capacity_ii',
+        name: 'Reinforced Elevator II',
+        desc: '+20% elevator capacity',
+        cost: 15,
+        effect: { type: 'capacity', value: 0.20 },
+        requires: 'capacity_i'
+    },
+    starting_cash: {
+        id: 'starting_cash',
+        name: 'Investor Confidence',
+        desc: 'Start with $5,000 after prestige',
+        cost: 10,
+        effect: { type: 'starting_cash', value: 5000 },
+        requires: null
+    },
+    starting_cash_ii: {
+        id: 'starting_cash_ii',
+        name: 'Major Investment',
+        desc: 'Start with $25,000 after prestige',
+        cost: 30,
+        effect: { type: 'starting_cash', value: 25000 },
+        requires: 'starting_cash'
+    },
+    offline_i: {
+        id: 'offline_i',
+        name: 'Night Shift I',
+        desc: '+25% offline earnings',
+        cost: 10,
+        effect: { type: 'offline', value: 0.25 },
+        requires: null
+    },
+    offline_ii: {
+        id: 'offline_ii',
+        name: 'Night Shift II',
+        desc: '+50% offline earnings',
+        cost: 25,
+        effect: { type: 'offline', value: 0.50 },
+        requires: 'offline_i'
+    },
+    manager_discount: {
+        id: 'manager_discount',
+        name: 'HR Connections',
+        desc: '25% cheaper managers',
+        cost: 8,
+        effect: { type: 'manager_discount', value: 0.25 },
+        requires: null
+    },
+    unlock_speed: {
+        id: 'unlock_speed',
+        name: 'Fast Expansion',
+        desc: '20% cheaper new shafts',
+        cost: 12,
+        effect: { type: 'shaft_discount', value: 0.20 },
+        requires: null
+    }
+};
