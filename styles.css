@@ -4944,6 +4944,41 @@ body::before {
     margin: 5px 0;
 }
 
+/* Base modal styles (for prestige/welcome modals) */
+.modal,
+.prestige-confirm-modal,
+.welcome-back-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    display: none !important;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000 !important;
+}
+
+.modal.show,
+.prestige-confirm-modal.show,
+.welcome-back-modal.show {
+    display: flex !important;
+}
+
+.modal .modal-content,
+.prestige-confirm-modal .modal-content,
+.welcome-back-modal .modal-content {
+    background: linear-gradient(to bottom, #2a1a0a, #1a0a00);
+    border: 3px solid #ffd700;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 /* Prestige Confirmation Modal */
 .prestige-confirm-modal .modal-content {
     max-width: 400px;

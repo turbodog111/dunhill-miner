@@ -3575,16 +3575,15 @@ function updatePlayerStats() {
 }
 
 function closeAllPanels() {
-    document.getElementById('statsPanel').classList.remove('show');
-    document.getElementById('achievementsPanel').classList.remove('show');
-    document.getElementById('updatesPanel').classList.remove('show');
-    document.getElementById('mapPanel').classList.remove('show');
-    document.getElementById('shopPanel').classList.remove('show');
-    document.getElementById('prestigePanel').classList.remove('show');
-    document.getElementById('settingsPanel').classList.remove('show');
-    document.getElementById('devPanel').classList.remove('show');
-    document.getElementById('prestigeConfirmModal').classList.remove('show');
-    document.getElementById('welcomeBackModal').classList.remove('show');
+    const panels = [
+        'statsPanel', 'achievementsPanel', 'updatesPanel', 'mapPanel',
+        'shopPanel', 'prestigePanel', 'settingsPanel', 'devPanel',
+        'prestigeConfirmModal', 'welcomeBackModal'
+    ];
+    panels.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('show');
+    });
 }
 
 function toggleStatsPanel() {
