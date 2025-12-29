@@ -369,3 +369,186 @@ const PRESTIGE_UPGRADES = {
         requires: null
     }
 };
+
+// ============================================
+// RESEARCH SYSTEM
+// ============================================
+const RESEARCH_CONFIG = {
+    // Research points earned per $1000 of ore sold
+    POINTS_PER_1000_SOLD: 1,
+
+    // Multiplier for research point display (show larger numbers)
+    DISPLAY_MULTIPLIER: 1
+};
+
+// Research categories and upgrades
+const RESEARCH_TREE = {
+    mining: {
+        id: 'mining',
+        name: 'Mining',
+        icon: '⛏️',
+        description: 'Improve ore extraction rates',
+        upgrades: {
+            pickaxe_i: {
+                id: 'pickaxe_i',
+                name: 'Better Pickaxes',
+                desc: '+10% mining output',
+                cost: 50,
+                effect: { type: 'mining_output', value: 0.10 },
+                requires: null
+            },
+            pickaxe_ii: {
+                id: 'pickaxe_ii',
+                name: 'Steel Pickaxes',
+                desc: '+15% mining output',
+                cost: 150,
+                effect: { type: 'mining_output', value: 0.15 },
+                requires: 'pickaxe_i'
+            },
+            pickaxe_iii: {
+                id: 'pickaxe_iii',
+                name: 'Diamond Pickaxes',
+                desc: '+20% mining output',
+                cost: 400,
+                effect: { type: 'mining_output', value: 0.20 },
+                requires: 'pickaxe_ii'
+            },
+            deep_mining: {
+                id: 'deep_mining',
+                name: 'Deep Mining',
+                desc: 'Deeper shafts yield +25% more',
+                cost: 200,
+                effect: { type: 'depth_bonus', value: 0.25 },
+                requires: 'pickaxe_i'
+            },
+            ore_detector: {
+                id: 'ore_detector',
+                name: 'Ore Detector',
+                desc: '+5% chance of bonus ore',
+                cost: 300,
+                effect: { type: 'bonus_ore_chance', value: 0.05 },
+                requires: 'deep_mining'
+            }
+        }
+    },
+    transport: {
+        id: 'transport',
+        name: 'Transport',
+        icon: '🛗',
+        description: 'Upgrade elevator and logistics',
+        upgrades: {
+            pulley_system: {
+                id: 'pulley_system',
+                name: 'Better Pulleys',
+                desc: '+15% elevator speed',
+                cost: 50,
+                effect: { type: 'elevator_speed', value: 0.15 },
+                requires: null
+            },
+            reinforced_cable: {
+                id: 'reinforced_cable',
+                name: 'Reinforced Cables',
+                desc: '+20% elevator capacity',
+                cost: 100,
+                effect: { type: 'elevator_capacity', value: 0.20 },
+                requires: 'pulley_system'
+            },
+            hydraulic_lift: {
+                id: 'hydraulic_lift',
+                name: 'Hydraulic Lift',
+                desc: '+25% elevator speed',
+                cost: 250,
+                effect: { type: 'elevator_speed', value: 0.25 },
+                requires: 'reinforced_cable'
+            },
+            cargo_expansion: {
+                id: 'cargo_expansion',
+                name: 'Cargo Expansion',
+                desc: '+30% elevator capacity',
+                cost: 350,
+                effect: { type: 'elevator_capacity', value: 0.30 },
+                requires: 'hydraulic_lift'
+            }
+        }
+    },
+    management: {
+        id: 'management',
+        name: 'Management',
+        icon: '👔',
+        description: 'Improve workforce efficiency',
+        upgrades: {
+            training_i: {
+                id: 'training_i',
+                name: 'Basic Training',
+                desc: '+10% worker speed',
+                cost: 75,
+                effect: { type: 'worker_speed', value: 0.10 },
+                requires: null
+            },
+            training_ii: {
+                id: 'training_ii',
+                name: 'Advanced Training',
+                desc: '+15% worker speed',
+                cost: 200,
+                effect: { type: 'worker_speed', value: 0.15 },
+                requires: 'training_i'
+            },
+            motivation: {
+                id: 'motivation',
+                name: 'Motivation Program',
+                desc: 'Managers 20% more effective',
+                cost: 150,
+                effect: { type: 'manager_effectiveness', value: 0.20 },
+                requires: 'training_i'
+            },
+            hr_efficiency: {
+                id: 'hr_efficiency',
+                name: 'HR Efficiency',
+                desc: '15% cheaper managers',
+                cost: 100,
+                effect: { type: 'manager_cost', value: 0.15 },
+                requires: null
+            }
+        }
+    },
+    automation: {
+        id: 'automation',
+        name: 'Automation',
+        icon: '🤖',
+        description: 'Reduce manual work',
+        upgrades: {
+            auto_cart: {
+                id: 'auto_cart',
+                name: 'Auto-Cart System',
+                desc: '+10% auto-mining efficiency',
+                cost: 100,
+                effect: { type: 'auto_efficiency', value: 0.10 },
+                requires: null
+            },
+            conveyor_belt: {
+                id: 'conveyor_belt',
+                name: 'Conveyor Belts',
+                desc: '+15% auto-mining efficiency',
+                cost: 250,
+                effect: { type: 'auto_efficiency', value: 0.15 },
+                requires: 'auto_cart'
+            },
+            smart_routing: {
+                id: 'smart_routing',
+                name: 'Smart Routing',
+                desc: '+20% overall efficiency',
+                cost: 400,
+                effect: { type: 'global_efficiency', value: 0.20 },
+                requires: 'conveyor_belt'
+            },
+            idle_optimizer: {
+                id: 'idle_optimizer',
+                name: 'Idle Optimizer',
+                desc: '+25% offline earnings',
+                cost: 300,
+                effect: { type: 'offline_bonus', value: 0.25 },
+                requires: 'auto_cart'
+            }
+        }
+    }
+};
