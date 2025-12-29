@@ -1252,6 +1252,861 @@ function syncGameStateToGlobals() {
     lastNoteTime = gameState.lastNoteTime;
 }
 
+// ============================================
+// SAVE MANAGER
+// Centralized save/load with error handling and recovery
+// ============================================
+class SaveManager {
+    constructor() {
+        this.STORAGE_KEY = 'dunhillMinerSave';
+        this.BACKUP_KEY = 'dunhillMinerBackup';
+        this.lastSaveTime = null;
+        this.autosaveIntervalId = null;
+        this.saveInProgress = false;
+        this.failedSaveAttempts = 0;
+        this.MAX_SAVE_RETRIES = 3;
+    }
+
+    // Create emergency backup before risky operations
+    createBackup() {
+        try {
+            const currentSave = localStorage.getItem(this.STORAGE_KEY);
+            if (currentSave) {
+                localStorage.setItem(this.BACKUP_KEY, currentSave);
+                return true;
+            }
+        } catch (e) {
+            console.warn('Backup creation failed:', e);
+        }
+        return false;
+    }
+
+    // Restore from backup if main save is corrupted
+    restoreFromBackup() {
+        try {
+            const backup = localStorage.getItem(this.BACKUP_KEY);
+            if (backup) {
+                localStorage.setItem(this.STORAGE_KEY, backup);
+                console.log('Save restored from backup');
+                return true;
+            }
+        } catch (e) {
+            console.error('Backup restoration failed:', e);
+        }
+        return false;
+    }
+
+    // Validate save data structure
+    validateSaveData(data) {
+        if (!data || typeof data !== 'object') return false;
+
+        // Check required fields exist
+        const requiredFields = ['money', 'shafts'];
+        for (const field of requiredFields) {
+            if (!(field in data)) {
+                console.warn(`Save validation failed: missing ${field}`);
+                return false;
+            }
+        }
+
+        // Check for obviously corrupt values
+        if (typeof data.money !== 'number' || data.money < 0 || !isFinite(data.money)) {
+            console.warn('Save validation failed: invalid money value');
+            return false;
+        }
+
+        if (!Array.isArray(data.shafts)) {
+            console.warn('Save validation failed: shafts is not an array');
+            return false;
+        }
+
+        return true;
+    }
+
+    // Build save data object from current game state
+    buildSaveData() {
+        // Save current mine state first
+        if (typeof saveCurrentMineState === 'function') {
+            saveCurrentMineState();
+        }
+
+        const shaftsData = mineshafts.map(s => ({
+            level: s.level,
+            bucketCoal: s.bucketCoal,
+            hasManager: s.hasManager,
+            managerAbility: s.managerAbility ? {
+                type: s.managerAbility.type,
+                name: s.managerAbility.name,
+                desc: s.managerAbility.desc,
+                icon: s.managerAbility.icon,
+                activeUntil: s.managerAbility.activeUntil,
+                cooldownUntil: s.managerAbility.cooldownUntil
+            } : null
+        }));
+
+        return {
+            version: SAVE_VERSION,
+            totalCoalSold,
+            totalCoalMined,
+            totalCopperMined,
+            totalMoneyEarned,
+            money,
+            notes,
+            elevatorLevel,
+            hasElevatorManager,
+            elevatorManagerAbility: elevatorManagerAbility ? {
+                type: elevatorManagerAbility.type,
+                name: elevatorManagerAbility.name,
+                desc: elevatorManagerAbility.desc,
+                icon: elevatorManagerAbility.icon,
+                activeUntil: elevatorManagerAbility.activeUntil,
+                cooldownUntil: elevatorManagerAbility.cooldownUntil
+            } : null,
+            achievementsState,
+            shafts: shaftsData,
+            currentMineId,
+            minesUnlocked,
+            mineStates,
+            playerXP,
+            activeBoosts,
+            totalNotesSpent,
+            dailyExchangeCount,
+            lastExchangeDate,
+            currentVolume: typeof currentVolume !== 'undefined' ? currentVolume : 30,
+            savedAt: Date.now()
+        };
+    }
+
+    // Save to localStorage with error handling
+    saveToLocal() {
+        if (this.saveInProgress) {
+            console.log('Save already in progress, skipping');
+            return false;
+        }
+
+        this.saveInProgress = true;
+
+        try {
+            const gameData = this.buildSaveData();
+
+            if (!this.validateSaveData(gameData)) {
+                throw new Error('Save data validation failed');
+            }
+
+            // Create backup before saving
+            this.createBackup();
+
+            const jsonData = JSON.stringify(gameData);
+
+            // Check storage quota
+            if (jsonData.length > 4.5 * 1024 * 1024) {
+                console.warn('Save data approaching localStorage limit');
+            }
+
+            localStorage.setItem(this.STORAGE_KEY, jsonData);
+            this.lastSaveTime = new Date();
+            this.failedSaveAttempts = 0;
+
+            if (typeof updateAutoSaveStatusDisplay === 'function') {
+                updateAutoSaveStatusDisplay();
+            }
+
+            this.saveInProgress = false;
+            return true;
+        } catch (error) {
+            this.saveInProgress = false;
+            this.failedSaveAttempts++;
+
+            console.error('Save failed:', error);
+
+            if (error.name === 'QuotaExceededError') {
+                this.handleStorageQuotaExceeded();
+            }
+
+            // Show error to user if multiple failures
+            if (this.failedSaveAttempts >= this.MAX_SAVE_RETRIES) {
+                this.showSaveError('Save failed multiple times. Your progress may not be saved.');
+            }
+
+            return false;
+        }
+    }
+
+    // Handle localStorage quota exceeded
+    handleStorageQuotaExceeded() {
+        console.warn('Storage quota exceeded, attempting cleanup');
+
+        // Remove backup to free space
+        try {
+            localStorage.removeItem(this.BACKUP_KEY);
+        } catch (e) {}
+
+        // Try to save again with minimal data
+        try {
+            const minimalData = this.buildSaveData();
+            // Remove non-essential data
+            delete minimalData.mineStates;
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(minimalData));
+            console.log('Saved with reduced data due to quota');
+        } catch (e) {
+            console.error('Even minimal save failed:', e);
+        }
+    }
+
+    // Load from localStorage with error handling and recovery
+    loadFromLocal() {
+        try {
+            const saved = localStorage.getItem(this.STORAGE_KEY);
+            if (!saved) return false;
+
+            let data;
+            try {
+                data = JSON.parse(saved);
+            } catch (parseError) {
+                console.error('Save data corrupted, attempting backup restore');
+                if (this.restoreFromBackup()) {
+                    const backup = localStorage.getItem(this.STORAGE_KEY);
+                    data = JSON.parse(backup);
+                } else {
+                    throw new Error('Could not recover save data');
+                }
+            }
+
+            if (!this.validateSaveData(data)) {
+                console.error('Save validation failed, attempting backup restore');
+                if (this.restoreFromBackup()) {
+                    const backup = localStorage.getItem(this.STORAGE_KEY);
+                    data = JSON.parse(backup);
+                } else {
+                    throw new Error('Backup also invalid');
+                }
+            }
+
+            // Run migrations if needed
+            if (!data.version || data.version < SAVE_VERSION) {
+                data = migrateSaveData(data);
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+            }
+
+            // Apply save data to game state
+            this.applySaveData(data);
+
+            return true;
+        } catch (error) {
+            console.error('Load failed:', error);
+            this.showLoadError('Could not load your save. Starting fresh game.');
+            return false;
+        }
+    }
+
+    // Apply loaded save data to game
+    applySaveData(data) {
+        // Restore basic stats
+        totalCoalSold = data.totalCoalSold || 0;
+        totalCoalMined = data.totalCoalMined || 0;
+        totalCopperMined = data.totalCopperMined || 0;
+        totalMoneyEarned = data.totalMoneyEarned || 0;
+        money = data.money || 0;
+        notes = data.notes || 0;
+        elevatorLevel = data.elevatorLevel || 1;
+
+        // Restore mine system state
+        if (data.currentMineId) currentMineId = data.currentMineId;
+        if (data.minesUnlocked) minesUnlocked = data.minesUnlocked;
+        if (data.mineStates) mineStates = data.mineStates;
+
+        // Restore player progression
+        if (data.playerXP !== undefined) playerXP = data.playerXP;
+        if (data.achievementsState) achievementsState = data.achievementsState;
+
+        if (typeof initAchievements === 'function') {
+            initAchievements();
+        }
+
+        // Restore audio settings
+        if (data.currentVolume !== undefined && typeof setVolume === 'function') {
+            setVolume(data.currentVolume);
+        }
+
+        // Clear and rebuild mineshafts
+        if (mineshaftsContainer) {
+            mineshaftsContainer.innerHTML = '';
+        }
+        mineshafts = [];
+
+        // Rebuild mineshafts
+        if (data.shafts && data.shafts.length > 0) {
+            for (let i = 0; i < data.shafts.length; i++) {
+                if (typeof createMineshaft === 'function') {
+                    createMineshaft(i);
+                    const shaftData = data.shafts[i];
+                    mineshafts[i].level = shaftData.level || 1;
+                    mineshafts[i].bucketCoal = shaftData.bucketCoal || 0;
+                    mineshafts[i].elements.levelBtn.textContent = mineshafts[i].level;
+
+                    if (typeof updateShaftBucket === 'function') {
+                        updateShaftBucket(i);
+                    }
+
+                    // Restore manager
+                    if (shaftData.hasManager && !mineshafts[i].hasManager) {
+                        this.restoreShaftManager(i, shaftData);
+                    }
+                }
+            }
+        } else {
+            if (typeof createMineshaft === 'function') {
+                createMineshaft(0);
+            }
+        }
+
+        // Restore elevator manager
+        if (data.hasElevatorManager && !hasElevatorManager) {
+            this.restoreElevatorManager(data);
+        }
+
+        // Restore active boosts (filter expired)
+        if (data.activeBoosts) {
+            const now = Date.now();
+            activeBoosts = {};
+            for (const [boostId, expiresAt] of Object.entries(data.activeBoosts)) {
+                if (expiresAt > now && BOOSTS[boostId]) {
+                    activeBoosts[boostId] = expiresAt;
+                }
+            }
+        }
+
+        // Restore shop state
+        if (data.totalNotesSpent !== undefined) totalNotesSpent = data.totalNotesSpent;
+        if (data.dailyExchangeCount !== undefined) dailyExchangeCount = data.dailyExchangeCount;
+        if (data.lastExchangeDate) lastExchangeDate = data.lastExchangeDate;
+
+        // Update displays
+        this.refreshAllDisplays();
+
+        // Sync to GameState
+        if (typeof syncGlobalsToGameState === 'function') {
+            syncGlobalsToGameState();
+        }
+    }
+
+    // Restore a shaft manager from save data
+    restoreShaftManager(index, shaftData) {
+        mineshafts[index].hasManager = true;
+        mineshafts[index].elements.managerSlot.classList.add('hired');
+        mineshafts[index].elements.managerSlot.innerHTML = `
+            <div class="worker manager" style="position: relative;">
+                <div class="worker-body">
+                    <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
+                    <div class="worker-head"></div>
+                    <div class="worker-torso"></div>
+                    <div class="worker-legs"></div>
+                </div>
+            </div>
+        `;
+        mineshafts[index].elements.minerStatus.textContent = 'Auto';
+
+        if (shaftData.managerAbility) {
+            mineshafts[index].managerAbility = shaftData.managerAbility;
+        }
+
+        if (typeof autoMine === 'function') {
+            autoMine(index);
+        }
+    }
+
+    // Restore elevator manager from save data
+    restoreElevatorManager(data) {
+        hasElevatorManager = true;
+        if (elevatorManagerSlot) {
+            elevatorManagerSlot.classList.add('hired');
+            elevatorManagerSlot.innerHTML = `
+                <div class="worker manager" style="position: relative;">
+                    <div class="worker-body">
+                        <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
+                        <div class="worker-head"></div>
+                        <div class="worker-torso"></div>
+                        <div class="worker-legs"></div>
+                    </div>
+                </div>
+            `;
+        }
+        if (operatorStatus) {
+            operatorStatus.textContent = 'Auto';
+        }
+
+        if (data.elevatorManagerAbility) {
+            elevatorManagerAbility = data.elevatorManagerAbility;
+        }
+
+        if (typeof autoElevator === 'function') {
+            autoElevator();
+        }
+    }
+
+    // Refresh all game displays after load
+    refreshAllDisplays() {
+        const displayFuncs = [
+            'updateStats', 'updatePlayerStats', 'checkAchievements',
+            'updateAchievementBadge', 'renderMapPanel', 'updateMineIndicator',
+            'updateMineTheme', 'updateLevelDisplay', 'updateNotesDisplay',
+            'updateShopRankDisplay', 'updateActiveBoostsDisplay'
+        ];
+
+        for (const funcName of displayFuncs) {
+            if (typeof window[funcName] === 'function') {
+                try {
+                    window[funcName]();
+                } catch (e) {
+                    console.warn(`Display update ${funcName} failed:`, e);
+                }
+            }
+        }
+    }
+
+    // Start autosave interval
+    startAutosave(isCloudUser = false) {
+        this.stopAutosave();
+
+        this.autosaveIntervalId = setInterval(() => {
+            if (isCloudUser && typeof currentUser !== 'undefined' && currentUser) {
+                this.saveToCloud();
+            } else if (!isCloudUser) {
+                this.saveToLocal();
+            }
+        }, TIMING.AUTOSAVE_INTERVAL);
+    }
+
+    // Stop autosave
+    stopAutosave() {
+        if (this.autosaveIntervalId) {
+            clearInterval(this.autosaveIntervalId);
+            this.autosaveIntervalId = null;
+        }
+    }
+
+    // Cloud save wrapper
+    async saveToCloud() {
+        if (typeof saveGameToCloud === 'function') {
+            try {
+                await saveGameToCloud();
+                this.lastSaveTime = new Date();
+                if (typeof updateAutoSaveStatusDisplay === 'function') {
+                    updateAutoSaveStatusDisplay();
+                }
+            } catch (error) {
+                console.error('Cloud save failed:', error);
+            }
+        }
+    }
+
+    // Show save error notification
+    showSaveError(message) {
+        console.error('SAVE ERROR:', message);
+        // Could show a toast/notification here
+    }
+
+    // Show load error notification
+    showLoadError(message) {
+        console.error('LOAD ERROR:', message);
+        // Could show a toast/notification here
+    }
+
+    // Check if we're online
+    isOnline() {
+        return navigator.onLine !== false;
+    }
+
+    // Export save for manual backup
+    exportSave() {
+        try {
+            const data = this.buildSaveData();
+            return btoa(JSON.stringify(data));
+        } catch (e) {
+            console.error('Export failed:', e);
+            return null;
+        }
+    }
+
+    // Import save from manual backup
+    importSave(encodedData) {
+        try {
+            const data = JSON.parse(atob(encodedData));
+            if (!this.validateSaveData(data)) {
+                throw new Error('Invalid save data');
+            }
+            this.createBackup();
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+            return true;
+        } catch (e) {
+            console.error('Import failed:', e);
+            return false;
+        }
+    }
+}
+
+// Create global save manager instance
+const saveManager = new SaveManager();
+
+// ============================================
+// AUDIO MANAGER
+// Centralized audio handling with error recovery
+// ============================================
+class AudioManager {
+    constructor() {
+        this.tracks = {
+            intro: null,
+            foreman: null,
+            background: null
+        };
+        this.currentScene = null;
+        this.isFading = {};
+        this.volume = 30;
+        this.initialized = false;
+        this.muted = false;
+        this.previousVolume = 30;
+    }
+
+    // Initialize audio elements
+    init() {
+        this.tracks.intro = document.getElementById('introMusic');
+        this.tracks.foreman = document.getElementById('foremanMusic');
+        this.tracks.background = document.getElementById('bgMusic');
+
+        // Add error handlers
+        for (const [name, track] of Object.entries(this.tracks)) {
+            if (track) {
+                track.addEventListener('error', (e) => this.handleError(name, e));
+            }
+        }
+
+        return this;
+    }
+
+    // Handle audio errors gracefully
+    handleError(trackName, error) {
+        console.warn(`Audio error on ${trackName}:`, error);
+        // Continue game without audio
+    }
+
+    // Set master volume (0-100)
+    setVolume(value) {
+        this.volume = Math.max(0, Math.min(100, value));
+        const normalized = this.volume / 100;
+
+        if (this.tracks.background) {
+            this.tracks.background.volume = normalized;
+        }
+
+        // Update slider UI if exists
+        const slider = document.getElementById('volumeSlider');
+        if (slider) {
+            slider.value = this.volume;
+            slider.style.background = `linear-gradient(to right, #ffd700 0%, #ffd700 ${this.volume}%, #333 ${this.volume}%, #333 100%)`;
+        }
+
+        const valueEl = document.getElementById('volumeValue');
+        if (valueEl) {
+            valueEl.textContent = this.volume + '%';
+        }
+
+        const iconEl = document.getElementById('volumeIcon');
+        if (iconEl) {
+            if (this.volume === 0) {
+                iconEl.textContent = '🔇';
+            } else if (this.volume < 50) {
+                iconEl.textContent = '🔉';
+            } else {
+                iconEl.textContent = '🔊';
+            }
+        }
+
+        // Expose to legacy global
+        if (typeof window !== 'undefined') {
+            window.currentVolume = this.volume;
+            window.audioInitialized = this.initialized;
+        }
+    }
+
+    // Toggle mute
+    toggleMute() {
+        if (this.volume > 0) {
+            this.previousVolume = this.volume;
+            this.setVolume(0);
+            this.muted = true;
+            if (this.tracks.background) {
+                this.tracks.background.pause();
+            }
+        } else {
+            this.setVolume(this.previousVolume || 30);
+            this.muted = false;
+            if (this.tracks.background && this.initialized) {
+                this.tracks.background.play().catch(() => {});
+            }
+        }
+    }
+
+    // Play a scene track
+    playScene(sceneName) {
+        const track = this.tracks[sceneName];
+        if (!track) return;
+
+        // Stop other scene tracks
+        this.stopAllExcept(sceneName);
+
+        this.currentScene = sceneName;
+
+        const volumes = {
+            intro: 0.75,
+            foreman: 0.56,
+            background: this.volume / 100
+        };
+
+        track.volume = volumes[sceneName] || 0.5;
+        track.currentTime = 0;
+
+        track.play().then(() => {
+            if (sceneName === 'background') {
+                this.initialized = true;
+            }
+        }).catch(e => {
+            console.log(`${sceneName} autoplay blocked:`, e);
+        });
+    }
+
+    // Stop all tracks except specified
+    stopAllExcept(exceptName) {
+        for (const [name, track] of Object.entries(this.tracks)) {
+            if (track && name !== exceptName && !track.paused) {
+                track.pause();
+                track.currentTime = 0;
+            }
+        }
+    }
+
+    // Stop all scene music
+    stopAll() {
+        for (const track of Object.values(this.tracks)) {
+            if (track) {
+                track.pause();
+                track.currentTime = 0;
+            }
+        }
+        this.currentScene = null;
+        this.isFading = {};
+    }
+
+    // Fade out a track
+    fadeOut(sceneName, duration = 500, callback = null) {
+        const track = this.tracks[sceneName];
+        if (!track || this.isFading[sceneName]) {
+            if (callback) callback();
+            return;
+        }
+
+        this.isFading[sceneName] = true;
+        const startVolume = track.volume;
+        const steps = 20;
+        const stepDuration = duration / steps;
+        const volumeStep = startVolume / steps;
+        let currentStep = 0;
+
+        const fadeInterval = setInterval(() => {
+            currentStep++;
+            track.volume = Math.max(0, startVolume - (volumeStep * currentStep));
+
+            if (currentStep >= steps) {
+                clearInterval(fadeInterval);
+                track.pause();
+                track.currentTime = 0;
+                track.volume = 0.75;
+                this.isFading[sceneName] = false;
+                if (this.currentScene === sceneName) {
+                    this.currentScene = null;
+                }
+                if (callback) callback();
+            }
+        }, stepDuration);
+    }
+
+    // Start background music
+    startBackground() {
+        if (this.volume === 0) return;
+        this.playScene('background');
+    }
+
+    // Get current volume
+    getVolume() {
+        return this.volume;
+    }
+
+    // Check if audio is initialized
+    isInitialized() {
+        return this.initialized;
+    }
+}
+
+// Create global audio manager instance
+const audioManager = new AudioManager().init();
+
+// ============================================
+// OFFLINE DETECTION
+// Handle network status changes gracefully
+// ============================================
+class OfflineHandler {
+    constructor() {
+        this.isOnline = navigator.onLine !== false;
+        this.offlineQueue = [];
+        this.init();
+    }
+
+    init() {
+        window.addEventListener('online', () => this.handleOnline());
+        window.addEventListener('offline', () => this.handleOffline());
+    }
+
+    handleOnline() {
+        this.isOnline = true;
+        console.log('Connection restored');
+
+        // Show notification
+        this.showStatus('Connection restored', 'success');
+
+        // Process any queued saves
+        if (typeof currentUser !== 'undefined' && currentUser) {
+            saveManager.saveToCloud();
+        }
+    }
+
+    handleOffline() {
+        this.isOnline = false;
+        console.log('Connection lost - switching to local save');
+
+        // Show notification
+        this.showStatus('Offline - saving locally', 'warning');
+
+        // Force local save
+        saveManager.saveToLocal();
+    }
+
+    showStatus(message, type = 'info') {
+        // Could integrate with game's notification system
+        console.log(`[${type.toUpperCase()}] ${message}`);
+
+        // Update autosave status display
+        const statusEl = document.getElementById('autoSaveStatus');
+        if (statusEl) {
+            if (type === 'warning') {
+                statusEl.textContent = 'Offline mode';
+                statusEl.style.color = '#ff8c42';
+            } else if (type === 'success') {
+                statusEl.style.color = '#32CD32';
+            }
+        }
+    }
+
+    checkConnection() {
+        return this.isOnline;
+    }
+}
+
+// Create global offline handler
+const offlineHandler = new OfflineHandler();
+
+// ============================================
+// ERROR RECOVERY SYSTEM
+// Catch and handle critical errors
+// ============================================
+class ErrorRecovery {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        // Global error handler
+        window.addEventListener('error', (event) => this.handleError(event));
+
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', (event) => {
+            this.handlePromiseRejection(event);
+        });
+    }
+
+    handleError(event) {
+        console.error('Game error caught:', event.error);
+
+        // Try to save game state before potential crash
+        this.emergencySave();
+
+        // Log for debugging
+        this.logError({
+            type: 'runtime',
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            stack: event.error?.stack
+        });
+    }
+
+    handlePromiseRejection(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+
+        // Don't save for network errors - they're expected when offline
+        if (!this.isNetworkError(event.reason)) {
+            this.emergencySave();
+        }
+    }
+
+    isNetworkError(error) {
+        if (!error) return false;
+        const message = error.message || String(error);
+        return message.includes('network') ||
+               message.includes('fetch') ||
+               message.includes('offline') ||
+               message.includes('NetworkError');
+    }
+
+    emergencySave() {
+        try {
+            if (typeof saveManager !== 'undefined') {
+                saveManager.saveToLocal();
+                console.log('Emergency save completed');
+            }
+        } catch (e) {
+            console.error('Emergency save failed:', e);
+        }
+    }
+
+    logError(errorInfo) {
+        // Could send to analytics/error tracking service
+        // For now, just store in sessionStorage for debugging
+        try {
+            const errors = JSON.parse(sessionStorage.getItem('gameErrors') || '[]');
+            errors.push({
+                ...errorInfo,
+                timestamp: Date.now()
+            });
+            // Keep last 10 errors
+            if (errors.length > 10) errors.shift();
+            sessionStorage.setItem('gameErrors', JSON.stringify(errors));
+        } catch (e) {
+            // Ignore storage errors
+        }
+    }
+
+    getRecentErrors() {
+        try {
+            return JSON.parse(sessionStorage.getItem('gameErrors') || '[]');
+        } catch {
+            return [];
+        }
+    }
+}
+
+// Create global error recovery handler
+const errorRecovery = new ErrorRecovery();
+
 function startNoteEarning() {
     lastNoteTime = Date.now();
     setInterval(() => {
