@@ -4705,3 +4705,377 @@ body::before {
     0%, 100% { opacity: 0.6; }
     50% { opacity: 1; }
 }
+
+/* ============================================
+   PRESTIGE SYSTEM STYLES
+   ============================================ */
+
+.prestige-modal .fullscreen-modal-content {
+    max-width: 700px;
+}
+
+.prestige-header {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-bottom: 2px solid #4a90d9;
+}
+
+.prestige-header h2 {
+    color: #4a90d9;
+}
+
+.prestige-container {
+    padding: 20px;
+}
+
+.prestige-currency-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
+    border: 2px solid #4a90d9;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.prestige-bonds-icon {
+    font-size: 28px;
+}
+
+.prestige-bonds-count {
+    font-size: 32px;
+    font-weight: bold;
+    color: #4a90d9;
+    font-family: 'Orbitron', monospace;
+}
+
+.prestige-bonds-label {
+    font-size: 18px;
+    color: #888;
+}
+
+.prestige-section {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.prestige-section-title {
+    font-size: 16px;
+    color: #4a90d9;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+}
+
+.prestige-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.prestige-stat {
+    text-align: center;
+    padding: 10px;
+    background: rgba(74, 144, 217, 0.1);
+    border-radius: 8px;
+}
+
+.prestige-stat-label {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.prestige-stat-value {
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+    color: #4a90d9;
+    font-family: 'Orbitron', monospace;
+}
+
+.prestige-action-box {
+    text-align: center;
+}
+
+.prestige-description {
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.prestige-reward-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.prestige-reward-label {
+    color: #888;
+}
+
+.prestige-reward-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffd700;
+    font-family: 'Orbitron', monospace;
+}
+
+.prestige-requirement {
+    color: #ff6b6b;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.prestige-requirement.met {
+    color: #32CD32;
+}
+
+.prestige-btn-action {
+    background: linear-gradient(135deg, #4a90d9, #2d5a8a);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.prestige-btn-action:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5aa0e9, #3d6a9a);
+    transform: scale(1.05);
+}
+
+.prestige-btn-action:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.prestige-upgrade-category {
+    margin-bottom: 15px;
+}
+
+.upgrade-category-title {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.prestige-upgrades-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.prestige-upgrade-item {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.prestige-upgrade-item:hover:not(.locked):not(.owned) {
+    border-color: #4a90d9;
+    background: rgba(74, 144, 217, 0.1);
+}
+
+.prestige-upgrade-item.owned {
+    border-color: #32CD32;
+    background: rgba(50, 205, 50, 0.1);
+}
+
+.prestige-upgrade-item.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.prestige-upgrade-item.affordable:not(.owned) {
+    border-color: #ffd700;
+}
+
+.upgrade-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.upgrade-desc {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.upgrade-cost {
+    font-size: 12px;
+    color: #4a90d9;
+    font-weight: bold;
+}
+
+.upgrade-owned {
+    color: #32CD32;
+    font-weight: bold;
+}
+
+.prestige-info {
+    margin-top: 15px;
+    padding: 12px;
+    background: rgba(74, 144, 217, 0.1);
+    border-radius: 8px;
+    font-size: 12px;
+    color: #888;
+}
+
+.prestige-info p {
+    margin: 5px 0;
+}
+
+/* Prestige Confirmation Modal */
+.prestige-confirm-modal .modal-content {
+    max-width: 400px;
+    text-align: center;
+}
+
+.prestige-confirm-content h3 {
+    color: #ff6b6b;
+    margin-bottom: 15px;
+}
+
+.prestige-confirm-reward {
+    font-size: 18px;
+    color: #ffd700;
+    margin: 15px 0;
+}
+
+.prestige-confirm-warning {
+    font-size: 13px;
+    color: #ff6b6b;
+    margin-bottom: 20px;
+}
+
+.prestige-confirm-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.prestige-confirm-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.prestige-confirm-btn.confirm {
+    background: linear-gradient(135deg, #4a90d9, #2d5a8a);
+    color: white;
+}
+
+.prestige-confirm-btn.confirm:hover {
+    background: linear-gradient(135deg, #5aa0e9, #3d6a9a);
+}
+
+.prestige-confirm-btn.cancel {
+    background: #333;
+    color: #aaa;
+}
+
+.prestige-confirm-btn.cancel:hover {
+    background: #444;
+}
+
+/* Welcome Back Modal (Offline Progress) */
+.welcome-back-modal .modal-content {
+    max-width: 400px;
+    text-align: center;
+}
+
+.welcome-back-content h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+.offline-time {
+    color: #888;
+    margin-bottom: 15px;
+}
+
+.offline-earnings {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.offline-reward {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.offline-reward-label {
+    color: #888;
+}
+
+.offline-reward-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #32CD32;
+    font-family: 'Orbitron', monospace;
+}
+
+.welcome-back-btn {
+    background: linear-gradient(135deg, #32CD32, #228B22);
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.welcome-back-btn:hover {
+    background: linear-gradient(135deg, #42DD42, #32AB32);
+    transform: scale(1.05);
+}
+
+/* Prestige Button in Toolbar */
+.prestige-btn {
+    background: linear-gradient(135deg, #4a90d9, #2d5a8a);
+}
+
+.prestige-btn:hover {
+    background: linear-gradient(135deg, #5aa0e9, #3d6a9a);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    .prestige-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .prestige-upgrades-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

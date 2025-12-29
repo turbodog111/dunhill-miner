@@ -1373,6 +1373,12 @@ class SaveManager {
             dailyExchangeCount,
             lastExchangeDate,
             currentVolume: typeof currentVolume !== 'undefined' ? currentVolume : 30,
+            // Prestige data
+            bonds: typeof bonds !== 'undefined' ? bonds : 0,
+            totalBondsEarned: typeof totalBondsEarned !== 'undefined' ? totalBondsEarned : 0,
+            prestigeCount: typeof prestigeCount !== 'undefined' ? prestigeCount : 0,
+            prestigeUpgradesPurchased: typeof prestigeUpgradesPurchased !== 'undefined' ? prestigeUpgradesPurchased : {},
+            lastPlayTime: typeof lastPlayTime !== 'undefined' ? lastPlayTime : Date.now(),
             savedAt: Date.now()
         };
     }
@@ -1581,12 +1587,24 @@ class SaveManager {
         if (data.dailyExchangeCount !== undefined) dailyExchangeCount = data.dailyExchangeCount;
         if (data.lastExchangeDate) lastExchangeDate = data.lastExchangeDate;
 
+        // Restore prestige state
+        if (data.bonds !== undefined) bonds = data.bonds;
+        if (data.totalBondsEarned !== undefined) totalBondsEarned = data.totalBondsEarned;
+        if (data.prestigeCount !== undefined) prestigeCount = data.prestigeCount;
+        if (data.prestigeUpgradesPurchased) prestigeUpgradesPurchased = data.prestigeUpgradesPurchased;
+        if (data.lastPlayTime) lastPlayTime = data.lastPlayTime;
+
         // Update displays
         this.refreshAllDisplays();
 
         // Sync to GameState
         if (typeof syncGlobalsToGameState === 'function') {
             syncGlobalsToGameState();
+        }
+
+        // Check for offline progress after load
+        if (typeof checkOfflineProgress === 'function') {
+            setTimeout(checkOfflineProgress, 500);
         }
     }
 
@@ -3562,8 +3580,11 @@ function closeAllPanels() {
     document.getElementById('updatesPanel').classList.remove('show');
     document.getElementById('mapPanel').classList.remove('show');
     document.getElementById('shopPanel').classList.remove('show');
+    document.getElementById('prestigePanel').classList.remove('show');
     document.getElementById('settingsPanel').classList.remove('show');
     document.getElementById('devPanel').classList.remove('show');
+    document.getElementById('prestigeConfirmModal').classList.remove('show');
+    document.getElementById('welcomeBackModal').classList.remove('show');
 }
 
 function toggleStatsPanel() {
@@ -3619,6 +3640,500 @@ function toggleShopPanel() {
         updateActiveBoostsDisplay();
     }
 }
+
+// ============================================
+// PRESTIGE SYSTEM (Bonds)
+// ============================================
+
+// Prestige state
+let bonds = 0;
+let totalBondsEarned = 0;
+let prestigeCount = 0;
+let prestigeUpgradesPurchased = {};
+let lastPlayTime = Date.now();
+let pendingOfflineRewards = null;
+
+function togglePrestigePanel() {
+    const panel = document.getElementById('prestigePanel');
+    const wasOpen = panel.classList.contains('show');
+    closeAllPanels();
+    if (!wasOpen) {
+        panel.classList.add('show');
+        updatePrestigeDisplay();
+        renderPrestigeUpgrades();
+    }
+}
+
+// Calculate bonds earned from current progress
+function calculateBondsFromProgress() {
+    const earned = totalMoneyEarned;
+    if (earned < PRESTIGE_CONFIG.MIN_PRESTIGE_THRESHOLD) {
+        return 0;
+    }
+    return Math.floor(Math.sqrt(earned / PRESTIGE_CONFIG.BONDS_DIVISOR));
+}
+
+// Check if player can prestige
+function canPrestige() {
+    return totalMoneyEarned >= PRESTIGE_CONFIG.MIN_PRESTIGE_THRESHOLD;
+}
+
+// Get total production bonus from bonds and upgrades
+function getPrestigeProductionBonus() {
+    let bonus = bonds * PRESTIGE_CONFIG.PRODUCTION_BONUS_PER_BOND;
+
+    // Add upgrade bonuses
+    for (const [upgradeId, purchased] of Object.entries(prestigeUpgradesPurchased)) {
+        if (purchased && PRESTIGE_UPGRADES[upgradeId]) {
+            const effect = PRESTIGE_UPGRADES[upgradeId].effect;
+            if (effect.type === 'production') {
+                bonus += effect.value;
+            }
+        }
+    }
+
+    return bonus;
+}
+
+// Get speed bonus from prestige upgrades
+function getPrestigeSpeedBonus() {
+    let bonus = 0;
+    for (const [upgradeId, purchased] of Object.entries(prestigeUpgradesPurchased)) {
+        if (purchased && PRESTIGE_UPGRADES[upgradeId]) {
+            const effect = PRESTIGE_UPGRADES[upgradeId].effect;
+            if (effect.type === 'speed') {
+                bonus += effect.value;
+            }
+        }
+    }
+    return bonus;
+}
+
+// Get capacity bonus from prestige upgrades
+function getPrestigeCapacityBonus() {
+    let bonus = 0;
+    for (const [upgradeId, purchased] of Object.entries(prestigeUpgradesPurchased)) {
+        if (purchased && PRESTIGE_UPGRADES[upgradeId]) {
+            const effect = PRESTIGE_UPGRADES[upgradeId].effect;
+            if (effect.type === 'capacity') {
+                bonus += effect.value;
+            }
+        }
+    }
+    return bonus;
+}
+
+// Get offline bonus from prestige upgrades
+function getPrestigeOfflineBonus() {
+    let bonus = 0;
+    for (const [upgradeId, purchased] of Object.entries(prestigeUpgradesPurchased)) {
+        if (purchased && PRESTIGE_UPGRADES[upgradeId]) {
+            const effect = PRESTIGE_UPGRADES[upgradeId].effect;
+            if (effect.type === 'offline') {
+                bonus += effect.value;
+            }
+        }
+    }
+    return bonus;
+}
+
+// Get manager discount from prestige upgrades
+function getPrestigeManagerDiscount() {
+    let discount = 0;
+    for (const [upgradeId, purchased] of Object.entries(prestigeUpgradesPurchased)) {
+        if (purchased && PRESTIGE_UPGRADES[upgradeId]) {
+            const effect = PRESTIGE_UPGRADES[upgradeId].effect;
+            if (effect.type === 'manager_discount') {
+                discount += effect.value;
+            }
+        }
+    }
+    return discount;
+}
+
+// Get shaft discount from prestige upgrades
+function getPrestigeShaftDiscount() {
+    let discount = 0;
+    for (const [upgradeId, purchased] of Object.entries(prestigeUpgradesPurchased)) {
+        if (purchased && PRESTIGE_UPGRADES[upgradeId]) {
+            const effect = PRESTIGE_UPGRADES[upgradeId].effect;
+            if (effect.type === 'shaft_discount') {
+                discount += effect.value;
+            }
+        }
+    }
+    return discount;
+}
+
+// Get starting cash from prestige upgrades
+function getPrestigeStartingCash() {
+    let startingCash = bonds * PRESTIGE_CONFIG.STARTING_CASH_PER_BOND;
+
+    for (const [upgradeId, purchased] of Object.entries(prestigeUpgradesPurchased)) {
+        if (purchased && PRESTIGE_UPGRADES[upgradeId]) {
+            const effect = PRESTIGE_UPGRADES[upgradeId].effect;
+            if (effect.type === 'starting_cash') {
+                startingCash = Math.max(startingCash, effect.value);
+            }
+        }
+    }
+
+    return startingCash;
+}
+
+// Update prestige panel display
+function updatePrestigeDisplay() {
+    const bondsEl = document.getElementById('prestigeBondsCount');
+    const countEl = document.getElementById('prestigeCount');
+    const totalEl = document.getElementById('totalBondsEarned');
+    const bonusEl = document.getElementById('currentPrestigeBonus');
+    const previewEl = document.getElementById('prestigeRewardPreview');
+    const btnBondsEl = document.getElementById('prestigeBtnBonds');
+    const reqEl = document.getElementById('prestigeRequirement');
+    const btnEl = document.getElementById('prestigeActionBtn');
+
+    if (bondsEl) bondsEl.textContent = formatNumber(bonds);
+    if (countEl) countEl.textContent = prestigeCount;
+    if (totalEl) totalEl.textContent = formatNumber(totalBondsEarned);
+
+    const totalBonus = getPrestigeProductionBonus();
+    if (bonusEl) bonusEl.textContent = `+${Math.round(totalBonus * 100)}%`;
+
+    const potentialBonds = calculateBondsFromProgress();
+    if (previewEl) previewEl.textContent = potentialBonds;
+    if (btnBondsEl) btnBondsEl.textContent = potentialBonds;
+
+    const canDoPrestige = canPrestige();
+    if (reqEl) {
+        if (canDoPrestige) {
+            reqEl.textContent = `Ready to prestige! Earn ${formatNumber(potentialBonds)} Bonds.`;
+            reqEl.classList.add('met');
+        } else {
+            const needed = PRESTIGE_CONFIG.MIN_PRESTIGE_THRESHOLD - totalMoneyEarned;
+            reqEl.textContent = `Earn $${formatNumber(needed)} more to unlock prestige`;
+            reqEl.classList.remove('met');
+        }
+    }
+
+    if (btnEl) {
+        btnEl.disabled = !canDoPrestige || potentialBonds === 0;
+    }
+}
+
+// Render prestige upgrades
+function renderPrestigeUpgrades() {
+    const categories = {
+        production: ['production_i', 'production_ii', 'production_iii'],
+        speed: ['speed_i', 'speed_ii', 'speed_iii'],
+        capacity: ['capacity_i', 'capacity_ii'],
+        economy: ['starting_cash', 'starting_cash_ii', 'offline_i', 'offline_ii', 'manager_discount', 'unlock_speed']
+    };
+
+    const grids = {
+        production: document.getElementById('productionUpgrades'),
+        speed: document.getElementById('speedUpgrades'),
+        capacity: document.getElementById('capacityUpgrades'),
+        economy: document.getElementById('economyUpgrades')
+    };
+
+    for (const [category, upgradeIds] of Object.entries(categories)) {
+        const grid = grids[category];
+        if (!grid) continue;
+
+        grid.innerHTML = upgradeIds.map(id => {
+            const upgrade = PRESTIGE_UPGRADES[id];
+            if (!upgrade) return '';
+
+            const owned = prestigeUpgradesPurchased[id];
+            const affordable = bonds >= upgrade.cost;
+            const locked = upgrade.requires && !prestigeUpgradesPurchased[upgrade.requires];
+
+            let classes = 'prestige-upgrade-item';
+            if (owned) classes += ' owned';
+            else if (locked) classes += ' locked';
+            else if (affordable) classes += ' affordable';
+
+            return `
+                <div class="${classes}" onclick="purchasePrestigeUpgrade('${id}')">
+                    <div class="upgrade-name">${upgrade.name}</div>
+                    <div class="upgrade-desc">${upgrade.desc}</div>
+                    ${owned
+                        ? '<div class="upgrade-owned">✓ Owned</div>'
+                        : `<div class="upgrade-cost">📜 ${upgrade.cost} Bonds</div>`
+                    }
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+// Purchase a prestige upgrade
+function purchasePrestigeUpgrade(upgradeId) {
+    const upgrade = PRESTIGE_UPGRADES[upgradeId];
+    if (!upgrade) return;
+
+    // Check if already owned
+    if (prestigeUpgradesPurchased[upgradeId]) return;
+
+    // Check if locked
+    if (upgrade.requires && !prestigeUpgradesPurchased[upgrade.requires]) {
+        showBoostMessage(`Requires: ${PRESTIGE_UPGRADES[upgrade.requires].name}`, 'error');
+        return;
+    }
+
+    // Check if can afford
+    if (bonds < upgrade.cost) {
+        showBoostMessage(`Need ${upgrade.cost} Bonds`, 'error');
+        return;
+    }
+
+    // Purchase
+    bonds -= upgrade.cost;
+    prestigeUpgradesPurchased[upgradeId] = true;
+
+    showBoostMessage(`Purchased: ${upgrade.name}`, 'success');
+
+    updatePrestigeDisplay();
+    renderPrestigeUpgrades();
+    saveToLocalStorage();
+}
+
+// Show prestige confirmation modal
+function confirmPrestige() {
+    if (!canPrestige()) return;
+
+    const potentialBonds = calculateBondsFromProgress();
+    document.getElementById('confirmBondsAmount').textContent = potentialBonds;
+    document.getElementById('prestigeConfirmModal').classList.add('show');
+}
+
+// Close prestige confirmation
+function closePrestigeConfirm() {
+    document.getElementById('prestigeConfirmModal').classList.remove('show');
+}
+
+// Execute the prestige reset
+function executePrestige() {
+    if (!canPrestige()) return;
+
+    const earnedBonds = calculateBondsFromProgress();
+
+    // Add bonds
+    bonds += earnedBonds;
+    totalBondsEarned += earnedBonds;
+    prestigeCount++;
+
+    // Close modal
+    closePrestigeConfirm();
+    closeAllPanels();
+
+    // Calculate starting cash
+    const startingCash = getPrestigeStartingCash();
+
+    // Reset game state (keep: bonds, prestigeUpgradesPurchased, achievementsState)
+    money = startingCash;
+    notes = 0;
+    playerXP = 0;
+    totalCoalSold = 0;
+    totalCoalMined = 0;
+    totalCopperMined = 0;
+    totalMoneyEarned = 0;
+    elevatorLevel = 1;
+    elevatorCarrying = 0;
+    hasElevatorManager = false;
+    elevatorManagerAbility = null;
+    operatorState = 'idle';
+
+    // Reset mines
+    currentMineId = 'mine22';
+    minesUnlocked = { mine22: true, mine37: false };
+    mineStates = {
+        mine22: {
+            mineshafts: [],
+            elevatorLevel: 1,
+            hasElevatorManager: false,
+            elevatorManagerAbility: null,
+            totalOreMined: 0,
+            lastActiveTime: Date.now()
+        },
+        mine37: {
+            mineshafts: [],
+            elevatorLevel: 1,
+            hasElevatorManager: false,
+            elevatorManagerAbility: null,
+            totalOreMined: 0,
+            lastActiveTime: null
+        }
+    };
+
+    // Reset shop state (keep rank progress though)
+    activeBoosts = {};
+    dailyExchangeCount = 0;
+
+    // Clear and recreate shafts
+    mineshaftsContainer.innerHTML = '';
+    mineshafts = [];
+    createMineshaft(0);
+
+    // Reset elevator UI
+    if (elevatorManagerSlot) {
+        elevatorManagerSlot.classList.remove('hired');
+        elevatorManagerSlot.innerHTML = '<span class="hire-text">Hire<br>Manager</span>';
+    }
+    if (operatorStatus) {
+        operatorStatus.textContent = 'Idle';
+    }
+
+    // Update all displays
+    updateStats();
+    updatePlayerStats();
+    updateLevelDisplay();
+    updateNotesDisplay();
+    renderMapPanel();
+    updateMineIndicator();
+    updateMineTheme();
+    updateShopRankDisplay();
+    updateActiveBoostsDisplay();
+
+    // Sync GameState
+    syncGlobalsToGameState();
+
+    // Save
+    saveToLocalStorage();
+
+    // Show success message
+    showBoostMessage(`Prestiged! Earned ${earnedBonds} Bonds`, 'success');
+}
+
+// ============================================
+// OFFLINE PROGRESS SYSTEM
+// ============================================
+
+// Calculate offline earnings
+function calculateOfflineEarnings(offlineMs) {
+    // Cap at max offline hours
+    const maxMs = PRESTIGE_CONFIG.MAX_OFFLINE_HOURS * 60 * 60 * 1000;
+    const cappedMs = Math.min(offlineMs, maxMs);
+
+    // Need at least managers to earn offline
+    let totalProductionPerSecond = 0;
+
+    // Calculate production from all managed shafts across all mines
+    for (const [mineId, mineState] of Object.entries(mineStates)) {
+        if (!mineState.mineshafts) continue;
+
+        const mineConfig = MINES[mineId];
+        if (!mineConfig) continue;
+
+        for (const shaft of mineState.mineshafts) {
+            if (shaft.hasManager) {
+                // Base production per second (rough estimate)
+                const shaftLevel = shaft.level || 1;
+                const baseProduction = shaftLevel * 2 * mineConfig.valueMultiplier;
+                totalProductionPerSecond += baseProduction;
+            }
+        }
+    }
+
+    // Also check if elevator has manager (otherwise production is stuck)
+    let elevatorEfficiency = 0;
+    const currentMineState = mineStates[currentMineId];
+    if (currentMineState && currentMineState.hasElevatorManager) {
+        elevatorEfficiency = 1;
+    } else if (hasElevatorManager) {
+        elevatorEfficiency = 1;
+    }
+
+    if (elevatorEfficiency === 0) {
+        // No elevator manager = no offline earnings
+        return 0;
+    }
+
+    // Apply offline efficiency
+    let efficiency = PRESTIGE_CONFIG.OFFLINE_EFFICIENCY;
+
+    // Apply prestige offline bonus
+    efficiency += getPrestigeOfflineBonus();
+
+    // Apply prestige production bonus
+    const productionBonus = 1 + getPrestigeProductionBonus();
+
+    const seconds = cappedMs / 1000;
+    const earnings = Math.floor(totalProductionPerSecond * seconds * efficiency * productionBonus);
+
+    return earnings;
+}
+
+// Check for offline progress on load
+function checkOfflineProgress() {
+    const now = Date.now();
+    const offlineMs = now - lastPlayTime;
+
+    // Minimum 1 minute offline to count
+    if (offlineMs < 60000) {
+        lastPlayTime = now;
+        return;
+    }
+
+    const earnings = calculateOfflineEarnings(offlineMs);
+
+    if (earnings > 0) {
+        pendingOfflineRewards = {
+            earnings: earnings,
+            timeOffline: offlineMs
+        };
+        showWelcomeBackModal();
+    }
+
+    lastPlayTime = now;
+}
+
+// Show welcome back modal
+function showWelcomeBackModal() {
+    if (!pendingOfflineRewards) return;
+
+    const modal = document.getElementById('welcomeBackModal');
+    const timeText = document.getElementById('offlineTimeText');
+    const earningsText = document.getElementById('offlineEarningsAmount');
+
+    // Format time
+    const hours = Math.floor(pendingOfflineRewards.timeOffline / (1000 * 60 * 60));
+    const minutes = Math.floor((pendingOfflineRewards.timeOffline % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+        timeText.textContent = `You were away for ${hours}h ${minutes}m`;
+    } else {
+        timeText.textContent = `You were away for ${minutes} minutes`;
+    }
+
+    earningsText.textContent = `$${formatNumber(pendingOfflineRewards.earnings)}`;
+
+    modal.classList.add('show');
+}
+
+// Claim offline rewards
+function claimOfflineRewards() {
+    if (!pendingOfflineRewards) return;
+
+    money += pendingOfflineRewards.earnings;
+    totalMoneyEarned += pendingOfflineRewards.earnings;
+
+    updateStats();
+    saveToLocalStorage();
+
+    showBoostMessage(`Collected $${formatNumber(pendingOfflineRewards.earnings)}!`, 'success');
+
+    pendingOfflineRewards = null;
+    document.getElementById('welcomeBackModal').classList.remove('show');
+}
+
+// Update last play time periodically
+function updateLastPlayTime() {
+    lastPlayTime = Date.now();
+}
+
+// Start tracking play time
+setInterval(updateLastPlayTime, 30000); // Update every 30 seconds
 
 function toggleSettingsPanel() {
     const panel = document.getElementById('settingsPanel');
@@ -4154,6 +4669,12 @@ function saveToLocalStorage() {
         totalNotesSpent,
         dailyExchangeCount,
         lastExchangeDate,
+        // Prestige data
+        bonds,
+        totalBondsEarned,
+        prestigeCount,
+        prestigeUpgradesPurchased,
+        lastPlayTime,
         savedAt: Date.now()
     };
 
@@ -4301,6 +4822,13 @@ function loadFromLocalStorage() {
         if (data.dailyExchangeCount !== undefined) dailyExchangeCount = data.dailyExchangeCount;
         if (data.lastExchangeDate) lastExchangeDate = data.lastExchangeDate;
 
+        // Restore prestige data
+        if (data.bonds !== undefined) bonds = data.bonds;
+        if (data.totalBondsEarned !== undefined) totalBondsEarned = data.totalBondsEarned;
+        if (data.prestigeCount !== undefined) prestigeCount = data.prestigeCount;
+        if (data.prestigeUpgradesPurchased) prestigeUpgradesPurchased = data.prestigeUpgradesPurchased;
+        if (data.lastPlayTime) lastPlayTime = data.lastPlayTime;
+
         // Update all displays
         updateStats();
         updatePlayerStats();
@@ -4313,6 +4841,9 @@ function loadFromLocalStorage() {
         updateNotesDisplay();
         updateShopRankDisplay();
         updateActiveBoostsDisplay();
+
+        // Check for offline progress
+        setTimeout(checkOfflineProgress, 500);
 
         return true;
     } catch (error) {
