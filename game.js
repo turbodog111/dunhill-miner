@@ -5211,38 +5211,68 @@ function saveGame() {
 }
 
 // Show save notification in bottom right
-function showSaveNotification(message, isError = false) {
+function showSaveNotification(message, isError = false, details = null) {
     // Create or get the save notification element
     let notification = document.getElementById('saveNotification');
     if (!notification) {
         notification = document.createElement('div');
         notification.id = 'saveNotification';
-        notification.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-family: 'Chakra Petch', sans-serif;
-            font-size: 12px;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        `;
         document.body.appendChild(notification);
     }
 
-    notification.textContent = message;
-    notification.style.background = isError ? 'rgba(220, 53, 69, 0.9)' : 'rgba(50, 205, 50, 0.9)';
-    notification.style.color = 'white';
-    notification.style.border = isError ? '2px solid #dc3545' : '2px solid #228B22';
-    notification.style.opacity = '1';
+    // Build the message with optional details
+    let fullMessage = message;
+    if (details) {
+        fullMessage += `\n${details}`;
+    }
+    if (isError) {
+        fullMessage += '\n(Click to dismiss)';
+    }
 
-    // Fade out after 2 seconds
-    setTimeout(() => {
-        notification.style.opacity = '0';
-    }, 2000);
+    notification.textContent = fullMessage;
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 5px;
+        font-family: 'Chakra Petch', sans-serif;
+        font-size: 12px;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        white-space: pre-line;
+        max-width: 350px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        cursor: ${isError ? 'pointer' : 'default'};
+        background: ${isError ? 'rgba(220, 53, 69, 0.95)' : 'rgba(50, 205, 50, 0.9)'};
+        color: white;
+        border: 2px solid ${isError ? '#dc3545' : '#228B22'};
+    `;
+
+    // Clear any existing timeout
+    if (notification.fadeTimeout) {
+        clearTimeout(notification.fadeTimeout);
+        notification.fadeTimeout = null;
+    }
+
+    // Remove any existing click handler
+    notification.onclick = null;
+
+    if (isError) {
+        // Error messages persist until clicked
+        notification.onclick = () => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 300);
+        };
+    } else {
+        // Success messages fade out after 2 seconds
+        notification.fadeTimeout = setTimeout(() => {
+            notification.style.opacity = '0';
+        }, 2000);
+    }
 }
 
 // Save to localStorage (for non-logged in users)
@@ -5325,7 +5355,11 @@ function saveToLocalStorage() {
         return true;
     } catch (error) {
         console.error('localStorage save failed:', error);
-        showSaveNotification('Save failed!', true);
+        let details = `Error: ${error.message || 'Unknown error'}`;
+        if (error.name === 'QuotaExceededError') {
+            details = 'Storage quota exceeded!\nTry clearing browser data or using cloud save.';
+        }
+        showSaveNotification('Local save failed!', true, details);
         return false;
     }
 }
@@ -5701,7 +5735,22 @@ function getAuthErrorMessage(code) {
 }
 
 async function saveGameToCloud() {
-    if (!currentUser) return;
+    // Early validation
+    if (!currentUser) {
+        showSaveNotification('Cloud save failed!', true, 'Not logged in.\nPlease log in to save to cloud.');
+        return;
+    }
+
+    if (typeof db === 'undefined' || !db) {
+        showSaveNotification('Cloud save failed!', true, 'Firebase database not initialized.\nCheck your internet connection and refresh the page.');
+        return;
+    }
+
+    if (typeof firebase === 'undefined') {
+        showSaveNotification('Cloud save failed!', true, 'Firebase not loaded.\nCheck your internet connection and refresh the page.');
+        return;
+    }
+
     saveStatusEl.textContent = 'Saving...';
 
     // Save current mine state before saving
@@ -5786,9 +5835,25 @@ async function saveGameToCloud() {
         showSaveNotification('Game saved to cloud!');
         setTimeout(() => { saveStatusEl.textContent = ''; }, 3000);
     } catch (error) {
-        saveStatusEl.textContent = 'Save failed: ' + error.message;
+        console.error('Cloud save error:', error);
+        const errorCode = error.code || 'unknown';
+        const errorMessage = error.message || 'Unknown error';
+        saveStatusEl.textContent = 'Save failed: ' + errorMessage;
         updateSettingsStatus('Save failed!', '#dc3545');
-        showSaveNotification('Cloud save failed!', true);
+
+        // Build detailed error info
+        let details = `Error: ${errorMessage}`;
+        if (errorCode !== 'unknown') {
+            details += `\nCode: ${errorCode}`;
+        }
+        if (currentUser) {
+            details += `\nUser: ${currentUser.email || currentUser.uid}`;
+        }
+        if (typeof db === 'undefined') {
+            details += '\nFirestore DB not initialized!';
+        }
+
+        showSaveNotification('Cloud save failed!', true, details);
     }
 }
 
