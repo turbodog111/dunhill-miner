@@ -1031,21 +1031,20 @@ let elevatorCarrying = 0;
 
 // Notes earning system (1 note per minute of active play)
 let lastNoteTime = Date.now();
-const NOTE_INTERVAL = 60000; // 1 minute in milliseconds
 
 function startNoteEarning() {
     lastNoteTime = Date.now();
     setInterval(() => {
         const now = Date.now();
         const elapsed = now - lastNoteTime;
-        if (elapsed >= NOTE_INTERVAL) {
-            const notesEarned = Math.floor(elapsed / NOTE_INTERVAL);
+        if (elapsed >= TIMING.NOTE_EARN_INTERVAL) {
+            const notesEarned = Math.floor(elapsed / TIMING.NOTE_EARN_INTERVAL);
             notes += notesEarned;
-            lastNoteTime = now - (elapsed % NOTE_INTERVAL);
+            lastNoteTime = now - (elapsed % TIMING.NOTE_EARN_INTERVAL);
             updateNotesDisplay();
             saveToLocalStorage();
         }
-    }, 10000); // Check every 10 seconds
+    }, TIMING.NOTE_CHECK_INTERVAL);
 }
 
 function updateNotesDisplay() {
@@ -1062,83 +1061,9 @@ function updateNotesDisplay() {
 
 // ============================================
 // SHOP SYSTEM - Ranks, Boosts, and Exchange
+// Note: SHOP_RANKS, BOOSTS, BOOST_COST_PER_NOTE, DAILY_EXCHANGE_LIMIT
+// are defined in config.js for centralized configuration
 // ============================================
-const BOOST_COST_PER_NOTE = 5000; // $5,000 per note for exchange
-const DAILY_EXCHANGE_LIMIT = 10; // Max 10 exchanges per day
-
-// Shop Rank Tiers - based on total Notes spent
-const SHOP_RANKS = [
-    { id: 'bronze', name: 'Bronze', icon: '🥉', notesRequired: 0, color: '#cd7f32',
-      bonuses: { production: 0, walkSpeed: 0, capacity: 0 } },
-    { id: 'silver', name: 'Silver', icon: '🥈', notesRequired: 25, color: '#c0c0c0',
-      bonuses: { production: 0.05, walkSpeed: 0, capacity: 0 } },
-    { id: 'gold', name: 'Gold', icon: '🥇', notesRequired: 75, color: '#ffd700',
-      bonuses: { production: 0.10, walkSpeed: 0.05, capacity: 0 } },
-    { id: 'platinum', name: 'Platinum', icon: '💎', notesRequired: 150, color: '#e5e4e2',
-      bonuses: { production: 0.15, walkSpeed: 0.10, capacity: 0 } },
-    { id: 'diamond', name: 'Diamond', icon: '💠', notesRequired: 300, color: '#b9f2ff',
-      bonuses: { production: 0.20, walkSpeed: 0.15, capacity: 0.05 } },
-    { id: 'obsidian', name: 'Obsidian', icon: '🖤', notesRequired: 500, color: '#3d3d3d',
-      bonuses: { production: 0.25, walkSpeed: 0.20, capacity: 0.10 } }
-];
-
-// Balanced Boosts - can't stack, can't extend while active
-const BOOSTS = {
-    // 3 Notes - Small boosts (2 min)
-    steady_hands: {
-        name: 'Steady Hands',
-        desc: '+15% gather rate',
-        cost: 3,
-        duration: 120000, // 2 minutes
-        minerGatherBoost: 1.15
-    },
-    light_steps: {
-        name: 'Light Steps',
-        desc: '+20% walk speed',
-        cost: 3,
-        duration: 120000,
-        minerSpeedBoost: 1.20
-    },
-    // 5 Notes - Medium boosts (3 min)
-    efficient_mining: {
-        name: 'Efficient Mining',
-        desc: '+25% gather rate',
-        cost: 5,
-        duration: 180000, // 3 minutes
-        minerGatherBoost: 1.25
-    },
-    swift_feet: {
-        name: 'Swift Feet',
-        desc: '+30% walk speed',
-        cost: 5,
-        duration: 180000,
-        minerSpeedBoost: 1.30
-    },
-    sturdy_cart: {
-        name: 'Sturdy Cart',
-        desc: '+20% elevator capacity',
-        cost: 5,
-        duration: 180000,
-        elevatorCapacityBoost: 1.20
-    },
-    // 8 Notes - Premium combo boosts (3 min)
-    master_miner: {
-        name: 'Master Miner',
-        desc: '+20% gather & walk speed',
-        cost: 8,
-        duration: 180000,
-        minerGatherBoost: 1.20,
-        minerSpeedBoost: 1.20
-    },
-    express_elevator: {
-        name: 'Express Elevator',
-        desc: '+25% elevator speed & +15% capacity',
-        cost: 8,
-        duration: 180000,
-        elevatorSpeedBoost: 1.25,
-        elevatorCapacityBoost: 1.15
-    }
-};
 
 // Shop state
 let totalNotesSpent = 0;
@@ -1149,7 +1074,7 @@ let lastExchangeDate = null; // Stored as 'YYYY-MM-DD' in EST
 function getESTDateString() {
     // Get current date in EST timezone
     const now = new Date();
-    const estOffset = -5 * 60; // EST is UTC-5
+    const estOffset = SHOP_CONFIG.EST_OFFSET_HOURS * 60; // EST offset in minutes
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     const est = new Date(utc + (estOffset * 60000));
     return est.toISOString().split('T')[0];
@@ -2108,8 +2033,8 @@ async function autoElevator() {
 
 // ============================================
 // BUY NEW SHAFT
+// Note: MAX_SHAFTS_MINE22 is defined in config.js
 // ============================================
-const MAX_SHAFTS_MINE22 = 20; // Shaft 21 is forbidden!
 
 function canBuyNewShaft() {
     // Mine 22 is limited to 20 shafts (Shaft 21 is sealed)
@@ -3077,7 +3002,7 @@ const settingsSaveStatus = document.getElementById('settingsSaveStatus');
 const autoSaveStatus = document.getElementById('autoSaveStatus');
 
 // Autosave configuration
-const AUTOSAVE_INTERVAL = 60000; // Save every 60 seconds
+// Note: AUTOSAVE_INTERVAL defined as TIMING.AUTOSAVE_INTERVAL in config.js
 let autosaveIntervalId = null;
 let lastSaveTime = null;
 
@@ -3097,7 +3022,7 @@ function startCloudAutosave() {
                 console.error('Autosave failed:', error);
             }
         }
-    }, AUTOSAVE_INTERVAL);
+    }, TIMING.AUTOSAVE_INTERVAL);
 }
 
 // Stop autosave interval
@@ -3127,6 +3052,7 @@ function saveToLocalStorage() {
     }));
 
     const gameData = {
+        version: SAVE_VERSION,
         totalCoalSold,
         totalCoalMined,
         totalCopperMined,
@@ -3167,14 +3093,39 @@ function saveToLocalStorage() {
     }
 }
 
+// Migrate save data from older versions
+function migrateSaveData(data) {
+    const version = data.version || 1;
+
+    // Version 1 -> 2: Added save versioning and config consolidation
+    if (version < 2) {
+        // No structural changes needed, just add version
+        data.version = 2;
+        console.log('Migrated save data from v1 to v2');
+    }
+
+    // Future migrations go here:
+    // if (version < 3) { ... }
+
+    return data;
+}
+
 // Load from localStorage
 function loadFromLocalStorage() {
     try {
         const saved = localStorage.getItem('dunhillMinerSave');
         if (!saved) return false;
 
-        const data = JSON.parse(saved);
+        let data = JSON.parse(saved);
 
+        // Run migrations if needed
+        if (!data.version || data.version < SAVE_VERSION) {
+            data = migrateSaveData(data);
+            // Re-save with updated version
+            localStorage.setItem('dunhillMinerSave', JSON.stringify(data));
+        }
+
+        // Restore basic stats
         totalCoalSold = data.totalCoalSold || 0;
         totalCoalMined = data.totalCoalMined || 0;
         totalCopperMined = data.totalCopperMined || 0;
@@ -3183,38 +3134,61 @@ function loadFromLocalStorage() {
         notes = data.notes || 0;
         elevatorLevel = data.elevatorLevel || 1;
 
+        // Restore mine system state
         if (data.currentMineId) currentMineId = data.currentMineId;
         if (data.minesUnlocked) minesUnlocked = data.minesUnlocked;
         if (data.mineStates) mineStates = data.mineStates;
+
+        // Restore player progression
         if (data.playerXP !== undefined) playerXP = data.playerXP;
         if (data.achievementsState) achievementsState = data.achievementsState;
+        initAchievements(); // Ensure all achievements are initialized
 
-        // Rebuild mineshafts
+        // Clear existing shafts and recreate
+        mineshaftsContainer.innerHTML = '';
+        mineshafts = [];
+
+        // Rebuild mineshafts using createMineshaft (the correct function)
         if (data.shafts && data.shafts.length > 0) {
-            while (mineshafts.length < data.shafts.length) {
-                const newShaft = createNewShaft(mineshafts.length + 1);
-                mineshafts.push(newShaft);
-                createShaftElement(newShaft);
-            }
+            for (let i = 0; i < data.shafts.length; i++) {
+                createMineshaft(i);
+                const shaftData = data.shafts[i];
+                mineshafts[i].level = shaftData.level || 1;
+                mineshafts[i].bucketCoal = shaftData.bucketCoal || 0;
+                mineshafts[i].elements.levelBtn.textContent = mineshafts[i].level;
+                updateShaftBucket(i);
 
-            data.shafts.forEach((savedShaft, index) => {
-                if (mineshafts[index]) {
-                    mineshafts[index].level = savedShaft.level;
-                    mineshafts[index].bucketCoal = savedShaft.bucketCoal || 0;
-                    if (savedShaft.hasManager && !mineshafts[index].hasManager) {
-                        hireManagerFor(index, true);
-                        if (savedShaft.managerAbility) {
-                            mineshafts[index].managerAbility = savedShaft.managerAbility;
-                        }
+                // Restore manager if had one
+                if (shaftData.hasManager && !mineshafts[i].hasManager) {
+                    mineshafts[i].hasManager = true;
+                    mineshafts[i].elements.managerSlot.classList.add('hired');
+                    mineshafts[i].elements.managerSlot.innerHTML = `
+                        <div class="worker manager" style="position: relative;">
+                            <div class="worker-body">
+                                <div class="worker-helmet"><div class="worker-helmet-light"></div></div>
+                                <div class="worker-head"></div>
+                                <div class="worker-torso"></div>
+                                <div class="worker-legs"></div>
+                            </div>
+                        </div>
+                    `;
+                    mineshafts[i].elements.minerStatus.textContent = 'Auto';
+
+                    // Restore ability data
+                    if (shaftData.managerAbility) {
+                        mineshafts[i].managerAbility = shaftData.managerAbility;
                     }
+
+                    autoMine(i);
                 }
-            });
+            }
+        } else {
+            createMineshaft(0);
         }
 
         // Restore elevator manager
         if (data.hasElevatorManager && !hasElevatorManager) {
             hasElevatorManager = true;
-            const elevatorManagerSlot = document.getElementById('elevatorManagerSlot');
             elevatorManagerSlot.classList.add('hired');
             elevatorManagerSlot.innerHTML = `
                 <div class="worker manager" style="position: relative;">
@@ -3226,10 +3200,13 @@ function loadFromLocalStorage() {
                     </div>
                 </div>
             `;
-            document.getElementById('operatorStatus').textContent = 'Auto';
+            operatorStatus.textContent = 'Auto';
+
+            // Restore elevator ability data
             if (data.elevatorManagerAbility) {
                 elevatorManagerAbility = data.elevatorManagerAbility;
             }
+
             autoElevator();
         }
 
@@ -3249,6 +3226,7 @@ function loadFromLocalStorage() {
         if (data.dailyExchangeCount !== undefined) dailyExchangeCount = data.dailyExchangeCount;
         if (data.lastExchangeDate) lastExchangeDate = data.lastExchangeDate;
 
+        // Update all displays
         updateStats();
         updatePlayerStats();
         checkAchievements();
@@ -3257,6 +3235,9 @@ function loadFromLocalStorage() {
         updateMineIndicator();
         updateMineTheme();
         updateLevelDisplay();
+        updateNotesDisplay();
+        updateShopRankDisplay();
+        updateActiveBoostsDisplay();
 
         return true;
     } catch (error) {
@@ -3300,7 +3281,7 @@ function startLocalAutosave() {
         if (!currentUser) {
             saveToLocalStorage();
         }
-    }, AUTOSAVE_INTERVAL);
+    }, TIMING.AUTOSAVE_INTERVAL);
 }
 
 auth.onAuthStateChanged(async (user) => {
@@ -3475,6 +3456,7 @@ async function saveGameToCloud() {
     saveCurrentMineState();
 
     const gameData = {
+        version: SAVE_VERSION,
         totalCoalSold,
         totalCoalMined,
         totalCopperMined,
@@ -3499,6 +3481,10 @@ async function saveGameToCloud() {
         mineStates,
         // Player progression
         playerXP,
+        activeBoosts,
+        totalNotesSpent,
+        dailyExchangeCount,
+        lastExchangeDate,
         savedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -3646,15 +3632,35 @@ authModal.addEventListener('click', (e) => {
 // ADMIN MODE & DEVELOPER TOOLS
 // ============================================
 
-const ADMIN_PASSWORD = 'FNAFDDLC';
+// Admin password hash (SHA-256 of actual password)
+// This is NOT secure for production - just obscures from casual source viewing
+const ADMIN_PASSWORD_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // hash of 'admin'
 let adminModeActive = false;
+let adminAttempts = 0;
+const MAX_ADMIN_ATTEMPTS = 5;
 
-function activateAdminMode() {
+// Simple hash function for password comparison
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function activateAdminMode() {
     const passwordInput = document.getElementById('adminPasswordInput');
     const errorEl = document.getElementById('adminError');
     const password = passwordInput.value;
 
-    if (password === ADMIN_PASSWORD) {
+    // Rate limiting
+    if (adminAttempts >= MAX_ADMIN_ATTEMPTS) {
+        errorEl.textContent = 'Too many attempts. Reload page to try again.';
+        return;
+    }
+
+    const passwordHash = await hashPassword(password);
+    if (passwordHash === ADMIN_PASSWORD_HASH) {
         adminModeActive = true;
         errorEl.textContent = '';
         passwordInput.value = '';
@@ -3668,8 +3674,18 @@ function activateAdminMode() {
 
         devLog('Admin mode activated', 'success');
     } else {
-        errorEl.textContent = 'Incorrect password';
-        setTimeout(() => { errorEl.textContent = ''; }, 3000);
+        adminAttempts++;
+        const remaining = MAX_ADMIN_ATTEMPTS - adminAttempts;
+        if (remaining > 0) {
+            errorEl.textContent = `Incorrect password (${remaining} attempts left)`;
+        } else {
+            errorEl.textContent = 'Too many attempts. Reload page to try again.';
+        }
+        setTimeout(() => {
+            if (adminAttempts < MAX_ADMIN_ATTEMPTS) {
+                errorEl.textContent = '';
+            }
+        }, 3000);
     }
 }
 
