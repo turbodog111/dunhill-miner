@@ -2432,6 +2432,29 @@ function showBoostMessage(message, type) {
     setTimeout(() => toast.remove(), 2000);
 }
 
+function showStatusMessage(message) {
+    const toast = document.createElement('div');
+    toast.className = 'status-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 150px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        background: rgba(80, 80, 120, 0.95);
+        color: #ffd700;
+        border-radius: 8px;
+        font-family: 'Chakra Petch', sans-serif;
+        font-weight: 600;
+        z-index: 10001;
+        border: 2px solid #ffd700;
+        animation: toastFade 3s forwards;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
 function startBoostTimerLoop() {
     setInterval(() => {
         updateActiveBoostsDisplay();
