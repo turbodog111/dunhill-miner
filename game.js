@@ -602,11 +602,12 @@ function renderMapPanel() {
     const minesList = Object.values(MINES).sort((a, b) => a.order - b.order);
 
     // Define mine positions on the visual map (percentage-based)
-    // Linear layout: upper-left to lower-right, room for 4 mines
+    // Linear layout: upper-left to lower-right
     const minePositions = {
         mine22: { left: 15, top: 20 },  // Coal mine - upper left (starting mine)
-        mine37: { left: 40, top: 35 },  // Copper mine - second position
-        future: { left: 65, top: 50 }   // Future mine placeholder - third position
+        mine37: { left: 35, top: 35 },  // Copper mine - second position
+        mine51: { left: 55, top: 50 },  // Gold mine - third position
+        mine64: { left: 75, top: 65 }   // Gem mine - fourth position
     };
 
     let minesHtml = '';
@@ -651,19 +652,6 @@ function renderMapPanel() {
         `;
     });
 
-    // Add future mine placeholder
-    const futurePos = minePositions.future;
-    minesHtml += `
-        <div class="map-mine-marker locked"
-             style="left: ${futurePos.left}%; top: ${futurePos.top}%; transform: translate(-50%, -50%);">
-            <div class="mine-marker-icon">❓</div>
-            <div class="mine-marker-label">
-                <div class="mine-marker-name">???</div>
-                <div class="mine-marker-status">Locked</div>
-            </div>
-        </div>
-    `;
-
     // Draw paths between mines (SVG lines) - use viewBox coordinates (0-100)
     // Add viewBox attribute to SVG for percentage-like positioning
     mapPaths.setAttribute('viewBox', '0 0 100 100');
@@ -673,11 +661,6 @@ function renderMapPanel() {
         const from = positions[i];
         const to = positions[i + 1];
         pathsHtml += `<path d="M ${from.left} ${from.top} L ${to.left} ${to.top}" />`;
-    }
-    // Path to future mine
-    if (positions.length > 0) {
-        const lastMine = positions[positions.length - 1];
-        pathsHtml += `<path d="M ${lastMine.left} ${lastMine.top} L ${futurePos.left} ${futurePos.top}" style="opacity: 0.4;" />`;
     }
 
     mapMines.innerHTML = minesHtml;
@@ -870,6 +853,18 @@ function loadMineState(mineId) {
     // Stop any running elevator and mining loops before switching
     elevatorLoopId++;
     miningLoopId++;
+
+    // Initialize mine state if it doesn't exist
+    if (!mineStates[mineId]) {
+        mineStates[mineId] = {
+            mineshafts: [],
+            elevatorLevel: 1,
+            hasElevatorManager: false,
+            elevatorManagerAbility: null,
+            totalOreMined: 0,
+            lastActiveTime: Date.now()
+        };
+    }
 
     const state = mineStates[mineId];
     if (state && state.mineshafts && state.mineshafts.length > 0) {
