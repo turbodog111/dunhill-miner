@@ -690,8 +690,15 @@ function checkMineUnlocks() {
             const mine = MINES[mineId];
             if (mine.unlockRequirement) {
                 const req = mine.unlockRequirement;
-                if (req.type === 'coal' && totalCoalMined >= req.amount) {
+                let currentAmount = 0;
+                if (req.type === 'coal') currentAmount = totalCoalMined;
+                else if (req.type === 'copper') currentAmount = totalCopperMined;
+                else if (req.type === 'gold') currentAmount = totalGoldMined;
+                else if (req.type === 'gem') currentAmount = totalGemsMined;
+
+                if (currentAmount >= req.amount) {
                     minesUnlocked[mineId] = true;
+                    showStatusMessage(`New mine unlocked: ${mine.name}!`);
                     renderMapPanel();
                 }
             }
@@ -701,12 +708,18 @@ function checkMineUnlocks() {
 
 function saveCurrentMineState() {
     // Save current mine's state
+    let totalOreMined = 0;
+    if (currentMineId === 'mine22') totalOreMined = totalCoalMined;
+    else if (currentMineId === 'mine37') totalOreMined = totalCopperMined;
+    else if (currentMineId === 'mine51') totalOreMined = totalGoldMined;
+    else if (currentMineId === 'mine64') totalOreMined = totalGemsMined;
+
     mineStates[currentMineId] = {
         mineshafts: JSON.parse(JSON.stringify(mineshafts)),
         elevatorLevel: elevatorLevel,
         hasElevatorManager: hasElevatorManager,
         elevatorManagerAbility: elevatorManagerAbility,
-        totalOreMined: currentMineId === 'mine22' ? totalCoalMined : totalCopperMined,
+        totalOreMined: totalOreMined,
         lastActiveTime: Date.now()
     };
 }
@@ -1000,6 +1013,10 @@ function collectIdleRewards() {
             totalCoalMined += pendingIdleRewards.oreMined;
         } else if (pendingIdleRewards.ore === 'copper') {
             totalCopperMined += pendingIdleRewards.oreMined;
+        } else if (pendingIdleRewards.ore === 'gold') {
+            totalGoldMined += pendingIdleRewards.oreMined;
+        } else if (pendingIdleRewards.ore === 'gem') {
+            totalGemsMined += pendingIdleRewards.oreMined;
         }
 
         // Award XP for idle mining
@@ -1208,6 +1225,8 @@ const gameState = new GameState();
 let totalCoalSold = 0;
 let totalCoalMined = 0;
 let totalCopperMined = 0;
+let totalGoldMined = 0;
+let totalGemsMined = 0;
 let totalMoneyEarned = 0;
 let money = 0;
 let notes = 0;
@@ -1356,6 +1375,8 @@ class SaveManager {
             totalCoalSold,
             totalCoalMined,
             totalCopperMined,
+            totalGoldMined,
+            totalGemsMined,
             totalMoneyEarned,
             money,
             notes,
@@ -1528,6 +1549,8 @@ class SaveManager {
         totalCoalSold = data.totalCoalSold || 0;
         totalCoalMined = data.totalCoalMined || 0;
         totalCopperMined = data.totalCopperMined || 0;
+        totalGoldMined = data.totalGoldMined || 0;
+        totalGemsMined = data.totalGemsMined || 0;
         totalMoneyEarned = data.totalMoneyEarned || 0;
         money = data.money || 0;
         notes = data.notes || 0;
@@ -2519,7 +2542,7 @@ function exchangeCashForNotesMax() {
 
 // Current mine state
 let currentMineId = 'mine22';
-let minesUnlocked = { mine22: true, mine37: false };
+let minesUnlocked = { mine22: true, mine37: false, mine51: false, mine64: false };
 
 // Mine-specific state storage (for idle rewards)
 let mineStates = {
@@ -2532,6 +2555,22 @@ let mineStates = {
         lastActiveTime: Date.now()
     },
     mine37: {
+        mineshafts: [],
+        elevatorLevel: 1,
+        hasElevatorManager: false,
+        elevatorManagerAbility: null,
+        totalOreMined: 0,
+        lastActiveTime: null
+    },
+    mine51: {
+        mineshafts: [],
+        elevatorLevel: 1,
+        hasElevatorManager: false,
+        elevatorManagerAbility: null,
+        totalOreMined: 0,
+        lastActiveTime: null
+    },
+    mine64: {
         mineshafts: [],
         elevatorLevel: 1,
         hasElevatorManager: false,
@@ -3024,6 +3063,10 @@ async function doMining(shaftIndex) {
         totalCoalMined += coalToMine;
     } else if (mine.ore === 'copper') {
         totalCopperMined += coalToMine;
+    } else if (mine.ore === 'gold') {
+        totalGoldMined += coalToMine;
+    } else if (mine.ore === 'gem') {
+        totalGemsMined += coalToMine;
     }
 
     // Award XP for mining (0.5 XP per resource)
@@ -3962,6 +4005,10 @@ function getAchievementProgress(achievement) {
         return Math.min(totalCoalMined, achievement.target);
     } else if (achievement.type === 'copper') {
         return Math.min(totalCopperMined, achievement.target);
+    } else if (achievement.type === 'gold') {
+        return Math.min(totalGoldMined, achievement.target);
+    } else if (achievement.type === 'gem') {
+        return Math.min(totalGemsMined, achievement.target);
     } else if (achievement.type === 'shafts') {
         // Count total shafts across all mines
         let totalShafts = mineshafts.length;
@@ -4371,6 +4418,8 @@ function executePrestige() {
     totalCoalSold = 0;
     totalCoalMined = 0;
     totalCopperMined = 0;
+    totalGoldMined = 0;
+    totalGemsMined = 0;
     totalMoneyEarned = 0;
     elevatorLevel = 1;
     elevatorCarrying = 0;
@@ -4380,7 +4429,7 @@ function executePrestige() {
 
     // Reset mines
     currentMineId = 'mine22';
-    minesUnlocked = { mine22: true, mine37: false };
+    minesUnlocked = { mine22: true, mine37: false, mine51: false, mine64: false };
     mineStates = {
         mine22: {
             mineshafts: [],
@@ -4391,6 +4440,22 @@ function executePrestige() {
             lastActiveTime: Date.now()
         },
         mine37: {
+            mineshafts: [],
+            elevatorLevel: 1,
+            hasElevatorManager: false,
+            elevatorManagerAbility: null,
+            totalOreMined: 0,
+            lastActiveTime: null
+        },
+        mine51: {
+            mineshafts: [],
+            elevatorLevel: 1,
+            hasElevatorManager: false,
+            elevatorManagerAbility: null,
+            totalOreMined: 0,
+            lastActiveTime: null
+        },
+        mine64: {
             mineshafts: [],
             elevatorLevel: 1,
             hasElevatorManager: false,
@@ -5327,6 +5392,8 @@ function saveToLocalStorage() {
         totalCoalSold,
         totalCoalMined,
         totalCopperMined,
+        totalGoldMined,
+        totalGemsMined,
         totalMoneyEarned,
         money,
         notes,
@@ -5423,6 +5490,8 @@ function loadFromLocalStorage() {
         totalCoalSold = data.totalCoalSold || 0;
         totalCoalMined = data.totalCoalMined || 0;
         totalCopperMined = data.totalCopperMined || 0;
+        totalGoldMined = data.totalGoldMined || 0;
+        totalGemsMined = data.totalGemsMined || 0;
         totalMoneyEarned = data.totalMoneyEarned || 0;
         money = data.money || 0;
         notes = data.notes || 0;
@@ -5804,6 +5873,8 @@ async function saveGameToCloud() {
         totalCoalSold,
         totalCoalMined,
         totalCopperMined,
+        totalGoldMined,
+        totalGemsMined,
         totalMoneyEarned,
         money,
         notes,
@@ -5892,6 +5963,8 @@ async function loadGameFromCloud() {
             totalCoalSold = data.totalCoalSold || 0;
             totalCoalMined = data.totalCoalMined || 0;
             totalCopperMined = data.totalCopperMined || 0;
+            totalGoldMined = data.totalGoldMined || 0;
+            totalGemsMined = data.totalGemsMined || 0;
             totalMoneyEarned = data.totalMoneyEarned || 0;
             money = data.money || 0;
             notes = data.notes || 0;
@@ -6292,6 +6365,8 @@ function devResetStoryProgress() {
             hasSeenForemanIntro: false,
             hasSeenMine22Intro: false,
             hasSeenMine37Intro: false,
+            hasSeenMine51Intro: false,
+            hasSeenMine64Intro: false,
             completedScenes: []
         };
         saveStoryProgress();
@@ -6313,6 +6388,8 @@ function devResetGame() {
             notes = 0;
             totalCoalMined = 0;
             totalCopperMined = 0;
+            totalGoldMined = 0;
+            totalGemsMined = 0;
             totalCoalSold = 0;
             totalMoneyEarned = 0;
             playerXP = 0;
@@ -6324,12 +6401,14 @@ function devResetGame() {
             currentMineId = 'mine22';
 
             // Reset mines unlocked
-            minesUnlocked = { mine22: true, mine37: false };
+            minesUnlocked = { mine22: true, mine37: false, mine51: false, mine64: false };
 
             // Reset mine states
             mineStates = {
                 mine22: { lastActiveTime: Date.now() },
-                mine37: { lastActiveTime: Date.now() }
+                mine37: { lastActiveTime: Date.now() },
+                mine51: { lastActiveTime: Date.now() },
+                mine64: { lastActiveTime: Date.now() }
             };
 
             // Reset achievements
@@ -6341,6 +6420,8 @@ function devResetGame() {
                 hasSeenForemanIntro: false,
                 hasSeenMine22Intro: false,
                 hasSeenMine37Intro: false,
+                hasSeenMine51Intro: false,
+                hasSeenMine64Intro: false,
                 completedScenes: []
             };
 
