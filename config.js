@@ -273,6 +273,30 @@ const MINES = {
         unlocked: false,
         unlockRequirement: { type: 'coal', amount: 10000 },
         order: 2
+    },
+    mine51: {
+        id: 'mine51',
+        name: 'Mine 51',
+        shortName: '51',
+        ore: 'gold',
+        logo: 'assets/Mine 51.png',
+        oreIcon: '🟡',
+        valueMultiplier: 8,
+        unlocked: false,
+        unlockRequirement: { type: 'copper', amount: 50000 },
+        order: 3
+    },
+    mine64: {
+        id: 'mine64',
+        name: 'Mine 64',
+        shortName: '64',
+        ore: 'gem',
+        logo: 'assets/Mine 64.png',
+        oreIcon: '💎',
+        valueMultiplier: 20,
+        unlocked: false,
+        unlockRequirement: { type: 'gold', amount: 100000 },
+        order: 4
     }
 };
 
@@ -288,6 +312,16 @@ const ACHIEVEMENTS = [
     { id: 'copper_3', name: 'Copper Mined III', desc: 'Mine 10,000 copper', icon: '🥉', type: 'copper', target: 10000 },
     { id: 'copper_4', name: 'Copper Mined IV', desc: 'Mine 100,000 copper', icon: '🥉', type: 'copper', target: 100000 },
     { id: 'copper_5', name: 'Copper Mined V', desc: 'Mine 1,000,000 copper', icon: '🥉', type: 'copper', target: 1000000 },
+    { id: 'gold_1', name: 'Gold Mined I', desc: 'Mine 100 gold', icon: '🟡', type: 'gold', target: 100 },
+    { id: 'gold_2', name: 'Gold Mined II', desc: 'Mine 1,000 gold', icon: '🟡', type: 'gold', target: 1000 },
+    { id: 'gold_3', name: 'Gold Mined III', desc: 'Mine 10,000 gold', icon: '🟡', type: 'gold', target: 10000 },
+    { id: 'gold_4', name: 'Gold Mined IV', desc: 'Mine 100,000 gold', icon: '🟡', type: 'gold', target: 100000 },
+    { id: 'gold_5', name: 'Gold Mined V', desc: 'Mine 1,000,000 gold', icon: '🟡', type: 'gold', target: 1000000 },
+    { id: 'gem_1', name: 'Gems Mined I', desc: 'Mine 100 gems', icon: '💎', type: 'gem', target: 100 },
+    { id: 'gem_2', name: 'Gems Mined II', desc: 'Mine 1,000 gems', icon: '💎', type: 'gem', target: 1000 },
+    { id: 'gem_3', name: 'Gems Mined III', desc: 'Mine 10,000 gems', icon: '💎', type: 'gem', target: 10000 },
+    { id: 'gem_4', name: 'Gems Mined IV', desc: 'Mine 100,000 gems', icon: '💎', type: 'gem', target: 100000 },
+    { id: 'gem_5', name: 'Gems Mined V', desc: 'Mine 1,000,000 gems', icon: '💎', type: 'gem', target: 1000000 },
     { id: 'shaft_1', name: 'Mineshaft I', desc: 'Own 2 mineshafts', icon: '🏭', type: 'shafts', target: 2 },
     { id: 'shaft_2', name: 'Mineshaft II', desc: 'Own 5 mineshafts', icon: '🏭', type: 'shafts', target: 5 },
     { id: 'shaft_3', name: 'Mineshaft III', desc: 'Own 20 mineshafts', icon: '🏭', type: 'shafts', target: 20 },

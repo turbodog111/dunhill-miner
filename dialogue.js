@@ -18,6 +18,8 @@ let storyProgress = {
     hasSeenForemanIntro: false,
     hasSeenMine22Intro: false,
     hasSeenMine37Intro: false,
+    hasSeenMine51Intro: false,
+    hasSeenMine64Intro: false,
     completedScenes: []
 };
 
