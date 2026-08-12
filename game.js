@@ -5232,6 +5232,12 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+// Optional App Check: set RECAPTCHA_V3_SITE_KEY after registering the app in
+// Firebase Console → App Check, then enforce App Check on Firestore.
+const RECAPTCHA_V3_SITE_KEY = '';
+if (RECAPTCHA_V3_SITE_KEY && firebase.appCheck) {
+    firebase.appCheck().activate(RECAPTCHA_V3_SITE_KEY, true);
+}
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -5699,6 +5705,11 @@ auth.onAuthStateChanged(async (user) => {
         settingsNotLoggedIn.style.display = 'block';
         settingsLoggedIn.style.display = 'none';
 
+        // Drop admin tools on logout
+        if (typeof deactivateAdminMode === 'function' && adminModeActive) {
+            deactivateAdminMode();
+        }
+
         // Stop cloud autosave and start local autosave
         stopCloudAutosave();
         startLocalAutosave();
@@ -6122,8 +6133,11 @@ authModal.addEventListener('click', (e) => {
 // ============================================
 // ADMIN MODE & DEVELOPER TOOLS
 // ============================================
+// Client-side password gate is only a speed bump (hash is public in JS).
+// Require a signed-in Firebase user + rotated password. Do not put the
+// plaintext password in git history or commit messages.
 
-const ADMIN_PASSWORD_HASH = 'e651362559979ce46010b6e24428831a5c979fcc8e0d6b1f95d8f8a94bc8abc9';
+const ADMIN_PASSWORD_HASH = 'b1861ccabb1c76f33ea10a6f5219a7210f949d1c19d4811d5512e05f68bcdc03';
 let adminModeActive = false;
 let adminAttempts = 0;
 const MAX_ADMIN_ATTEMPTS = 5;
@@ -6140,6 +6154,11 @@ async function activateAdminMode() {
     const passwordInput = document.getElementById('adminPasswordInput');
     const errorEl = document.getElementById('adminError');
     const password = passwordInput.value;
+
+    if (!currentUser) {
+        errorEl.textContent = 'Sign in with Firebase before unlocking admin tools.';
+        return;
+    }
 
     // Rate limiting
     if (adminAttempts >= MAX_ADMIN_ATTEMPTS) {
